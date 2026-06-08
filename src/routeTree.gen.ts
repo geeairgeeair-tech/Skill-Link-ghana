@@ -9,38 +9,217 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkersRouteImport } from './routes/workers'
+import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkersIdRouteImport } from './routes/workers.$id'
+import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedWorkerSubscriptionRouteImport } from './routes/_authenticated/worker.subscription'
+import { Route as AuthenticatedWorkerOnboardingRouteImport } from './routes/_authenticated/worker.onboarding'
+import { Route as AuthenticatedWorkerJobsRouteImport } from './routes/_authenticated/worker.jobs'
+import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_authenticated/worker.dashboard'
+import { Route as AuthenticatedBookWorkerIdRouteImport } from './routes/_authenticated/book.$workerId'
 
+const WorkersRoute = WorkersRouteImport.update({
+  id: '/workers',
+  path: '/workers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkersIdRoute = WorkersIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => WorkersRoute,
+} as any)
+const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
+  id: '/bookings',
+  path: '/bookings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWorkerSubscriptionRoute =
+  AuthenticatedWorkerSubscriptionRouteImport.update({
+    id: '/worker/subscription',
+    path: '/worker/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkerOnboardingRoute =
+  AuthenticatedWorkerOnboardingRouteImport.update({
+    id: '/worker/onboarding',
+    path: '/worker/onboarding',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkerJobsRoute = AuthenticatedWorkerJobsRouteImport.update({
+  id: '/worker/jobs',
+  path: '/worker/jobs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWorkerDashboardRoute =
+  AuthenticatedWorkerDashboardRouteImport.update({
+    id: '/worker/dashboard',
+    path: '/worker/dashboard',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBookWorkerIdRoute =
+  AuthenticatedBookWorkerIdRouteImport.update({
+    id: '/book/$workerId',
+    path: '/book/$workerId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/profile': typeof ProfileRoute
+  '/workers': typeof WorkersRouteWithChildren
+  '/admin': typeof AuthenticatedAdminRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
+  '/workers/$id': typeof WorkersIdRoute
+  '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
+  '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
+  '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/profile': typeof ProfileRoute
+  '/workers': typeof WorkersRouteWithChildren
+  '/admin': typeof AuthenticatedAdminRoute
+  '/bookings': typeof AuthenticatedBookingsRoute
+  '/workers/$id': typeof WorkersIdRoute
+  '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
+  '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
+  '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/profile': typeof ProfileRoute
+  '/workers': typeof WorkersRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
+  '/workers/$id': typeof WorkersIdRoute
+  '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/_authenticated/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
+  '/_authenticated/worker/jobs': typeof AuthenticatedWorkerJobsRoute
+  '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/_authenticated/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/profile'
+    | '/workers'
+    | '/admin'
+    | '/bookings'
+    | '/workers/$id'
+    | '/book/$workerId'
+    | '/worker/dashboard'
+    | '/worker/jobs'
+    | '/worker/onboarding'
+    | '/worker/subscription'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/profile'
+    | '/workers'
+    | '/admin'
+    | '/bookings'
+    | '/workers/$id'
+    | '/book/$workerId'
+    | '/worker/dashboard'
+    | '/worker/jobs'
+    | '/worker/onboarding'
+    | '/worker/subscription'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/profile'
+    | '/workers'
+    | '/_authenticated/admin'
+    | '/_authenticated/bookings'
+    | '/workers/$id'
+    | '/_authenticated/book/$workerId'
+    | '/_authenticated/worker/dashboard'
+    | '/_authenticated/worker/jobs'
+    | '/_authenticated/worker/onboarding'
+    | '/_authenticated/worker/subscription'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  ProfileRoute: typeof ProfileRoute
+  WorkersRoute: typeof WorkersRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workers': {
+      id: '/workers'
+      path: '/workers'
+      fullPath: '/workers'
+      preLoaderRoute: typeof WorkersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +227,106 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/workers/$id': {
+      id: '/workers/$id'
+      path: '/$id'
+      fullPath: '/workers/$id'
+      preLoaderRoute: typeof WorkersIdRouteImport
+      parentRoute: typeof WorkersRoute
+    }
+    '/_authenticated/bookings': {
+      id: '/_authenticated/bookings'
+      path: '/bookings'
+      fullPath: '/bookings'
+      preLoaderRoute: typeof AuthenticatedBookingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worker/subscription': {
+      id: '/_authenticated/worker/subscription'
+      path: '/worker/subscription'
+      fullPath: '/worker/subscription'
+      preLoaderRoute: typeof AuthenticatedWorkerSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worker/onboarding': {
+      id: '/_authenticated/worker/onboarding'
+      path: '/worker/onboarding'
+      fullPath: '/worker/onboarding'
+      preLoaderRoute: typeof AuthenticatedWorkerOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worker/jobs': {
+      id: '/_authenticated/worker/jobs'
+      path: '/worker/jobs'
+      fullPath: '/worker/jobs'
+      preLoaderRoute: typeof AuthenticatedWorkerJobsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worker/dashboard': {
+      id: '/_authenticated/worker/dashboard'
+      path: '/worker/dashboard'
+      fullPath: '/worker/dashboard'
+      preLoaderRoute: typeof AuthenticatedWorkerDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/book/$workerId': {
+      id: '/_authenticated/book/$workerId'
+      path: '/book/$workerId'
+      fullPath: '/book/$workerId'
+      preLoaderRoute: typeof AuthenticatedBookWorkerIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
+  AuthenticatedBookWorkerIdRoute: typeof AuthenticatedBookWorkerIdRoute
+  AuthenticatedWorkerDashboardRoute: typeof AuthenticatedWorkerDashboardRoute
+  AuthenticatedWorkerJobsRoute: typeof AuthenticatedWorkerJobsRoute
+  AuthenticatedWorkerOnboardingRoute: typeof AuthenticatedWorkerOnboardingRoute
+  AuthenticatedWorkerSubscriptionRoute: typeof AuthenticatedWorkerSubscriptionRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
+  AuthenticatedBookWorkerIdRoute: AuthenticatedBookWorkerIdRoute,
+  AuthenticatedWorkerDashboardRoute: AuthenticatedWorkerDashboardRoute,
+  AuthenticatedWorkerJobsRoute: AuthenticatedWorkerJobsRoute,
+  AuthenticatedWorkerOnboardingRoute: AuthenticatedWorkerOnboardingRoute,
+  AuthenticatedWorkerSubscriptionRoute: AuthenticatedWorkerSubscriptionRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface WorkersRouteChildren {
+  WorkersIdRoute: typeof WorkersIdRoute
+}
+
+const WorkersRouteChildren: WorkersRouteChildren = {
+  WorkersIdRoute: WorkersIdRoute,
+}
+
+const WorkersRouteWithChildren =
+  WorkersRoute._addFileChildren(WorkersRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  ProfileRoute: ProfileRoute,
+  WorkersRoute: WorkersRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

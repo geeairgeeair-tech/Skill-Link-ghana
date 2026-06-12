@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,6 +49,7 @@ function JobsPage() {
               {b.status === "accepted" && <Btn onClick={() => updateStatus(b.id,"on_the_way")}>On the way</Btn>}
               {b.status === "on_the_way" && <Btn onClick={() => updateStatus(b.id,"in_progress")}>Start job</Btn>}
               {b.status === "in_progress" && <Btn onClick={() => updateStatus(b.id,"completed")}>Mark complete</Btn>}
+              <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2 rounded-lg text-xs font-semibold bg-muted">💬 Chat</Link>
             </div>
           </div>
         ))}

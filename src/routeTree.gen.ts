@@ -21,6 +21,7 @@ import { Route as AuthenticatedWorkerSubscriptionRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkerOnboardingRouteImport } from './routes/_authenticated/worker.onboarding'
 import { Route as AuthenticatedWorkerJobsRouteImport } from './routes/_authenticated/worker.jobs'
 import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_authenticated/worker.dashboard'
+import { Route as AuthenticatedChatBookingIdRouteImport } from './routes/_authenticated/chat.$bookingId'
 import { Route as AuthenticatedBookWorkerIdRouteImport } from './routes/_authenticated/book.$workerId'
 
 const WorkersRoute = WorkersRouteImport.update({
@@ -85,6 +86,12 @@ const AuthenticatedWorkerDashboardRoute =
     path: '/worker/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedChatBookingIdRoute =
+  AuthenticatedChatBookingIdRouteImport.update({
+    id: '/chat/$bookingId',
+    path: '/chat/$bookingId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedBookWorkerIdRoute =
   AuthenticatedBookWorkerIdRouteImport.update({
     id: '/book/$workerId',
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
   '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
+  '/_authenticated/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
   '/_authenticated/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/_authenticated/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/workers/$id'
     | '/book/$workerId'
+    | '/chat/$bookingId'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/workers/$id'
     | '/book/$workerId'
+    | '/chat/$bookingId'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings'
     | '/workers/$id'
     | '/_authenticated/book/$workerId'
+    | '/_authenticated/chat/$bookingId'
     | '/_authenticated/worker/dashboard'
     | '/_authenticated/worker/jobs'
     | '/_authenticated/worker/onboarding'
@@ -276,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkerDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/chat/$bookingId': {
+      id: '/_authenticated/chat/$bookingId'
+      path: '/chat/$bookingId'
+      fullPath: '/chat/$bookingId'
+      preLoaderRoute: typeof AuthenticatedChatBookingIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/book/$workerId': {
       id: '/_authenticated/book/$workerId'
       path: '/book/$workerId'
@@ -290,6 +310,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedBookWorkerIdRoute: typeof AuthenticatedBookWorkerIdRoute
+  AuthenticatedChatBookingIdRoute: typeof AuthenticatedChatBookingIdRoute
   AuthenticatedWorkerDashboardRoute: typeof AuthenticatedWorkerDashboardRoute
   AuthenticatedWorkerJobsRoute: typeof AuthenticatedWorkerJobsRoute
   AuthenticatedWorkerOnboardingRoute: typeof AuthenticatedWorkerOnboardingRoute
@@ -300,6 +321,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedBookWorkerIdRoute: AuthenticatedBookWorkerIdRoute,
+  AuthenticatedChatBookingIdRoute: AuthenticatedChatBookingIdRoute,
   AuthenticatedWorkerDashboardRoute: AuthenticatedWorkerDashboardRoute,
   AuthenticatedWorkerJobsRoute: AuthenticatedWorkerJobsRoute,
   AuthenticatedWorkerOnboardingRoute: AuthenticatedWorkerOnboardingRoute,

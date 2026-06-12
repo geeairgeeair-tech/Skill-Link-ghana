@@ -50,6 +50,13 @@ function WorkerDetail() {
                 <BadgeCheck className="size-5 text-primary fill-primary-soft" />
               </div>
               <p className="text-sm text-muted-foreground">{(w as any).categories?.name}</p>
+              <span className={`mt-1 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${((w as any).is_available ?? true) ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+                <span className={`size-1.5 rounded-full ${((w as any).is_available ?? true) ? "bg-success" : "bg-muted-foreground"}`} />
+                {((w as any).is_available ?? true) ? "Available now" : "Unavailable"}
+              </span>
+              {!((w as any).is_available ?? true) && (w as any).unavailable_note && (
+                <p className="text-xs text-muted-foreground mt-1 italic">"{(w as any).unavailable_note}"</p>
+              )}
               <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
                 <StarRating value={Number((w as any).rating ?? 0)} count={(w as any).reviews_count ?? 0} />
                 <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(w as any).service_area}</span>

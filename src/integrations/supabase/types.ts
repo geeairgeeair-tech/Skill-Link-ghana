@@ -243,6 +243,7 @@ export type Database = {
           ghana_card_number: string | null
           ghana_card_url: string | null
           hourly_rate: number | null
+          is_available: boolean
           is_featured: boolean | null
           jobs_completed: number | null
           phone_verified: boolean | null
@@ -256,6 +257,7 @@ export type Database = {
           subscription_plan:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
+          unavailable_note: string | null
           updated_at: string
           user_id: string
           verification_status: Database["public"]["Enums"]["verification_status"]
@@ -270,6 +272,7 @@ export type Database = {
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
+          is_available?: boolean
           is_featured?: boolean | null
           jobs_completed?: number | null
           phone_verified?: boolean | null
@@ -283,6 +286,7 @@ export type Database = {
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
+          unavailable_note?: string | null
           updated_at?: string
           user_id: string
           verification_status?: Database["public"]["Enums"]["verification_status"]
@@ -297,6 +301,7 @@ export type Database = {
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
+          is_available?: boolean
           is_featured?: boolean | null
           jobs_completed?: number | null
           phone_verified?: boolean | null
@@ -310,6 +315,7 @@ export type Database = {
           subscription_plan?:
             | Database["public"]["Enums"]["subscription_plan"]
             | null
+          unavailable_note?: string | null
           updated_at?: string
           user_id?: string
           verification_status?: Database["public"]["Enums"]["verification_status"]

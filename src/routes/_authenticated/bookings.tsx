@@ -50,6 +50,9 @@ function BookingsPage() {
             <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
             {b.scheduled_at && <p className="text-xs text-muted-foreground mt-2">📅 {new Date(b.scheduled_at).toLocaleString()}</p>}
             {b.estimated_cost ? <p className="text-sm font-semibold text-primary mt-1">~ GH₵{b.estimated_cost}</p> : null}
+            <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-primary">
+              💬 Message worker
+            </Link>
           </div>
         ))}
       </main>

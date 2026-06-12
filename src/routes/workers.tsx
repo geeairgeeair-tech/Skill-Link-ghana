@@ -36,8 +36,9 @@ function WorkersPage() {
     queryFn: async (): Promise<WorkerCardData[]> => {
       let query = supabase
         .from("worker_profiles")
-        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, categories!inner(name, slug), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
+        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, categories!inner(name, slug), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
         .gte("rating", minRating)
+        .order("is_available", { ascending: false })
         .order("is_featured", { ascending: false })
         .order("rating", { ascending: false })
         .limit(50);
@@ -52,6 +53,7 @@ function WorkersPage() {
         rating: w.rating, reviews_count: w.reviews_count,
         starting_price: w.starting_price, is_featured: w.is_featured,
         jobs_completed: w.jobs_completed,
+        is_available: w.is_available,
       }));
       if (q.trim()) {
         const needle = q.toLowerCase();

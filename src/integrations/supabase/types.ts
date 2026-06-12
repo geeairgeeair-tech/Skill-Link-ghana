@@ -94,6 +94,59 @@ export type Database = {
         }
         Relationships: []
       }
+      job_requests: {
+        Row: {
+          address: string | null
+          budget: number | null
+          category_id: string | null
+          city: string | null
+          created_at: string
+          customer_id: string
+          description: string
+          id: string
+          media: Json
+          status: Database["public"]["Enums"]["job_request_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          budget?: number | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string
+          customer_id: string
+          description: string
+          id?: string
+          media?: Json
+          status?: Database["public"]["Enums"]["job_request_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          budget?: number | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string
+          customer_id?: string
+          description?: string
+          id?: string
+          media?: Json
+          status?: Database["public"]["Enums"]["job_request_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_requests_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           booking_id: string
@@ -353,6 +406,7 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      job_request_status: "open" | "assigned" | "closed" | "cancelled"
       subscription_plan: "basic" | "premium" | "elite"
       verification_status: "pending" | "approved" | "rejected"
     }
@@ -491,6 +545,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      job_request_status: ["open", "assigned", "closed", "cancelled"],
       subscription_plan: ["basic", "premium", "elite"],
       verification_status: ["pending", "approved", "rejected"],
     },

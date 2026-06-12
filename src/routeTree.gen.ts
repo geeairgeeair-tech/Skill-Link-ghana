@@ -17,10 +17,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkersIdRouteImport } from './routes/workers.$id'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
 import { Route as AuthenticatedWorkerSubscriptionRouteImport } from './routes/_authenticated/worker.subscription'
 import { Route as AuthenticatedWorkerOnboardingRouteImport } from './routes/_authenticated/worker.onboarding'
 import { Route as AuthenticatedWorkerJobsRouteImport } from './routes/_authenticated/worker.jobs'
 import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_authenticated/worker.dashboard'
+import { Route as AuthenticatedJobsNewRouteImport } from './routes/_authenticated/jobs.new'
+import { Route as AuthenticatedJobsIdRouteImport } from './routes/_authenticated/jobs.$id'
 import { Route as AuthenticatedChatBookingIdRouteImport } from './routes/_authenticated/chat.$bookingId'
 import { Route as AuthenticatedBookWorkerIdRouteImport } from './routes/_authenticated/book.$workerId'
 
@@ -63,6 +66,11 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedJobsIndexRoute = AuthenticatedJobsIndexRouteImport.update({
+  id: '/jobs/',
+  path: '/jobs/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedWorkerSubscriptionRoute =
   AuthenticatedWorkerSubscriptionRouteImport.update({
     id: '/worker/subscription',
@@ -86,6 +94,16 @@ const AuthenticatedWorkerDashboardRoute =
     path: '/worker/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedJobsNewRoute = AuthenticatedJobsNewRouteImport.update({
+  id: '/jobs/new',
+  path: '/jobs/new',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedJobsIdRoute = AuthenticatedJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedChatBookingIdRoute =
   AuthenticatedChatBookingIdRouteImport.update({
     id: '/chat/$bookingId',
@@ -109,10 +127,13 @@ export interface FileRoutesByFullPath {
   '/workers/$id': typeof WorkersIdRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
+  '/jobs/$id': typeof AuthenticatedJobsIdRoute
+  '/jobs/new': typeof AuthenticatedJobsNewRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
+  '/jobs/': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -124,10 +145,13 @@ export interface FileRoutesByTo {
   '/workers/$id': typeof WorkersIdRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
+  '/jobs/$id': typeof AuthenticatedJobsIdRoute
+  '/jobs/new': typeof AuthenticatedJobsNewRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
+  '/jobs': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -141,10 +165,13 @@ export interface FileRoutesById {
   '/workers/$id': typeof WorkersIdRoute
   '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/_authenticated/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
+  '/_authenticated/jobs/$id': typeof AuthenticatedJobsIdRoute
+  '/_authenticated/jobs/new': typeof AuthenticatedJobsNewRoute
   '/_authenticated/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/_authenticated/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/_authenticated/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
+  '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -158,10 +185,13 @@ export interface FileRouteTypes {
     | '/workers/$id'
     | '/book/$workerId'
     | '/chat/$bookingId'
+    | '/jobs/$id'
+    | '/jobs/new'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
     | '/worker/subscription'
+    | '/jobs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -173,10 +203,13 @@ export interface FileRouteTypes {
     | '/workers/$id'
     | '/book/$workerId'
     | '/chat/$bookingId'
+    | '/jobs/$id'
+    | '/jobs/new'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
     | '/worker/subscription'
+    | '/jobs'
   id:
     | '__root__'
     | '/'
@@ -189,10 +222,13 @@ export interface FileRouteTypes {
     | '/workers/$id'
     | '/_authenticated/book/$workerId'
     | '/_authenticated/chat/$bookingId'
+    | '/_authenticated/jobs/$id'
+    | '/_authenticated/jobs/new'
     | '/_authenticated/worker/dashboard'
     | '/_authenticated/worker/jobs'
     | '/_authenticated/worker/onboarding'
     | '/_authenticated/worker/subscription'
+    | '/_authenticated/jobs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -261,6 +297,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jobs/': {
+      id: '/_authenticated/jobs/'
+      path: '/jobs'
+      fullPath: '/jobs/'
+      preLoaderRoute: typeof AuthenticatedJobsIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/worker/subscription': {
       id: '/_authenticated/worker/subscription'
       path: '/worker/subscription'
@@ -289,6 +332,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkerDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jobs/new': {
+      id: '/_authenticated/jobs/new'
+      path: '/jobs/new'
+      fullPath: '/jobs/new'
+      preLoaderRoute: typeof AuthenticatedJobsNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/jobs/$id': {
+      id: '/_authenticated/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/jobs/$id'
+      preLoaderRoute: typeof AuthenticatedJobsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chat/$bookingId': {
       id: '/_authenticated/chat/$bookingId'
       path: '/chat/$bookingId'
@@ -311,10 +368,13 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedBookWorkerIdRoute: typeof AuthenticatedBookWorkerIdRoute
   AuthenticatedChatBookingIdRoute: typeof AuthenticatedChatBookingIdRoute
+  AuthenticatedJobsIdRoute: typeof AuthenticatedJobsIdRoute
+  AuthenticatedJobsNewRoute: typeof AuthenticatedJobsNewRoute
   AuthenticatedWorkerDashboardRoute: typeof AuthenticatedWorkerDashboardRoute
   AuthenticatedWorkerJobsRoute: typeof AuthenticatedWorkerJobsRoute
   AuthenticatedWorkerOnboardingRoute: typeof AuthenticatedWorkerOnboardingRoute
   AuthenticatedWorkerSubscriptionRoute: typeof AuthenticatedWorkerSubscriptionRoute
+  AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -322,10 +382,13 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedBookWorkerIdRoute: AuthenticatedBookWorkerIdRoute,
   AuthenticatedChatBookingIdRoute: AuthenticatedChatBookingIdRoute,
+  AuthenticatedJobsIdRoute: AuthenticatedJobsIdRoute,
+  AuthenticatedJobsNewRoute: AuthenticatedJobsNewRoute,
   AuthenticatedWorkerDashboardRoute: AuthenticatedWorkerDashboardRoute,
   AuthenticatedWorkerJobsRoute: AuthenticatedWorkerJobsRoute,
   AuthenticatedWorkerOnboardingRoute: AuthenticatedWorkerOnboardingRoute,
   AuthenticatedWorkerSubscriptionRoute: AuthenticatedWorkerSubscriptionRoute,
+  AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

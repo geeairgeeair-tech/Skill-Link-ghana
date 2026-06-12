@@ -58,6 +58,11 @@ function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
   const { user, role } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (role === "worker") navigate({ to: "/worker/dashboard" });
+  }, [role, navigate]);
 
   return (
     <AppShell>
@@ -75,13 +80,21 @@ function Home() {
             )}
           </div>
           <h2 className="text-3xl font-extrabold leading-tight">Find trusted pros near you.</h2>
-          <p className="mt-1 text-primary-foreground/80">Verified electricians, plumbers, carpenters & more across Accra.</p>
+          <p className="mt-1 text-primary-foreground/80">Verified electricians, plumbers, carpenters, pool builders & more across Ghana.</p>
           <Link
             to="/workers"
             className="mt-5 flex items-center gap-3 rounded-2xl bg-card text-foreground px-4 py-3.5 shadow-elevated"
           >
             <Search className="size-5 text-muted-foreground" />
             <span className="text-muted-foreground">Search by skill, name, or area…</span>
+          </Link>
+          <Link
+            to="/jobs/new"
+            className="mt-3 flex items-center gap-2 rounded-2xl bg-gold text-gold-foreground px-4 py-3 shadow-elevated font-semibold"
+          >
+            <Camera className="size-5" />
+            <span className="text-sm">Post a job with photos or video</span>
+            <ArrowRight className="size-4 ml-auto" />
           </Link>
           <div className="mt-4 flex items-center gap-2 text-xs text-primary-foreground/80">
             <ShieldCheck className="size-4 text-gold" /> Ghana Card verified
@@ -90,6 +103,7 @@ function Home() {
           </div>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-md px-5 py-6 space-y-8">
         <section>

@@ -389,6 +389,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_worker_identity: {
+        Args: { _user_id: string }
+        Returns: {
+          ghana_card_number: string
+          ghana_card_url: string
+          selfie_url: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

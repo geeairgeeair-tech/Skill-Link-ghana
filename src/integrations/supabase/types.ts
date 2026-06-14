@@ -386,7 +386,89 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      workers_public: {
+        Row: {
+          bio: string | null
+          callout_fee: number | null
+          category_id: string | null
+          city: string | null
+          created_at: string | null
+          hourly_rate: number | null
+          is_available: boolean | null
+          is_featured: boolean | null
+          jobs_completed: number | null
+          portfolio_images: Json | null
+          rating: number | null
+          reviews_count: number | null
+          service_area: string | null
+          starting_price: number | null
+          subscription_expires_at: string | null
+          unavailable_note: string | null
+          updated_at: string | null
+          user_id: string | null
+          verification_status:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          callout_fee?: number | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string | null
+          hourly_rate?: number | null
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          jobs_completed?: number | null
+          portfolio_images?: Json | null
+          rating?: number | null
+          reviews_count?: number | null
+          service_area?: string | null
+          starting_price?: number | null
+          subscription_expires_at?: string | null
+          unavailable_note?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          callout_fee?: number | null
+          category_id?: string | null
+          city?: string | null
+          created_at?: string | null
+          hourly_rate?: number | null
+          is_available?: boolean | null
+          is_featured?: boolean | null
+          jobs_completed?: number | null
+          portfolio_images?: Json | null
+          rating?: number | null
+          reviews_count?: number | null
+          service_area?: string | null
+          starting_price?: number | null
+          subscription_expires_at?: string | null
+          unavailable_note?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verification_status?:
+            | Database["public"]["Enums"]["verification_status"]
+            | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_profiles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_worker_identity: {

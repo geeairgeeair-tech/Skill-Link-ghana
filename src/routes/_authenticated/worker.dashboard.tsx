@@ -16,7 +16,7 @@ function WorkerDashboard() {
   const { data: wp } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("worker_profiles").select("*").eq("user_id", user!.id).maybeSingle()).data,
+    queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
   });
   const { data: bookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],

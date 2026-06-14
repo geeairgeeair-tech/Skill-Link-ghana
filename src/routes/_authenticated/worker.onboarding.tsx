@@ -27,11 +27,12 @@ function Onboarding() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase.from("worker_profiles").select("*").eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase.from("worker_profiles").select("category_id, bio, years_experience, service_area, hourly_rate, callout_fee, starting_price").eq("user_id", user.id).maybeSingle();
+      const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user.id });
       if (data) setForm({
         category_id: data.category_id ?? "", bio: data.bio ?? "",
         years_experience: data.years_experience ?? 0,
-        ghana_card_number: data.ghana_card_number ?? "",
+        ghana_card_number: (ident as any)?.[0]?.ghana_card_number ?? "",
         service_area: data.service_area ?? "Accra",
         hourly_rate: data.hourly_rate ?? 50,
         callout_fee: data.callout_fee ?? 30,

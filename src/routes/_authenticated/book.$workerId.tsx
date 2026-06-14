@@ -21,7 +21,7 @@ function BookPage() {
 
   const { data: w } = useQuery({
     queryKey: ["book-worker", workerId],
-    queryFn: async () => (await supabase.from("worker_profiles").select("*, profiles!worker_profiles_user_id_fkey(full_name), categories(name,id)").eq("user_id", workerId).maybeSingle()).data,
+    queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, hourly_rate, callout_fee, starting_price, service_area, city, profiles!worker_profiles_user_id_fkey(full_name), categories(name,id)").eq("user_id", workerId).maybeSingle()).data,
   });
 
   const submit = async (e: React.FormEvent) => {

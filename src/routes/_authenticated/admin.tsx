@@ -16,7 +16,17 @@ function AdminPage() {
   const { data: pending } = useQuery({
     queryKey: ["admin-pending"],
     enabled: role === "admin",
-    queryFn: async () => (await supabase.from("worker_profiles").select("*, profiles!worker_profiles_user_id_fkey(full_name, phone), categories(name)").eq("verification_status","pending")).data ?? [],
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("worker_profiles")
+        .select("user_id, years_experience, bio, profiles!worker_profiles_user_id_fkey(full_name, phone), categories(name)")
+        .eq("verification_status","pending");
+      const enriched = await Promise.all((rows ?? []).map(async (r: any) => {
+        const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: r.user_id });
+        return { ...r, ghana_card_number: (ident as any)?.[0]?.ghana_card_number ?? null };
+      }));
+      return enriched;
+    },
   });
   const { data: stats } = useQuery({
     queryKey: ["admin-stats"],

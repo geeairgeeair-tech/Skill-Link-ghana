@@ -19,7 +19,7 @@ function WorkerDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
-        .select("*, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url, phone, city)")
+        .select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, verification_status, subscription_expires_at, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url, phone, city)")
         .eq("user_id", id).maybeSingle();
       return data;
     },

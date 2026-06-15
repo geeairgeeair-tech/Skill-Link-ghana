@@ -13,7 +13,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "Sign in — FixIt Ghana" }] }),
+  head: () => ({ meta: [{ title: "Sign in — Skill Link" }] }),
   component: AuthPage,
 });
 
@@ -69,7 +69,7 @@ function AuthPage() {
         </Link>
         <div className="flex items-center gap-2 mb-2">
           <div className="size-10 rounded-xl bg-primary text-primary-foreground grid place-items-center font-extrabold">F</div>
-          <h1 className="font-display text-2xl font-extrabold">FixIt Ghana</h1>
+          <h1 className="font-display text-2xl font-extrabold">Skill Link</h1>
         </div>
         <p className="text-muted-foreground mb-6">
           {mode === "login" ? "Welcome back. Sign in to continue." : "Create your account in seconds."}

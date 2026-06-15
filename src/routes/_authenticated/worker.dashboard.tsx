@@ -83,11 +83,11 @@ function WorkerDashboard() {
           <div className="rounded-2xl bg-card border border-border p-4 flex items-center justify-between">
             <div className="min-w-0 pr-3">
               <p className="font-display font-bold flex items-center gap-2">
-                <span className={`size-2.5 rounded-full ${available ? "bg-success" : "bg-muted-foreground/50"}`} />
-                {available ? "Available" : "Unavailable"}
+                <span className={`size-2.5 rounded-full ${available ? "bg-success animate-pulse" : "bg-muted-foreground/50"}`} />
+                {available ? "Active" : "Unavailable"}
               </p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {available ? "Customers can see and book you." : "You're hidden from search until you turn this on."}
+                {available ? "Customers can see and book you right now." : "You're hidden from search until you turn this back on."}
               </p>
             </div>
             <button

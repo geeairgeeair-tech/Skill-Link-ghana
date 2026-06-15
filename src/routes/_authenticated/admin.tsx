@@ -173,9 +173,11 @@ function PendingRow({ w, decide, signedUrl }: any) {
       <p className="text-xs text-muted-foreground">📞 {w.profiles?.phone} · ID: {w.ghana_card_number ?? "—"}</p>
       {w.bio && <p className="text-sm mt-1">{w.bio}</p>}
       <div className="flex gap-2 mt-2 flex-wrap">
-        <button onClick={loadDocs} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold">
-          <FileText className="size-3" /> View documents
-        </button>
+        {(w.ghana_card_url || w.selfie_url) && (
+          <button onClick={loadDocs} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold">
+            <FileText className="size-3" /> View documents
+          </button>
+        )}
         <button onClick={() => decide(w.user_id, "approved")} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-success text-success-foreground text-xs font-semibold"><BadgeCheck className="size-3" /> Approve</button>
         <button onClick={() => decide(w.user_id, "rejected")} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-destructive text-destructive-foreground text-xs font-semibold"><X className="size-3" /> Reject</button>
       </div>

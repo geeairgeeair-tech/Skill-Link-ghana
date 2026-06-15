@@ -43,7 +43,7 @@ const featuredQuery = queryOptions({
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "FixIt Ghana — Find Trusted Skilled Workers" },
+      { title: "Skill Link — Find Trusted Skilled Workers" },
       { name: "description", content: "Book verified electricians, plumbers, carpenters, painters and AC technicians across Accra." },
     ],
   }),
@@ -71,7 +71,7 @@ function Home() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <div className="size-9 rounded-lg bg-gold text-gold-foreground grid place-items-center font-extrabold">F</div>
-              <h1 className="font-display text-lg font-extrabold">FixIt Ghana</h1>
+              <h1 className="font-display text-lg font-extrabold">Skill Link</h1>
             </div>
             {!user ? (
               <Link to="/auth" className="text-sm font-semibold underline">Sign in</Link>

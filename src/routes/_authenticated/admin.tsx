@@ -56,7 +56,7 @@ function AdminPage() {
     <AppShell>
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
         <h1 className="font-display text-2xl font-bold">Admin</h1>
-        <p className="text-sm opacity-80">FixIt Ghana operations</p>
+        <p className="text-sm opacity-80">Skill Link operations</p>
       </header>
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
         <div className="grid grid-cols-3 gap-2">

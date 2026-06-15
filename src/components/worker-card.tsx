@@ -47,7 +47,7 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
               </span>
             )}
             <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${available ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-              {available ? "Available" : "Unavailable"}
+              {available ? "Active" : "Unavailable"}
             </span>
           </div>
           <p className="text-sm text-muted-foreground truncate">{w.category_name ?? "Pro"}</p>

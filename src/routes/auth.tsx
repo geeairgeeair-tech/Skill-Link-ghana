@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { ArrowLeft, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),

@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAuth } from "@/hooks/use-auth";
+import { BrandLogo } from "@/components/brand-logo";
 
 
 const categoriesQuery = queryOptions({

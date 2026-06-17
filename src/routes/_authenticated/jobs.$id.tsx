@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Phone, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
+import { LocationMap } from "@/components/location-map";
 
 export const Route = createFileRoute("/_authenticated/jobs/$id")({
   component: JobDetail,
@@ -68,6 +69,11 @@ function JobDetail() {
             )}
           </section>
         )}
+
+        <section className="rounded-2xl bg-card border border-border p-4">
+          <h3 className="font-display font-bold mb-2 text-sm">Location</h3>
+          <LocationMap area={(job as any).city ?? cust?.city} height={160} />
+        </section>
 
         <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
           <div className="size-12 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold">

@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAuth } from "@/hooks/use-auth";
+import { BrandLogo } from "@/components/brand-logo";
 
 
 const categoriesQuery = queryOptions({
@@ -69,10 +70,8 @@ function Home() {
       <header className="fg-gradient-hero text-primary-foreground pb-8 pt-6 px-5 rounded-b-3xl">
         <div className="mx-auto max-w-md">
           <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-2">
-              <div className="size-9 rounded-lg bg-gold text-gold-foreground grid place-items-center font-extrabold">F</div>
-              <h1 className="font-display text-lg font-extrabold">Skill Link</h1>
-            </div>
+            <BrandLogo size={34} textClassName="text-lg text-primary-foreground" />
+
             {!user ? (
               <Link to="/auth" className="text-sm font-semibold underline">Sign in</Link>
             ) : (

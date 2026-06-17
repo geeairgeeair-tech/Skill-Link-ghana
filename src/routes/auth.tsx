@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { ArrowLeft, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
 
 const searchSchema = z.object({
   mode: z.enum(["login", "signup"]).optional().default("login"),
@@ -67,10 +68,8 @@ function AuthPage() {
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-6">
           <ArrowLeft className="size-4" /> Back
         </Link>
-        <div className="flex items-center gap-2 mb-2">
-          <div className="size-10 rounded-xl bg-primary text-primary-foreground grid place-items-center font-extrabold">F</div>
-          <h1 className="font-display text-2xl font-extrabold">Skill Link</h1>
-        </div>
+        <BrandLogo size={42} textClassName="text-2xl text-foreground" className="mb-2 text-primary" />
+
         <p className="text-muted-foreground mb-6">
           {mode === "login" ? "Welcome back. Sign in to continue." : "Create your account in seconds."}
         </p>

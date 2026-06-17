@@ -4,6 +4,7 @@ import { ArrowLeft, BadgeCheck, MapPin, Phone, MessageCircle, Calendar } from "l
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/star-rating";
 import { useAuth } from "@/hooks/use-auth";
+import { LocationMap } from "@/components/location-map";
 
 export const Route = createFileRoute("/workers/$id")({
   component: WorkerDetail,
@@ -75,6 +76,11 @@ function WorkerDetail() {
             <p className="text-sm leading-relaxed">{(w as any).bio}</p>
           </Section>
         )}
+
+        <Section title="Service area">
+          <LocationMap area={(w as any).service_area ?? p?.city} height={180} />
+          <p className="mt-2 text-xs text-muted-foreground inline-flex items-center gap-1"><MapPin className="size-3"/> {(w as any).service_area ?? "Ghana"}</p>
+        </Section>
 
         <Section title="Pricing">
           <div className="grid grid-cols-2 gap-2 text-sm">

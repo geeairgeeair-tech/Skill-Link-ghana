@@ -58,7 +58,7 @@ function JobDetail() {
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
-          {(job as any).address && <p className="mt-3 text-xs text-muted-foreground">📍 {(job as any).address}</p>}
+          {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}
         </div>
 
         {media.length > 0 && (

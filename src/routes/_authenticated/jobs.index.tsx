@@ -23,7 +23,7 @@ function JobsBoard() {
     queryKey: ["job-requests", category],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("*, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status","open")
         .order("created_at", { ascending: false })
         .limit(50);

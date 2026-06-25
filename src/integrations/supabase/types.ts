@@ -471,6 +471,7 @@ export type Database = {
       }
     }
     Functions: {
+      get_job_request_address: { Args: { _id: string }; Returns: string }
       get_worker_identity: {
         Args: { _user_id: string }
         Returns: {

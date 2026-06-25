@@ -28,8 +28,13 @@ function JobDetail() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("*, categories(name), profiles!job_requests_customer_id_fkey(full_name, phone, city, avatar_url)")
+      .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name), profiles!job_requests_customer_id_fkey(full_name, phone, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
+  });
+  const { data: jobAddress } = useQuery({
+    queryKey: ["job-request-address", id, user?.id],
+    enabled: !!user && !!job && (job as any).customer_id === user.id,
+    queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
@@ -53,7 +58,7 @@ function JobDetail() {
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
-          {(job as any).address && <p className="mt-3 text-xs text-muted-foreground">📍 {(job as any).address}</p>}
+          {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}
         </div>
 
         {media.length > 0 && (

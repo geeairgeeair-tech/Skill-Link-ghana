@@ -20,7 +20,7 @@ function WorkerDetail() {
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
-        .select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, verification_status, subscription_expires_at, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url, phone, city)")
+        .select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, verification_status, subscription_expires_at, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url, city)")
         .eq("user_id", id).maybeSingle();
       return data;
     },
@@ -29,11 +29,16 @@ function WorkerDetail() {
     queryKey: ["reviews", id],
     queryFn: async () => (await supabase.from("reviews").select("*, profiles!reviews_customer_id_fkey(full_name, avatar_url)").eq("worker_id", id).order("created_at",{ascending:false}).limit(10)).data ?? [],
   });
+  const { data: contact } = useQuery({
+    queryKey: ["profile-contact", id, user?.id],
+    enabled: !!user && !!id,
+    queryFn: async () => (await supabase.rpc("get_profile_contact", { _id: id })).data as any,
+  });
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (!w) return <div className="p-8 text-center"><p>Worker not found.</p><Link to="/workers" className="text-primary font-semibold">Back to browse</Link></div>;
 
-  const p: any = (w as any).profiles;
+  const p: any = { ...(w as any).profiles, phone: (contact as any)?.[0]?.phone };
   return (
     <div className="min-h-screen bg-background pb-32">
       <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-20 rounded-b-3xl">

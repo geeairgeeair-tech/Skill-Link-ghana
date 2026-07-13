@@ -19,8 +19,12 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("*").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) { setName(data.full_name ?? ""); setPhone(data.phone ?? ""); setAddress(data.address ?? ""); }
+    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data) setName(data.full_name ?? "");
+    });
+    supabase.rpc("get_profile_contact", { _id: user.id }).then(({ data }) => {
+      const c = (data as any)?.[0];
+      if (c) { setPhone(c.phone ?? ""); setAddress(c.address ?? ""); }
     });
   }, [user?.id]);
 

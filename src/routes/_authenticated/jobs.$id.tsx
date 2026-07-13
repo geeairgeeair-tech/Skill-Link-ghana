@@ -28,7 +28,7 @@ function JobDetail() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name), profiles!job_requests_customer_id_fkey(full_name, phone, city, avatar_url)")
+      .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
   });
   const { data: jobAddress } = useQuery({
@@ -36,13 +36,18 @@ function JobDetail() {
     enabled: !!user && !!job && (job as any).customer_id === user.id,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
+  const { data: custContact } = useQuery({
+    queryKey: ["profile-contact", (job as any)?.customer_id, user?.id],
+    enabled: !!user && !!job && role === "worker" && user.id !== (job as any).customer_id,
+    queryFn: async () => (await supabase.rpc("get_profile_contact", { _id: (job as any).customer_id })).data as any,
+  });
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
   const cust = (job as any).profiles;
-  const phone = cust?.phone;
+  const phone = (custContact as any)?.[0]?.phone ?? null;
 
   return (
     <div className="min-h-screen bg-background pb-28">

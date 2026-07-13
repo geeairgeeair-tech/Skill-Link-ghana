@@ -24,13 +24,15 @@ function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("worker_profiles")
-        .select("user_id, years_experience, bio, service_area, city, profiles!worker_profiles_user_id_fkey(full_name, phone, avatar_url), categories(name)")
+        .select("user_id, years_experience, bio, service_area, city, profiles!worker_profiles_user_id_fkey(full_name, avatar_url), categories(name)")
         .eq("verification_status", "pending")
         .order("created_at", { ascending: false });
       const enriched = await Promise.all((rows ?? []).map(async (r: any) => {
         const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: r.user_id });
+        const { data: contact } = await supabase.rpc("get_profile_contact", { _id: r.user_id });
         const i = (ident as any)?.[0] ?? {};
-        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url };
+        const c = (contact as any)?.[0] ?? {};
+        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url, profiles: { ...(r.profiles ?? {}), phone: c.phone } };
       }));
       return enriched;
     },
@@ -41,7 +43,7 @@ function AdminPage() {
     enabled: role === "admin" && tab === "all-workers",
     queryFn: async () => (await supabase
       .from("worker_profiles")
-      .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, profiles!worker_profiles_user_id_fkey(full_name, phone), categories(name)")
+      .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, profiles!worker_profiles_user_id_fkey(full_name), categories(name)")
       .order("created_at", { ascending: false })).data ?? [],
   });
 

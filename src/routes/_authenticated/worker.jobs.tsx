@@ -15,7 +15,7 @@ function JobsPage() {
   const { data } = useQuery({
     queryKey: ["worker-jobs", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("bookings").select("*, profiles!bookings_customer_id_fkey(full_name, phone)").eq("worker_id", user!.id).order("created_at",{ascending:false})).data ?? [],
+    queryFn: async () => (await supabase.from("bookings").select("*, profiles!bookings_customer_id_fkey(full_name)").eq("worker_id", user!.id).order("created_at",{ascending:false})).data ?? [],
   });
 
   const updateStatus = async (id: string, status: string) => {

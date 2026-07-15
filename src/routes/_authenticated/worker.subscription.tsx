@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { BackButton } from "@/components/back-button";
 
 export const Route = createFileRoute("/_authenticated/worker/subscription")({
   component: SubscriptionPage,

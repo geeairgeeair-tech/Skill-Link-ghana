@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { BackButton } from "@/components/back-button";
 
 export const Route = createFileRoute("/_authenticated/worker/onboarding")({
   component: Onboarding,

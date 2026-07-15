@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -95,7 +96,7 @@ function NewJobPage() {
     <div className="min-h-screen bg-background pb-10">
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6 rounded-b-3xl">
         <div className="mx-auto max-w-md">
-          <Link to="/jobs" className="inline-flex items-center gap-1 text-sm mb-3"><ArrowLeft className="size-4"/> Back to board</Link>
+          <div className="mb-3"><BackButton fallback="/jobs" /></div>
           <h1 className="font-display text-2xl font-bold">Post a job</h1>
           <p className="text-sm opacity-80">Add photos or a short video so workers know what you need.</p>
         </div>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, BadgeCheck, MapPin, Phone, MessageCircle, Calendar } from "lucide-react";
+import { BadgeCheck, MapPin, Phone, MessageCircle, Calendar } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/star-rating";
 import { useAuth } from "@/hooks/use-auth";
@@ -42,7 +43,7 @@ function WorkerDetail() {
   return (
     <div className="min-h-screen bg-background pb-32">
       <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-20 rounded-b-3xl">
-        <Link to="/workers" className="inline-flex items-center gap-1 text-sm mb-4"><ArrowLeft className="size-4"/> Back</Link>
+        <div className="mb-4"><BackButton fallback="/workers" className="text-primary-foreground/90 hover:text-primary-foreground" /></div>
       </div>
       <div className="mx-auto max-w-md px-5 -mt-16">
         <div className="rounded-2xl bg-card border border-border shadow-elevated p-5">

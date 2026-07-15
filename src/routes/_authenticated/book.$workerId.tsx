@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -46,7 +46,7 @@ function BookPage() {
   return (
     <div className="min-h-screen bg-background pb-12">
       <header className="px-5 pt-5 pb-4">
-        <Link to="/workers/$id" params={{ id: workerId }} className="inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="size-4"/> Back</Link>
+        <BackButton fallback="/workers" />
         <h1 className="font-display text-2xl font-bold mt-2">Book {(w as any)?.profiles?.full_name ?? "Pro"}</h1>
         <p className="text-sm text-muted-foreground">{(w as any)?.categories?.name}</p>
       </header>

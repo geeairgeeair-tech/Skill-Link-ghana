@@ -58,7 +58,8 @@ function Onboarding() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
+      <header className="fg-gradient-hero text-primary-foreground px-5 pt-4 pb-8 rounded-b-3xl">
+        <BackButton fallback="/profile" className="text-primary-foreground/90 hover:text-primary-foreground mb-2" />
         <h1 className="font-display text-2xl font-bold">Worker setup</h1>
         <p className="text-sm opacity-80">Complete your verification</p>
       </header>

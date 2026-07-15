@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { BackButton } from "@/components/back-button";
 
 export const Route = createFileRoute("/_authenticated/worker/subscription")({
   component: SubscriptionPage,
@@ -36,7 +37,8 @@ function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-background pb-12">
-      <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
+      <header className="fg-gradient-hero text-primary-foreground px-5 pt-4 pb-8 rounded-b-3xl">
+        <BackButton fallback="/worker/dashboard" className="text-primary-foreground/90 hover:text-primary-foreground mb-2" />
         <h1 className="font-display text-2xl font-bold">Subscription</h1>
         <p className="text-sm opacity-80">Choose a plan to receive bookings</p>
       </header>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Phone, MessageCircle } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
@@ -52,7 +53,7 @@ function JobDetail() {
   return (
     <div className="min-h-screen bg-background pb-28">
       <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6">
-        <Link to="/jobs" className="inline-flex items-center gap-1 text-sm"><ArrowLeft className="size-4"/> Back to board</Link>
+        <BackButton fallback="/jobs" />
       </div>
       <main className="mx-auto max-w-md px-5 -mt-3 space-y-4">
         <div className="rounded-2xl bg-card border border-border p-5 shadow-elevated">

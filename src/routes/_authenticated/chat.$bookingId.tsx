@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Send } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -54,7 +55,7 @@ function ChatPage() {
     <div className="min-h-screen flex flex-col bg-background">
       <header className="sticky top-0 z-30 bg-card/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-md px-4 py-3 flex items-center gap-3">
-          <Link to="/bookings" className="size-9 grid place-items-center rounded-full bg-muted"><ArrowLeft className="size-4"/></Link>
+          <BackButton fallback="/bookings" label="" />
           <div className="min-w-0">
             <p className="font-semibold truncate">{other ?? "Chat"}</p>
             <p className="text-xs text-muted-foreground truncate">{(booking as any)?.description ?? "Booking chat"}</p>

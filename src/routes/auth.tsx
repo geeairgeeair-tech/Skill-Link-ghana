@@ -29,12 +29,29 @@ function AuthPage() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const redirectByRole = async (userId: string, fallbackRole?: "customer" | "worker") => {
+    let resolved: "admin" | "worker" | "customer" | null = null;
+    try {
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+      const roles = (data ?? []).map((r: any) => r.role as string);
+      if (roles.includes("admin")) resolved = "admin";
+      else if (roles.includes("worker")) resolved = "worker";
+      else if (roles.includes("customer")) resolved = "customer";
+    } catch {
+      // user_roles table may not exist yet — fall through
+    }
+    const effective = resolved ?? fallbackRole ?? "customer";
+    if (effective === "admin") navigate({ to: "/admin" });
+    else if (effective === "worker") navigate({ to: resolved ? "/worker/dashboard" : "/worker/onboarding" });
+    else navigate({ to: "/" });
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
       if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
             emailRedirectTo: window.location.origin,
@@ -42,16 +59,22 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        if (!data.session) {
+          toast.success("Check your email to confirm your account.");
+          setMode("login");
+          return;
+        }
         toast.success("Account created!");
-        navigate({ to: role === "worker" ? "/worker/onboarding" : "/" });
+        await redirectByRole(data.user!.id, role);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Welcome back!");
-        navigate({ to: "/" });
+        await redirectByRole(data.user.id);
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Something went wrong");
+      const msg = err?.message ?? "Something went wrong";
+      toast.error(msg.includes("Invalid login") ? "Invalid email or password" : msg);
     } finally {
       setLoading(false);
     }

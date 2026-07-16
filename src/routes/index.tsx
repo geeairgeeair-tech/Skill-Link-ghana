@@ -38,6 +38,8 @@ const featuredQuery = queryOptions({
       rating: w.rating, reviews_count: w.reviews_count,
       starting_price: w.starting_price, is_featured: w.is_featured,
       jobs_completed: w.jobs_completed,
+      is_available: w.is_available,
+      years_experience: w.years_experience,
     }));
   },
 });

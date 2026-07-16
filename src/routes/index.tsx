@@ -24,7 +24,8 @@ const featuredQuery = queryOptions({
   queryFn: async (): Promise<WorkerCardData[]> => {
     const { data, error } = await supabase
       .from("worker_profiles")
-      .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
+      .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
+      .order("is_featured", { ascending: false })
       .order("rating", { ascending: false })
       .limit(6);
     if (error) return [];

@@ -41,8 +41,9 @@ function WorkersPage() {
   const category = search.category || undefined;
   const sort = (SORTS.includes(search.sort as SortKey) ? search.sort : "rating") as SortKey;
 
-  const setSearch = (patch: Partial<z.infer<typeof searchSchema>>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
+  type SearchState = z.infer<typeof searchSchema>;
+  const setSearch = (patch: Partial<SearchState>) =>
+    navigate({ search: (prev: SearchState) => ({ ...prev, ...patch }) });
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],

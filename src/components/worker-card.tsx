@@ -15,6 +15,7 @@ export interface WorkerCardData {
   is_featured?: boolean | null;
   jobs_completed?: number | null;
   is_available?: boolean | null;
+  years_experience?: number | null;
 }
 
 export function WorkerCard({ w }: { w: WorkerCardData }) {

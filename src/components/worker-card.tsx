@@ -59,11 +59,13 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
               {w.service_area ?? w.city ?? "Accra"}
             </span>
           </div>
-          <div className="mt-1 text-sm">
+          <div className="mt-1 flex items-center justify-between gap-2 text-sm">
             <span className="font-semibold text-primary">From GH₵{w.starting_price ?? 0}</span>
-            {w.jobs_completed ? (
-              <span className="text-muted-foreground"> · {w.jobs_completed} jobs</span>
-            ) : null}
+            <span className="text-[11px] text-muted-foreground">
+              {w.years_experience ? `${w.years_experience}y exp` : null}
+              {w.years_experience && w.jobs_completed ? " · " : null}
+              {w.jobs_completed ? `${w.jobs_completed} jobs` : null}
+            </span>
           </div>
         </div>
       </div>

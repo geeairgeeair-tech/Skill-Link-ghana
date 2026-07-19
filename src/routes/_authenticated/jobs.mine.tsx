@@ -45,8 +45,10 @@ function MyJobPosts() {
 
   return (
     <AppShell>
-      <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
-        <div className="mx-auto max-w-md flex items-center justify-between">
+      <header className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-8 rounded-b-3xl">
+        <div className="mx-auto max-w-md">
+          <div className="mb-2"><BackButton fallback="/" className="text-primary-foreground/90 hover:text-primary-foreground" /></div>
+          <div className="flex items-center justify-between">
           <div>
             <h1 className="font-display text-2xl font-bold">My job posts</h1>
             <p className="text-sm opacity-80">Track and manage jobs you've posted.</p>

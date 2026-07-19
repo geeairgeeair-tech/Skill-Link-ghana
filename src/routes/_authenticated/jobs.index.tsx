@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, MapPin, Image as ImageIcon, Video } from "lucide-react";
+import { Plus, MapPin, Image as ImageIcon, Video, Zap, AlertTriangle, ListChecks } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,8 +23,9 @@ function JobsBoard() {
     queryKey: ["job-requests", category],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, status, urgency, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status","open")
+        .order("urgency", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(50);
       if (category) {
@@ -46,9 +47,14 @@ function JobsBoard() {
             </p>
           </div>
           {role !== "worker" && (
-            <Link to="/jobs/new" className="size-11 grid place-items-center rounded-full bg-gold text-gold-foreground shadow-elevated" aria-label="Post a job">
-              <Plus className="size-5"/>
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link to="/jobs/mine" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1" aria-label="My posts">
+                <ListChecks className="size-4"/> My posts
+              </Link>
+              <Link to="/jobs/new" className="size-11 grid place-items-center rounded-full bg-gold text-gold-foreground shadow-elevated" aria-label="Post a job">
+                <Plus className="size-5"/>
+              </Link>
+            </div>
           )}
         </div>
       </header>
@@ -86,7 +92,9 @@ function JobsBoard() {
                   </div>
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {j.urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
+                    {j.urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
                     <p className="font-semibold truncate">{j.title}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{j.categories?.name ?? "General"}</p>

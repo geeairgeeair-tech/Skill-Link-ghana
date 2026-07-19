@@ -104,10 +104,15 @@ export type Database = {
           customer_id: string
           description: string
           id: string
+          lat: number | null
+          lng: number | null
           media: Json
+          preferred_at: string | null
+          service_area: string | null
           status: Database["public"]["Enums"]["job_request_status"]
           title: string
           updated_at: string
+          urgency: Database["public"]["Enums"]["job_urgency"]
         }
         Insert: {
           address?: string | null
@@ -118,10 +123,15 @@ export type Database = {
           customer_id: string
           description: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           media?: Json
+          preferred_at?: string | null
+          service_area?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title: string
           updated_at?: string
+          urgency?: Database["public"]["Enums"]["job_urgency"]
         }
         Update: {
           address?: string | null
@@ -132,10 +142,15 @@ export type Database = {
           customer_id?: string
           description?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           media?: Json
+          preferred_at?: string | null
+          service_area?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title?: string
           updated_at?: string
+          urgency?: Database["public"]["Enums"]["job_urgency"]
         }
         Relationships: [
           {
@@ -588,7 +603,15 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
-      job_request_status: "open" | "assigned" | "closed" | "cancelled"
+      job_request_status:
+        | "open"
+        | "assigned"
+        | "closed"
+        | "cancelled"
+        | "draft"
+        | "in_progress"
+        | "completed"
+      job_urgency: "normal" | "urgent" | "emergency"
       subscription_plan: "basic" | "premium" | "elite"
       verification_status: "pending" | "approved" | "rejected"
     }
@@ -727,7 +750,16 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
-      job_request_status: ["open", "assigned", "closed", "cancelled"],
+      job_request_status: [
+        "open",
+        "assigned",
+        "closed",
+        "cancelled",
+        "draft",
+        "in_progress",
+        "completed",
+      ],
+      job_urgency: ["normal", "urgent", "emergency"],
       subscription_plan: ["basic", "premium", "elite"],
       verification_status: ["pending", "approved", "rejected"],
     },

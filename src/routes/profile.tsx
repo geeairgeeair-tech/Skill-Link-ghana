@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, BadgeCheck, Wrench } from "lucide-react";
+import { LogOut, BadgeCheck, Wrench, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,

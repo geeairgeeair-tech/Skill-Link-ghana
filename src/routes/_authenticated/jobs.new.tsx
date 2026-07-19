@@ -147,7 +147,8 @@ function NewJobPage() {
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Job posted! Workers can see it now.");
-    navigate({ to: "/jobs/$id", params: { id: inserted!.id } });
+    setReview(false);
+    setPostedId(inserted!.id);
   };
 
   const catName = (cats ?? []).find(c => c.id === form.category_id)?.name;

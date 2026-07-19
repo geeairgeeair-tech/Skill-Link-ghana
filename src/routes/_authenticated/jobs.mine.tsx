@@ -56,6 +56,8 @@ function MyJobPosts() {
           <Link to="/jobs/new" className="size-11 grid place-items-center rounded-full bg-gold text-gold-foreground shadow-elevated" aria-label="Post a job">
             <Plus className="size-5"/>
           </Link>
+          </Link>
+          </div>
         </div>
       </header>
 

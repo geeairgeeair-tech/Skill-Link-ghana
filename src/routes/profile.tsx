@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, BadgeCheck, Wrench } from "lucide-react";
+import { LogOut, BadgeCheck, Wrench, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
@@ -64,6 +64,15 @@ function ProfilePage() {
           <Field label="Address"><input value={address} onChange={e=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
           <button onClick={save} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold">Save changes</button>
         </div>
+
+        {role === "customer" && (
+          <Link to="/jobs/mine" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="size-5 text-primary"/>
+              <div><p className="font-semibold">My Job Posts</p><p className="text-xs text-muted-foreground">Track jobs you've posted.</p></div>
+            </div>
+          </Link>
+        )}
 
         {role === "customer" && (
           <Link to="/worker/onboarding" className="block rounded-2xl bg-card border border-border p-4 shadow-card">

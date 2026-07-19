@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Upload, X, Loader2, MapPin, Camera, ArrowLeft, Zap, AlertTriangle } from "lucide-react";
+import { Upload, X, Loader2, MapPin, Camera, ArrowLeft, Zap, AlertTriangle, CheckCircle2, ClipboardList, Home } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -42,6 +42,7 @@ function NewJobPage() {
   const [uploading, setUploading] = useState(false);
   const [locBusy, setLocBusy] = useState(false);
   const [review, setReview] = useState(false);
+  const [postedId, setPostedId] = useState<string | null>(null);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
@@ -146,10 +147,45 @@ function NewJobPage() {
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Job posted! Workers can see it now.");
-    navigate({ to: "/jobs/$id", params: { id: inserted!.id } });
+    setReview(false);
+    setPostedId(inserted!.id);
   };
 
   const catName = (cats ?? []).find(c => c.id === form.category_id)?.name;
+
+  if (postedId) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center px-5 py-10">
+        <div className="mx-auto max-w-md w-full text-center space-y-5">
+          <div className="mx-auto size-20 rounded-full bg-success/15 grid place-items-center">
+            <CheckCircle2 className="size-11 text-success" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold">Job posted!</h1>
+            <p className="text-sm text-muted-foreground mt-1">Verified workers can see it now and will reach out if they can help.</p>
+          </div>
+          <div className="rounded-2xl bg-card border border-border p-4 text-left shadow-card">
+            <p className="text-xs text-muted-foreground">Posted</p>
+            <p className="font-semibold">{form.title}</p>
+            <p className="text-xs text-muted-foreground mt-1">{catName ?? "General"} · {form.city}</p>
+          </div>
+          <div className="space-y-2">
+            <Link to="/jobs/mine" className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 shadow-elevated">
+              <ClipboardList className="size-4" /> View My Job Posts
+            </Link>
+            <Link to="/jobs/$id" params={{ id: postedId }} className="w-full h-11 rounded-xl border border-border font-semibold inline-flex items-center justify-center">
+              View this job
+            </Link>
+            <Link to="/" className="w-full h-11 rounded-xl bg-muted font-semibold inline-flex items-center justify-center gap-2">
+              <Home className="size-4" /> Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="min-h-screen bg-background pb-12">

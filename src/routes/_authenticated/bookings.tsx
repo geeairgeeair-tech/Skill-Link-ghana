@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Star, MessageCircle } from "lucide-react";
+import { Calendar, Star, MessageCircle, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
@@ -39,8 +39,16 @@ function BookingsPage() {
     <AppShell>
       <header className="px-5 pt-6 pb-3 mx-auto max-w-md">
         <h1 className="font-display text-2xl font-bold">My bookings</h1>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="h-10 rounded-xl bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5">
+            <Calendar className="size-3.5"/> Bookings
+          </div>
+          <Link to="/jobs/mine" className="h-10 rounded-xl border border-border bg-card text-xs font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-muted">
+            <ClipboardList className="size-3.5"/> My Job Posts
+          </Link>
+        </div>
       </header>
-      <main className="mx-auto max-w-md px-5 space-y-3">
+      <main className="mx-auto max-w-md px-5 space-y-3 mt-3">
         {(data ?? []).length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <Calendar className="size-8 mx-auto text-muted-foreground mb-2" />

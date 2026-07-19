@@ -1,7 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Upload, X, Loader2, MapPin, Camera, ArrowLeft, Zap, AlertTriangle } from "lucide-react";
+import { Upload, X, Loader2, MapPin, Camera, ArrowLeft, Zap, AlertTriangle, CheckCircle2, ClipboardList, Home } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { z } from "zod";

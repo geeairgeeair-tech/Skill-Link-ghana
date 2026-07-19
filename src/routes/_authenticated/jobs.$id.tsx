@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Phone, MessageCircle } from "lucide-react";
+import { MapPin, Phone, MessageCircle, Zap, AlertTriangle, Calendar, Pencil } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,7 +29,7 @@ function JobDetail() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, budget, city, status, media, created_at, customer_id, category_id, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
+      .select("id, title, description, budget, city, status, urgency, preferred_at, media, created_at, customer_id, category_id, lat, lng, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
   });
   const { data: jobAddress } = useQuery({

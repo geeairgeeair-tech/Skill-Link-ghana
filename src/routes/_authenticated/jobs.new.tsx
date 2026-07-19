@@ -153,6 +153,40 @@ function NewJobPage() {
 
   const catName = (cats ?? []).find(c => c.id === form.category_id)?.name;
 
+  if (postedId) {
+    return (
+      <div className="min-h-screen bg-background grid place-items-center px-5 py-10">
+        <div className="mx-auto max-w-md w-full text-center space-y-5">
+          <div className="mx-auto size-20 rounded-full bg-success/15 grid place-items-center">
+            <CheckCircle2 className="size-11 text-success" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold">Job posted!</h1>
+            <p className="text-sm text-muted-foreground mt-1">Verified workers can see it now and will reach out if they can help.</p>
+          </div>
+          <div className="rounded-2xl bg-card border border-border p-4 text-left shadow-card">
+            <p className="text-xs text-muted-foreground">Posted</p>
+            <p className="font-semibold">{form.title}</p>
+            <p className="text-xs text-muted-foreground mt-1">{catName ?? "General"} · {form.city}</p>
+          </div>
+          <div className="space-y-2">
+            <Link to="/jobs/mine" className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 shadow-elevated">
+              <ClipboardList className="size-4" /> View My Job Posts
+            </Link>
+            <Link to="/jobs/$id" params={{ id: postedId }} className="w-full h-11 rounded-xl border border-border font-semibold inline-flex items-center justify-center">
+              View this job
+            </Link>
+            <Link to="/" className="w-full h-11 rounded-xl bg-muted font-semibold inline-flex items-center justify-center gap-2">
+              <Home className="size-4" /> Back to Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+
+
   return (
     <div className="min-h-screen bg-background pb-12">
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6 rounded-b-3xl">

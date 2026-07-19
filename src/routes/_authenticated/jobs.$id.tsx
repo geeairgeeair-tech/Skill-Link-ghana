@@ -57,14 +57,24 @@ function JobDetail() {
       </div>
       <main className="mx-auto max-w-md px-5 -mt-3 space-y-4">
         <div className="rounded-2xl bg-card border border-border p-5 shadow-elevated">
-          <p className="text-xs uppercase font-bold text-primary tracking-wide">{(job as any).categories?.name ?? "Job"}</p>
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <p className="text-xs uppercase font-bold text-primary tracking-wide">{(job as any).categories?.name ?? "Job"}</p>
+            {(job as any).urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
+            {(job as any).urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
+          </div>
           <h1 className="font-display text-xl font-bold mt-1">{(job as any).title}</h1>
-          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
             <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).city ?? cust?.city ?? "Ghana"}</span>
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
+            {(job as any).preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date((job as any).preferred_at).toLocaleString()}</span>}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
           {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}
+          {user?.id === (job as any).customer_id && (job as any).status === "open" && (
+            <Link to="/jobs/$id/edit" params={{ id }} className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+              <Pencil className="size-3.5"/> Edit this post
+            </Link>
+          )}
         </div>
 
         {media.length > 0 && (

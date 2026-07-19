@@ -66,6 +66,15 @@ function ProfilePage() {
         </div>
 
         {role === "customer" && (
+          <Link to="/jobs/mine" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+            <div className="flex items-center gap-3">
+              <ClipboardList className="size-5 text-primary"/>
+              <div><p className="font-semibold">My Job Posts</p><p className="text-xs text-muted-foreground">Track jobs you've posted.</p></div>
+            </div>
+          </Link>
+        )}
+
+        {role === "customer" && (
           <Link to="/worker/onboarding" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
             <div className="flex items-center gap-3">
               <Wrench className="size-5 text-primary"/>

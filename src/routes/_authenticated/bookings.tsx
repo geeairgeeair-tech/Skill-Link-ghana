@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Star, MessageCircle } from "lucide-react";
+import { Calendar, Star, MessageCircle, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,

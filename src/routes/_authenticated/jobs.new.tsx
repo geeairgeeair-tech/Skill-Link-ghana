@@ -42,6 +42,7 @@ function NewJobPage() {
   const [uploading, setUploading] = useState(false);
   const [locBusy, setLocBusy] = useState(false);
   const [review, setReview] = useState(false);
+  const [postedId, setPostedId] = useState<string | null>(null);
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],

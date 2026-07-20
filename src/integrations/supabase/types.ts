@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_type: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_type?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           address: string | null
@@ -436,6 +466,7 @@ export type Database = {
           category_id: string | null
           city: string | null
           created_at: string
+          date_of_birth: string | null
           ghana_card_number: string | null
           ghana_card_url: string | null
           hourly_rate: number | null
@@ -465,6 +496,7 @@ export type Database = {
           category_id?: string | null
           city?: string | null
           created_at?: string
+          date_of_birth?: string | null
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
@@ -494,6 +526,7 @@ export type Database = {
           category_id?: string | null
           city?: string | null
           created_at?: string
+          date_of_birth?: string | null
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
@@ -614,6 +647,42 @@ export type Database = {
       }
     }
     Functions: {
+      admin_list_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          full_name: string
+          is_suspended: boolean
+          phone: string
+          roles: string[]
+          user_id: string
+          verification_status: string
+        }[]
+      }
+      admin_list_workers: {
+        Args: { _status?: string }
+        Returns: {
+          age: number
+          avatar_url: string
+          category_name: string
+          city: string
+          created_at: string
+          date_of_birth: string
+          email: string
+          full_name: string
+          is_available: boolean
+          jobs_completed: number
+          phone: string
+          rating: number
+          reviews_count: number
+          service_area: string
+          subscription_expires_at: string
+          user_id: string
+          verification_status: string
+          years_experience: number
+        }[]
+      }
       get_job_request_address: { Args: { _id: string }; Returns: string }
       get_profile_contact: {
         Args: { _id: string }
@@ -622,9 +691,11 @@ export type Database = {
           phone: string
         }[]
       }
+      get_user_email: { Args: { _user_id: string }; Returns: string }
       get_worker_identity: {
         Args: { _user_id: string }
         Returns: {
+          date_of_birth: string
           ghana_card_number: string
           ghana_card_url: string
           selfie_url: string

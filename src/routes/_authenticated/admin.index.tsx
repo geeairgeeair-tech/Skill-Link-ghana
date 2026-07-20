@@ -180,6 +180,7 @@ function AdminPage() {
             <Link to="/admin/users" className="rounded-xl bg-muted px-3 py-2">Users overview →</Link>
             <Link to="/admin/jobs" className="rounded-xl bg-muted px-3 py-2">Jobs overview →</Link>
             <Link to="/admin/bookings" className="rounded-xl bg-muted px-3 py-2">Bookings overview →</Link>
+            <Link to="/admin/support" className="rounded-xl bg-muted px-3 py-2 col-span-2">Support tickets →</Link>
           </div>
         </section>
 

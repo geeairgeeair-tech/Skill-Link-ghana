@@ -1,4 +1,4 @@
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -131,7 +131,7 @@ function AdminUserDetailPage() {
                   <button onClick={loadDocs} className="text-[11px] px-2 py-1 rounded bg-muted font-semibold">Load identity docs</button>
                   {docs.card && <a href={docs.card} target="_blank" rel="noreferrer" className="text-[11px] px-2 py-1 rounded bg-muted font-semibold">Ghana Card ↗</a>}
                   {docs.selfie && <a href={docs.selfie} target="_blank" rel="noreferrer" className="text-[11px] px-2 py-1 rounded bg-muted font-semibold">Selfie ↗</a>}
-                  <Link to="/workers/$id" params={{ id: userId }} className="text-[11px] px-2 py-1 rounded bg-muted font-semibold">Public profile ↗</Link>
+                  
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
                   {data.verification_status !== "approved" && (

@@ -58,6 +58,34 @@ function ApplyPage() {
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
+  const jobCatName = (job as any).categories?.name ?? "this category";
+  const isApproved = workerProfile?.verification_status === "approved";
+  const categoryMatches = isApproved && workerProfile?.category_id === (job as any).category_id;
+  const gateReason = !isApproved
+    ? `Your account is ${workerProfile?.verification_status ?? "not verified"}. Only approved workers can apply.`
+    : !categoryMatches
+      ? `Only verified workers in the ${jobCatName} category can apply to this job.`
+      : (job as any).status !== "open"
+        ? "This job is no longer open."
+        : null;
+
+  if (gateReason) {
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6">
+          <BackButton fallback="/jobs" />
+          <h1 className="font-display text-2xl font-bold mt-2">Can't apply</h1>
+        </div>
+        <main className="mx-auto max-w-md px-5 -mt-3">
+          <div className="rounded-2xl bg-card border border-border p-5 shadow-elevated text-sm">
+            <p>{gateReason}</p>
+            <Link to="/jobs" className="inline-block mt-4 text-primary font-semibold">Back to job board →</Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;

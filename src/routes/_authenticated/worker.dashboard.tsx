@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { BadgeCheck, AlertCircle, Sparkles, MessageCircle } from "lucide-react";
+import { BadgeCheck, AlertCircle, Sparkles, MessageCircle, LifeBuoy, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
   component: WorkerDashboard,
@@ -16,7 +16,7 @@ function WorkerDashboard() {
   const { data: wp } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
+    queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, rejection_reason, rejected_at, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
   });
   const { data: bookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],
@@ -59,7 +59,35 @@ function WorkerDashboard() {
             </div>
           </Link>
         )}
-        {wp && !isVerified && (
+        {wp && (wp as any).verification_status === "rejected" && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4"/> Your verification was not approved.</p>
+            {(wp as any).rejection_reason && (
+              <div className="rounded-lg bg-card border border-border p-2 text-sm">
+                <p className="text-[10px] uppercase font-bold text-muted-foreground">Reason from admin</p>
+                <p>{(wp as any).rejection_reason}</p>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <Link to="/worker/onboarding" className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold">Update profile</Link>
+              <button
+                onClick={async () => {
+                  const { error } = await supabase.rpc("worker_resubmit_verification");
+                  if (error) return toast.error(error.message);
+                  toast.success("Resubmitted for verification");
+                  qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
+                }}
+                className="text-xs px-3 py-1.5 rounded-lg bg-gold text-gold-foreground font-semibold inline-flex items-center gap-1"
+              >
+                <RefreshCw className="size-3"/> Resubmit for verification
+              </button>
+              <Link to="/support" className="text-xs px-3 py-1.5 rounded-lg bg-muted font-semibold inline-flex items-center gap-1">
+                <LifeBuoy className="size-3"/> Contact support
+              </Link>
+            </div>
+          </div>
+        )}
+        {wp && !isVerified && (wp as any).verification_status !== "rejected" && (
           <div className="rounded-2xl bg-warning/15 border border-warning/30 p-4">
             <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4"/> Awaiting verification</p>
             <p className="text-sm text-muted-foreground mt-1">Your account is pending admin approval.</p>

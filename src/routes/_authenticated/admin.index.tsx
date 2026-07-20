@@ -123,17 +123,23 @@ function AdminPage() {
   });
 
   const decide = async (id: string, status: "approved" | "rejected" | "suspended") => {
-    const { error } = await supabase.from("worker_profiles").update({ verification_status: status }).eq("user_id", id);
-    if (error) return toast.error(error.message);
-    // Audit log — non-blocking
-    if (user?.id) {
-      await supabase.from("admin_audit_logs").insert({
-        admin_id: user.id,
-        action: status === "approved" ? "worker_approved" : status === "suspended" ? "worker_suspended" : "worker_rejected",
-        target_user_id: id,
-        target_type: "worker",
-        details: { status },
-      });
+    if (status === "rejected") {
+      const reason = window.prompt("Enter rejection reason (min 5 chars):");
+      if (!reason || reason.trim().length < 5) { toast.error("Rejection reason is required"); return; }
+      const { error } = await supabase.rpc("admin_reject_worker", { _user_id: id, _reason: reason.trim() });
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("worker_profiles")
+        .update({ verification_status: status, rejection_reason: null, rejected_at: null })
+        .eq("user_id", id);
+      if (error) return toast.error(error.message);
+      if (user?.id) {
+        await supabase.from("admin_audit_logs").insert({
+          admin_id: user.id,
+          action: status === "approved" ? "worker_approved" : "worker_suspended",
+          target_user_id: id, target_type: "worker", details: { status },
+        });
+      }
     }
     toast.success(`Worker ${status}`);
     qc.invalidateQueries({ queryKey: ["admin-pending"] });
@@ -174,6 +180,7 @@ function AdminPage() {
             <Link to="/admin/users" className="rounded-xl bg-muted px-3 py-2">Users overview →</Link>
             <Link to="/admin/jobs" className="rounded-xl bg-muted px-3 py-2">Jobs overview →</Link>
             <Link to="/admin/bookings" className="rounded-xl bg-muted px-3 py-2">Bookings overview →</Link>
+            <Link to="/admin/support" className="rounded-xl bg-muted px-3 py-2 col-span-2">Support tickets →</Link>
           </div>
         </section>
 
@@ -469,9 +476,18 @@ function UsersPanel({ users }: { users: any[] }) {
                 {u.is_suspended ? "Suspended" : "Active"}
               </span>
             </div>
-            <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
-              <Eye className="size-3" /> {isOpen ? "Hide" : "View"} details
-            </button>
+            <div className="mt-1 flex items-center gap-2">
+              <Link
+                to="/admin/users/$userId"
+                params={{ userId: u.user_id }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-primary text-primary-foreground text-[11px] font-semibold"
+              >
+                <Eye className="size-3" /> View details
+              </Link>
+              <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
+                {isOpen ? "Hide" : "Quick view"}
+              </button>
+            </div>
             {isOpen && (
               <div className="mt-2 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
                 <Detail label="Full name" value={u.full_name} />

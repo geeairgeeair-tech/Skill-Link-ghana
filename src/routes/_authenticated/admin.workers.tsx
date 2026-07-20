@@ -39,16 +39,21 @@ function AdminWorkersPage() {
   }, [data, q]);
 
   const act = async (id: string, next: "approved" | "rejected" | "pending" | "suspended") => {
-    const { error } = await supabase.from("worker_profiles").update({ verification_status: next }).eq("user_id", id);
-    if (error) return toast.error(error.message);
-    if (user?.id) {
-      await supabase.from("admin_audit_logs").insert({
-        admin_id: user.id,
-        action: `worker_${next}`,
-        target_user_id: id,
-        target_type: "worker",
-        details: { status: next },
-      });
+    if (next === "rejected") {
+      const reason = window.prompt("Enter rejection reason (min 5 chars):");
+      if (!reason || reason.trim().length < 5) return toast.error("Rejection reason is required");
+      const { error } = await supabase.rpc("admin_reject_worker", { _user_id: id, _reason: reason.trim() });
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("worker_profiles")
+        .update({ verification_status: next, rejection_reason: null, rejected_at: null })
+        .eq("user_id", id);
+      if (error) return toast.error(error.message);
+      if (user?.id) {
+        await supabase.from("admin_audit_logs").insert({
+          admin_id: user.id, action: `worker_${next}`, target_user_id: id, target_type: "worker", details: { status: next },
+        });
+      }
     }
     toast.success(`Worker set to ${next}`);
     qc.invalidateQueries({ queryKey: ["admin-workers-page"] });

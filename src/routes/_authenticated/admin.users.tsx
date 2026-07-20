@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,6 +73,13 @@ function AdminUsersPage() {
                 </div>
                 <p className="text-xs text-muted-foreground truncate">{u.email ?? "—"} · {u.phone ?? "—"}</p>
                 <p className="text-[10px] text-muted-foreground">Joined {new Date(u.created_at).toLocaleDateString()}{u.verification_status ? ` · ${u.verification_status}` : ""}{u.is_suspended ? " · suspended" : ""}</p>
+                <Link
+                  to="/admin/users/$userId"
+                  params={{ userId: u.user_id }}
+                  className="mt-1 inline-block px-2 py-1 rounded bg-primary text-primary-foreground text-[11px] font-semibold"
+                >
+                  View details →
+                </Link>
               </div>
             ))}
         </section>

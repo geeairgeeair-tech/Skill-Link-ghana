@@ -91,7 +91,7 @@ function WorkerDetail() {
       navigate({ to: "/auth" });
       return;
     }
-    toast.info("Booking is coming next — this feature is being built.");
+    navigate({ to: "/book/$workerId", params: { workerId: id } });
   };
 
   return (

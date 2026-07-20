@@ -22,6 +22,7 @@ import { Route as AuthenticatedWorkerSubscriptionRouteImport } from './routes/_a
 import { Route as AuthenticatedWorkerOnboardingRouteImport } from './routes/_authenticated/worker.onboarding'
 import { Route as AuthenticatedWorkerJobsRouteImport } from './routes/_authenticated/worker.jobs'
 import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_authenticated/worker.dashboard'
+import { Route as AuthenticatedWorkerApplicationsRouteImport } from './routes/_authenticated/worker.applications'
 import { Route as AuthenticatedJobsNewRouteImport } from './routes/_authenticated/jobs.new'
 import { Route as AuthenticatedJobsMineRouteImport } from './routes/_authenticated/jobs.mine'
 import { Route as AuthenticatedJobsIdRouteImport } from './routes/_authenticated/jobs.$id'
@@ -97,6 +98,12 @@ const AuthenticatedWorkerDashboardRoute =
     path: '/worker/dashboard',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedWorkerApplicationsRoute =
+  AuthenticatedWorkerApplicationsRouteImport.update({
+    id: '/worker/applications',
+    path: '/worker/applications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedJobsNewRoute = AuthenticatedJobsNewRouteImport.update({
   id: '/jobs/new',
   path: '/jobs/new',
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/jobs/$id': typeof AuthenticatedJobsIdRouteWithChildren
   '/jobs/mine': typeof AuthenticatedJobsMineRoute
   '/jobs/new': typeof AuthenticatedJobsNewRoute
+  '/worker/applications': typeof AuthenticatedWorkerApplicationsRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/jobs/$id': typeof AuthenticatedJobsIdRouteWithChildren
   '/jobs/mine': typeof AuthenticatedJobsMineRoute
   '/jobs/new': typeof AuthenticatedJobsNewRoute
+  '/worker/applications': typeof AuthenticatedWorkerApplicationsRoute
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   '/_authenticated/jobs/$id': typeof AuthenticatedJobsIdRouteWithChildren
   '/_authenticated/jobs/mine': typeof AuthenticatedJobsMineRoute
   '/_authenticated/jobs/new': typeof AuthenticatedJobsNewRoute
+  '/_authenticated/worker/applications': typeof AuthenticatedWorkerApplicationsRoute
   '/_authenticated/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/_authenticated/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/jobs/$id'
     | '/jobs/mine'
     | '/jobs/new'
+    | '/worker/applications'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/jobs/$id'
     | '/jobs/mine'
     | '/jobs/new'
+    | '/worker/applications'
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
@@ -259,6 +271,7 @@ export interface FileRouteTypes {
     | '/_authenticated/jobs/$id'
     | '/_authenticated/jobs/mine'
     | '/_authenticated/jobs/new'
+    | '/_authenticated/worker/applications'
     | '/_authenticated/worker/dashboard'
     | '/_authenticated/worker/jobs'
     | '/_authenticated/worker/onboarding'
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedWorkerDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/worker/applications': {
+      id: '/_authenticated/worker/applications'
+      path: '/worker/applications'
+      fullPath: '/worker/applications'
+      preLoaderRoute: typeof AuthenticatedWorkerApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/jobs/new': {
       id: '/_authenticated/jobs/new'
       path: '/jobs/new'
@@ -442,6 +462,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedJobsIdRoute: typeof AuthenticatedJobsIdRouteWithChildren
   AuthenticatedJobsMineRoute: typeof AuthenticatedJobsMineRoute
   AuthenticatedJobsNewRoute: typeof AuthenticatedJobsNewRoute
+  AuthenticatedWorkerApplicationsRoute: typeof AuthenticatedWorkerApplicationsRoute
   AuthenticatedWorkerDashboardRoute: typeof AuthenticatedWorkerDashboardRoute
   AuthenticatedWorkerJobsRoute: typeof AuthenticatedWorkerJobsRoute
   AuthenticatedWorkerOnboardingRoute: typeof AuthenticatedWorkerOnboardingRoute
@@ -457,6 +478,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedJobsIdRoute: AuthenticatedJobsIdRouteWithChildren,
   AuthenticatedJobsMineRoute: AuthenticatedJobsMineRoute,
   AuthenticatedJobsNewRoute: AuthenticatedJobsNewRoute,
+  AuthenticatedWorkerApplicationsRoute: AuthenticatedWorkerApplicationsRoute,
   AuthenticatedWorkerDashboardRoute: AuthenticatedWorkerDashboardRoute,
   AuthenticatedWorkerJobsRoute: AuthenticatedWorkerJobsRoute,
   AuthenticatedWorkerOnboardingRoute: AuthenticatedWorkerOnboardingRoute,

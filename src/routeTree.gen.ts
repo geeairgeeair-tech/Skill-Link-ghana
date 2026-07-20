@@ -9,13 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WorkersRouteImport } from './routes/workers'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WorkersIndexRouteImport } from './routes/workers.index'
 import { Route as WorkersIdRouteImport } from './routes/workers.$id'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
@@ -44,11 +44,6 @@ import { Route as AuthenticatedJobsIdApplyRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAdminUsersUserIdRouteImport } from './routes/_authenticated/admin.users.$userId'
 import { Route as AuthenticatedAdminJobsJobIdRouteImport } from './routes/_authenticated/admin.jobs.$jobId'
 
-const WorkersRoute = WorkersRouteImport.update({
-  id: '/workers',
-  path: '/workers',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -78,10 +73,15 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WorkersIndexRoute = WorkersIndexRouteImport.update({
+  id: '/workers/',
+  path: '/workers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WorkersIdRoute = WorkersIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => WorkersRoute,
+  id: '/workers/$id',
+  path: '/workers/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/admin/login',
@@ -234,12 +234,12 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/workers': typeof WorkersRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/workers/': typeof WorkersIndexRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
   '/admin/support': typeof AuthenticatedAdminSupportRoute
@@ -269,11 +269,11 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/workers': typeof WorkersRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/support': typeof AuthenticatedSupportRoute
   '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/workers': typeof WorkersIndexRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/admin/workers': typeof AuthenticatedAdminWorkersRoute
@@ -304,12 +304,12 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/profile': typeof ProfileRoute
   '/reset-password': typeof ResetPasswordRoute
-  '/workers': typeof WorkersRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/workers/': typeof WorkersIndexRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
@@ -341,12 +341,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
-    | '/workers'
     | '/admin'
     | '/bookings'
     | '/support'
     | '/admin/login'
     | '/workers/$id'
+    | '/workers/'
     | '/admin/bookings'
     | '/admin/jobs'
     | '/admin/support'
@@ -376,11 +376,11 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
-    | '/workers'
     | '/bookings'
     | '/support'
     | '/admin/login'
     | '/workers/$id'
+    | '/workers'
     | '/admin/bookings'
     | '/admin/support'
     | '/admin/workers'
@@ -410,12 +410,12 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/profile'
     | '/reset-password'
-    | '/workers'
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
     | '/_authenticated/support'
     | '/admin/login'
     | '/workers/$id'
+    | '/workers/'
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/jobs'
     | '/_authenticated/admin/support'
@@ -447,19 +447,13 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
-  WorkersRoute: typeof WorkersRouteWithChildren
   AdminLoginRoute: typeof AdminLoginRoute
+  WorkersIdRoute: typeof WorkersIdRoute
+  WorkersIndexRoute: typeof WorkersIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/workers': {
-      id: '/workers'
-      path: '/workers'
-      fullPath: '/workers'
-      preLoaderRoute: typeof WorkersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -502,12 +496,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/workers/': {
+      id: '/workers/'
+      path: '/workers'
+      fullPath: '/workers/'
+      preLoaderRoute: typeof WorkersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/workers/$id': {
       id: '/workers/$id'
-      path: '/$id'
+      path: '/workers/$id'
       fullPath: '/workers/$id'
       preLoaderRoute: typeof WorkersIdRouteImport
-      parentRoute: typeof WorkersRoute
+      parentRoute: typeof rootRouteImport
     }
     '/admin/login': {
       id: '/admin/login'
@@ -783,17 +784,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface WorkersRouteChildren {
-  WorkersIdRoute: typeof WorkersIdRoute
-}
-
-const WorkersRouteChildren: WorkersRouteChildren = {
-  WorkersIdRoute: WorkersIdRoute,
-}
-
-const WorkersRouteWithChildren =
-  WorkersRoute._addFileChildren(WorkersRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -801,19 +791,10 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
-  WorkersRoute: WorkersRouteWithChildren,
   AdminLoginRoute: AdminLoginRoute,
+  WorkersIdRoute: WorkersIdRoute,
+  WorkersIndexRoute: WorkersIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

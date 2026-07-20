@@ -112,7 +112,8 @@ function Field({ icon: Icon, value, onChange, ...rest }: {
   icon: React.ComponentType<{ className?: string }>;
   value: string;
   onChange: (v: string) => void;
-} & React.InputHTMLAttributes<HTMLInputElement>) {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
+
   return (
     <div className="relative">
       <Icon className="size-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />

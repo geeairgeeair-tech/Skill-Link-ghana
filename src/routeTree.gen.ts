@@ -17,6 +17,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as WorkersIdRouteImport } from './routes/workers.$id'
+import { Route as AdminLoginRouteImport } from './routes/admin.login'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
@@ -78,6 +79,11 @@ const WorkersIdRoute = WorkersIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => WorkersRoute,
+} as any)
+const AdminLoginRoute = AdminLoginRouteImport.update({
+  id: '/admin/login',
+  path: '/admin/login',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
@@ -210,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/workers': typeof WorkersRouteWithChildren
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/workers': typeof WorkersRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
   '/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/workers': typeof WorkersRouteWithChildren
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
+  '/admin/login': typeof AdminLoginRoute
   '/workers/$id': typeof WorkersIdRoute
   '/_authenticated/admin/bookings': typeof AuthenticatedAdminBookingsRoute
   '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
@@ -305,6 +314,7 @@ export interface FileRouteTypes {
     | '/workers'
     | '/admin'
     | '/bookings'
+    | '/admin/login'
     | '/workers/$id'
     | '/admin/bookings'
     | '/admin/jobs'
@@ -335,6 +345,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/workers'
     | '/bookings'
+    | '/admin/login'
     | '/workers/$id'
     | '/admin/bookings'
     | '/admin/users'
@@ -366,6 +377,7 @@ export interface FileRouteTypes {
     | '/workers'
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
+    | '/admin/login'
     | '/workers/$id'
     | '/_authenticated/admin/bookings'
     | '/_authenticated/admin/jobs'
@@ -397,6 +409,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   WorkersRoute: typeof WorkersRouteWithChildren
+  AdminLoginRoute: typeof AdminLoginRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -456,6 +469,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/workers/$id'
       preLoaderRoute: typeof WorkersIdRouteImport
       parentRoute: typeof WorkersRoute
+    }
+    '/admin/login': {
+      id: '/admin/login'
+      path: '/admin/login'
+      fullPath: '/admin/login'
+      preLoaderRoute: typeof AdminLoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/bookings': {
       id: '/_authenticated/bookings'
@@ -716,6 +736,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   WorkersRoute: WorkersRouteWithChildren,
+  AdminLoginRoute: AdminLoginRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -37,10 +37,30 @@ function JobDetail() {
     enabled: !!user && !!job && (job as any).customer_id === user.id,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
-  const { data: custContact } = useQuery({
-    queryKey: ["profile-contact", (job as any)?.customer_id, user?.id],
-    enabled: !!user && !!job && role === "worker" && user.id !== (job as any).customer_id,
-    queryFn: async () => (await supabase.rpc("get_profile_contact", { _id: (job as any).customer_id })).data as any,
+  // Worker verification status (gates Apply)
+  const { data: workerProfile } = useQuery({
+    queryKey: ["worker-profile-self", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("worker_profiles")
+      .select("verification_status").eq("user_id", user!.id).maybeSingle()).data,
+  });
+
+  // Existing application by this worker for this job
+  const { data: myApp } = useQuery({
+    queryKey: ["my-application-for-job", id, user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("job_applications")
+      .select("id, status, quoted_price").eq("job_id", id).eq("worker_id", user!.id).maybeSingle()).data,
+  });
+
+  // Application count for customer (own job)
+  const { data: appCount } = useQuery({
+    queryKey: ["app-count-for-job", id, user?.id],
+    enabled: !!user && !!job && (job as any).customer_id === user.id,
+    queryFn: async () => {
+      const { count } = await supabase.from("job_applications").select("id", { count: "exact", head: true }).eq("job_id", id);
+      return count ?? 0;
+    },
   });
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
@@ -48,7 +68,8 @@ function JobDetail() {
 
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
   const cust = (job as any).profiles;
-  const phone = (custContact as any)?.[0]?.phone ?? null;
+  const isVerifiedWorker = workerProfile?.verification_status === "approved";
+  const isOwner = user?.id === (job as any).customer_id;
 
   return (
     <div className="min-h-screen bg-background pb-28">

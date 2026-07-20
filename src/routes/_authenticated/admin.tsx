@@ -25,7 +25,7 @@ async function attachProfiles<T extends { user_id: string }>(rows: T[]) {
 }
 
 function AdminPage() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
 

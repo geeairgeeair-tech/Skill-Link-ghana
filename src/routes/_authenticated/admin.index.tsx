@@ -167,6 +167,16 @@ function AdminPage() {
           <Stat label="Done" value={stats?.completed ?? 0} />
         </div>
 
+        <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <h3 className="font-display font-bold">Management pages</h3>
+          <div className="grid grid-cols-2 gap-2 text-xs font-semibold">
+            <Link to="/admin/workers" className="rounded-xl bg-muted px-3 py-2">Workers overview →</Link>
+            <Link to="/admin/users" className="rounded-xl bg-muted px-3 py-2">Users overview →</Link>
+            <Link to="/admin/jobs" className="rounded-xl bg-muted px-3 py-2">Jobs overview →</Link>
+            <Link to="/admin/bookings" className="rounded-xl bg-muted px-3 py-2">Bookings overview →</Link>
+          </div>
+        </section>
+
         <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold overflow-x-auto">
           <TabBtn active={tab === "pending"} onClick={() => setTab("pending")}>Pending ({pending?.length ?? 0})</TabBtn>
           <TabBtn active={tab === "all-workers"} onClick={() => setTab("all-workers")}>Workers</TabBtn>
@@ -190,7 +200,10 @@ function AdminPage() {
 
         {tab === "all-workers" && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
-            <h3 className="font-display font-bold">All workers</h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display font-bold">Workers overview</h3>
+              <Link to="/admin/workers" className="text-xs font-semibold text-primary whitespace-nowrap">View all →</Link>
+            </div>
             {(allWorkers ?? []).length === 0 && <p className="text-sm text-muted-foreground">No workers yet.</p>}
             {(allWorkers ?? []).map((w: any) => {
               const subActive = w.subscription_expires_at && new Date(w.subscription_expires_at) > new Date();
@@ -232,7 +245,10 @@ function AdminPage() {
 
         {tab === "jobs" && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
-            <h3 className="font-display font-bold">All job posts</h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display font-bold">Jobs overview</h3>
+              <Link to="/admin/jobs" className="text-xs font-semibold text-primary whitespace-nowrap">View all →</Link>
+            </div>
             {(allJobs ?? []).length === 0 && <p className="text-sm text-muted-foreground">No job posts yet.</p>}
             {(allJobs ?? []).map((j: any) => (
               <div key={j.id} className="py-2 border-t border-border first:border-0">
@@ -259,7 +275,10 @@ function AdminPage() {
 
         {tab === "bookings" && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
-            <h3 className="font-display font-bold">Recent bookings</h3>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="font-display font-bold">Bookings overview</h3>
+              <Link to="/admin/bookings" className="text-xs font-semibold text-primary whitespace-nowrap">View all →</Link>
+            </div>
             {(bookings ?? []).length === 0 && <p className="text-sm text-muted-foreground">No bookings yet.</p>}
             {(bookings ?? []).map((b: any) => (
               <div key={b.id} className="py-2 border-t border-border first:border-0">
@@ -404,7 +423,10 @@ function UsersPanel({ users }: { users: any[] }) {
 
   return (
     <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
-      <h3 className="font-display font-bold">Users ({filtered.length})</h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="font-display font-bold">Users overview ({filtered.length})</h3>
+        <Link to="/admin/users" className="text-xs font-semibold text-primary whitespace-nowrap">View all →</Link>
+      </div>
       <div className="space-y-2">
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or email…" className="w-full rounded-xl border border-input bg-card p-2.5 text-sm" />
         <div className="grid grid-cols-2 gap-2">

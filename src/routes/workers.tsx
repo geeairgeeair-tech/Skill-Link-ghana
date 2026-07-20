@@ -55,25 +55,32 @@ function WorkersPage() {
     queryFn: async (): Promise<WorkerCardData[]> => {
       let query = supabase
         .from("worker_profiles")
-        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, created_at, categories!inner(name, slug), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
+        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, created_at, categories!inner(name, slug)")
+        .eq("verification_status", "approved")
         .gte("rating", search.minRating)
         .gte("years_experience", search.minExperience)
         .limit(100);
       if (category) query = query.eq("categories.slug", category);
       if (search.availableOnly) query = query.eq("is_available", true);
 
-      // Sorting
-      if (sort === "rating") query = query.order("is_featured", { ascending: false }).order("rating", { ascending: false });
+      if (sort === "rating") query = query.order("is_featured", { ascending: false }).order("rating", { ascending: false }).order("jobs_completed", { ascending: false }).order("is_available", { ascending: false });
       else if (sort === "experience") query = query.order("years_experience", { ascending: false });
       else if (sort === "jobs") query = query.order("jobs_completed", { ascending: false });
       else if (sort === "newest") query = query.order("created_at", { ascending: false });
 
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []).map((w: any) => ({
+      const rows = data ?? [];
+      const ids = rows.map((w: any) => w.user_id);
+      const profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        (profs ?? []).forEach((p: any) => profilesMap.set(p.id, { full_name: p.full_name, avatar_url: p.avatar_url }));
+      }
+      return rows.map((w: any) => ({
         user_id: w.user_id,
-        full_name: w.profiles?.full_name ?? "Pro",
-        avatar_url: w.profiles?.avatar_url ?? null,
+        full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
+        avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
         category_name: w.categories?.name ?? null,
         city: w.city,
         service_area: w.service_area,
@@ -87,6 +94,7 @@ function WorkersPage() {
       }));
     },
   });
+
 
   const filtered = useMemo(() => {
     if (!workers) return [];

@@ -121,6 +121,11 @@ function AuthPage() {
           )}
           <Field icon={Mail} placeholder="Email" value={email} onChange={setEmail} type="email" required />
           <Field icon={Lock} placeholder="Password" value={password} onChange={setPassword} type="password" required />
+          {mode === "login" && (
+            <div className="flex justify-end -mt-1">
+              <Link to="/forgot-password" className="text-xs font-semibold text-primary">Forgot password?</Link>
+            </div>
+          )}
           <button
             disabled={loading}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
@@ -128,6 +133,7 @@ function AuthPage() {
             {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
+
 
         <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
           <div className="flex-1 h-px bg-border" /> OR <div className="flex-1 h-px bg-border" />

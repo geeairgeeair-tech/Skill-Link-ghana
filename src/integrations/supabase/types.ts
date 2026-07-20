@@ -47,44 +47,59 @@ export type Database = {
       bookings: {
         Row: {
           address: string | null
+          budget: number | null
           category_id: string | null
           created_at: string
           customer_id: string
           description: string
           estimated_cost: number | null
           id: string
+          latitude: number | null
+          longitude: number | null
           photos: Json
           scheduled_at: string | null
+          service_area: string | null
           status: Database["public"]["Enums"]["booking_status"]
           updated_at: string
+          urgency: string
           worker_id: string
         }
         Insert: {
           address?: string | null
+          budget?: number | null
           category_id?: string | null
           created_at?: string
           customer_id: string
           description?: string
           estimated_cost?: number | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           photos?: Json
           scheduled_at?: string | null
+          service_area?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
+          urgency?: string
           worker_id: string
         }
         Update: {
           address?: string | null
+          budget?: number | null
           category_id?: string | null
           created_at?: string
           customer_id?: string
           description?: string
           estimated_cost?: number | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           photos?: Json
           scheduled_at?: string | null
+          service_area?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
+          urgency?: string
           worker_id?: string
         }
         Relationships: [
@@ -816,6 +831,8 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+        | "declined"
+        | "arrived"
       job_application_status: "pending" | "withdrawn" | "accepted" | "rejected"
       job_request_status:
         | "open"
@@ -963,6 +980,8 @@ export const Constants = {
         "in_progress",
         "completed",
         "cancelled",
+        "declined",
+        "arrived",
       ],
       job_application_status: ["pending", "withdrawn", "accepted", "rejected"],
       job_request_status: [

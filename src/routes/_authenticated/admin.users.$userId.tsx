@@ -38,7 +38,7 @@ function AdminUserDetailPage() {
 
   const setStatus = async (next: "approved" | "suspended" | "pending") => {
     const { error } = await supabase.from("worker_profiles")
-      .update({ verification_status: next, ...(next !== "rejected" ? { rejection_reason: null, rejected_at: null } : {}) })
+      .update({ verification_status: next, rejection_reason: null, rejected_at: null })
       .eq("user_id", userId);
     if (error) return toast.error(error.message);
     await logAction(`worker_${next}`, { status: next });

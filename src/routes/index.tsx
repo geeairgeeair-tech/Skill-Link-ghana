@@ -168,7 +168,7 @@ function EmptyWorkers() {
   return (
     <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
       <p>No verified pros listed yet.</p>
-      <p className="mt-1">Workers appear here after verification + active subscription.</p>
+      <p className="mt-1">Approved workers appear here automatically during Free Beta.</p>
     </div>
   );
 }

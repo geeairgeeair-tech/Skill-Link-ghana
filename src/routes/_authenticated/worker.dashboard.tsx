@@ -98,10 +98,6 @@ function WorkerDashboard() {
             <BadgeCheck className="size-4 text-success"/> Free Beta Access — you're live in the marketplace
           </div>
         )}
-          <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
-            <BadgeCheck className="size-4 text-success"/> Verified & active
-          </div>
-        )}
 
         {wp && (
           <div className="rounded-2xl bg-card border border-border p-4 flex items-center justify-between">

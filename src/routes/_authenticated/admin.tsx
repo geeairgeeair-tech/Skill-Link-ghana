@@ -167,9 +167,10 @@ function AdminPage() {
           <Stat label="Done" value={stats?.completed ?? 0} />
         </div>
 
-        <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold">
+        <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold overflow-x-auto">
           <TabBtn active={tab === "pending"} onClick={() => setTab("pending")}>Pending ({pending?.length ?? 0})</TabBtn>
           <TabBtn active={tab === "all-workers"} onClick={() => setTab("all-workers")}>Workers</TabBtn>
+          <TabBtn active={tab === "users"} onClick={() => setTab("users")}>Users</TabBtn>
           <TabBtn active={tab === "jobs"} onClick={() => setTab("jobs")}>Jobs</TabBtn>
           <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")}>Bookings</TabBtn>
         </div>
@@ -197,12 +198,15 @@ function AdminPage() {
                 <div key={w.user_id} className="py-2 border-t border-border first:border-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm truncate">{w.profile?.full_name ?? "—"}</p>
+                      <p className="font-semibold text-sm truncate">{w.full_name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {w.categories?.name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
+                        {w.category_name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {w.email ?? "—"} · {w.phone ?? "no phone"} · DOB: {w.date_of_birth ?? "—"}{w.age ? ` (${w.age}y)` : ""}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
+                        {w.service_area ?? w.city ?? "—"} · {w.years_experience ?? 0}y exp · Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
                       </p>
                     </div>
                     <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
@@ -222,6 +226,9 @@ function AdminPage() {
             })}
           </section>
         )}
+
+        {tab === "users" && <UsersPanel users={allUsers ?? []} />}
+
 
         {tab === "jobs" && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">

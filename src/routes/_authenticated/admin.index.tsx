@@ -475,9 +475,18 @@ function UsersPanel({ users }: { users: any[] }) {
                 {u.is_suspended ? "Suspended" : "Active"}
               </span>
             </div>
-            <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
-              <Eye className="size-3" /> {isOpen ? "Hide" : "View"} details
-            </button>
+            <div className="mt-1 flex items-center gap-2">
+              <Link
+                to="/admin/users/$userId"
+                params={{ userId: u.user_id }}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded bg-primary text-primary-foreground text-[11px] font-semibold"
+              >
+                <Eye className="size-3" /> View details
+              </Link>
+              <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
+                {isOpen ? "Hide" : "Quick view"}
+              </button>
+            </div>
             {isOpen && (
               <div className="mt-2 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
                 <Detail label="Full name" value={u.full_name} />

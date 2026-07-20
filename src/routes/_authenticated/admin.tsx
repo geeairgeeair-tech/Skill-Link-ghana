@@ -33,19 +33,13 @@ function AdminPage() {
     queryKey: ["admin-pending"],
     enabled: role === "admin",
     queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("worker_profiles")
-        .select("user_id, years_experience, bio, service_area, city, hourly_rate, callout_fee, starting_price, created_at, category_id, categories(name)")
-        .eq("verification_status", "pending")
-        .order("created_at", { ascending: false });
+      const { data: rows, error } = await supabase.rpc("admin_list_workers", { _status: "pending" });
       if (error) { toast.error(error.message); return []; }
-      const enriched = await attachProfiles(rows ?? []);
-      return await Promise.all(enriched.map(async (r: any) => {
+      // Attach identity docs for each pending worker
+      return await Promise.all(((rows as any[]) ?? []).map(async (r: any) => {
         const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: r.user_id });
-        const { data: contact } = await supabase.rpc("get_profile_contact", { _id: r.user_id });
         const i = (ident as any)?.[0] ?? {};
-        const c = (contact as any)?.[0] ?? {};
-        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url, phone: c?.phone };
+        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url };
       }));
     },
   });
@@ -54,11 +48,19 @@ function AdminPage() {
     queryKey: ["admin-all-workers"],
     enabled: role === "admin" && tab === "all-workers",
     queryFn: async () => {
-      const { data: rows } = await supabase
-        .from("worker_profiles")
-        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, subscription_expires_at, created_at, categories(name)")
-        .order("created_at", { ascending: false });
-      return await attachProfiles((rows as any) ?? []);
+      const { data, error } = await supabase.rpc("admin_list_workers");
+      if (error) { toast.error(error.message); return []; }
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const { data: allUsers } = useQuery({
+    queryKey: ["admin-all-users"],
+    enabled: role === "admin" && tab === "users",
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) { toast.error(error.message); return []; }
+      return (data as any[]) ?? [];
     },
   });
 

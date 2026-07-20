@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Phone, MessageCircle, Zap, AlertTriangle, Calendar, Pencil } from "lucide-react";
+import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -37,10 +37,30 @@ function JobDetail() {
     enabled: !!user && !!job && (job as any).customer_id === user.id,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
-  const { data: custContact } = useQuery({
-    queryKey: ["profile-contact", (job as any)?.customer_id, user?.id],
-    enabled: !!user && !!job && role === "worker" && user.id !== (job as any).customer_id,
-    queryFn: async () => (await supabase.rpc("get_profile_contact", { _id: (job as any).customer_id })).data as any,
+  // Worker verification status (gates Apply)
+  const { data: workerProfile } = useQuery({
+    queryKey: ["worker-profile-self", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("worker_profiles")
+      .select("verification_status").eq("user_id", user!.id).maybeSingle()).data,
+  });
+
+  // Existing application by this worker for this job
+  const { data: myApp } = useQuery({
+    queryKey: ["my-application-for-job", id, user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("job_applications")
+      .select("id, status, quoted_price").eq("job_id", id).eq("worker_id", user!.id).maybeSingle()).data,
+  });
+
+  // Application count for customer (own job)
+  const { data: appCount } = useQuery({
+    queryKey: ["app-count-for-job", id, user?.id],
+    enabled: !!user && !!job && (job as any).customer_id === user.id,
+    queryFn: async () => {
+      const { count } = await supabase.from("job_applications").select("id", { count: "exact", head: true }).eq("job_id", id);
+      return count ?? 0;
+    },
   });
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
@@ -48,7 +68,8 @@ function JobDetail() {
 
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
   const cust = (job as any).profiles;
-  const phone = (custContact as any)?.[0]?.phone ?? null;
+  const isVerifiedWorker = workerProfile?.verification_status === "approved";
+  const isOwner = user?.id === (job as any).customer_id;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -108,21 +129,41 @@ function JobDetail() {
           </div>
         </section>
 
-        {role === "worker" && phone && user?.id !== (job as any).customer_id && (
-          <div className="rounded-2xl bg-primary-soft border border-primary/20 p-3 text-sm">
-            <p className="font-semibold text-primary mb-2">Interested? Call the customer directly.</p>
-            <div className="flex gap-2">
-              <a href={`tel:${phone}`} className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
-                <Phone className="size-4"/> Call {phone}
-              </a>
-              <a href={`https://wa.me/${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="size-11 grid place-items-center rounded-xl bg-success text-success-foreground">
-                <MessageCircle className="size-4"/>
-              </a>
+        {isOwner && (
+          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-primary"/>
+                <p className="font-semibold">Applications received</p>
+              </div>
+              <span className="text-lg font-bold text-primary">{appCount ?? 0}</span>
             </div>
-          </div>
+            <p className="text-xs text-muted-foreground mt-1">Applicant review coming soon.</p>
+          </section>
         )}
-        {role === "worker" && !phone && (
-          <p className="text-xs text-muted-foreground text-center">No phone number on file — customer can be reached after booking.</p>
+
+        {role === "worker" && !isOwner && (
+          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
+            {!isVerifiedWorker ? (
+              <p className="text-xs text-muted-foreground">Get verified by an admin to apply for jobs.</p>
+            ) : myApp ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-success">
+                  <CheckCircle2 className="size-4"/>
+                  <p className="font-semibold">Application {myApp.status}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Your quote: <b className="text-foreground">GH₵{myApp.quoted_price}</b></p>
+                <Link to="/worker/applications" className="inline-block text-xs font-semibold text-primary">Manage in My Applications →</Link>
+              </div>
+            ) : (job as any).status !== "open" ? (
+              <p className="text-xs text-muted-foreground">This job is no longer open.</p>
+            ) : (
+              <Link to="/jobs/$id/apply" params={{ id }} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
+                Apply for this Job
+              </Link>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-3">Customer contact details are shared only after your application is accepted.</p>
+          </section>
         )}
       </main>
     </div>

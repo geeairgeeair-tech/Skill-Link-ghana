@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/jobs/")({
 });
 
 function JobsBoard() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [category, setCategory] = useState<string | undefined>();
 
   const { data: cats } = useQuery({
@@ -19,21 +19,57 @@ function JobsBoard() {
     queryFn: async () => (await supabase.from("categories").select("id, slug, name").eq("active", true).order("sort_order")).data ?? [],
   });
 
+  // Worker's own profile (for category + service area filtering + verification gate)
+  const { data: workerProfile } = useQuery({
+    queryKey: ["worker-profile-self", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("worker_profiles")
+      .select("category_id, service_area, city, verification_status")
+      .eq("user_id", user!.id).maybeSingle()).data,
+  });
+
+  const isVerifiedWorker = role === "worker" && workerProfile?.verification_status === "approved";
+  const workerCategoryId = workerProfile?.category_id;
+  const workerArea = (workerProfile?.service_area ?? workerProfile?.city ?? "").toLowerCase().trim();
+
+  // Applications this worker has already made (to hide "Apply" on cards they've applied to)
+  const { data: myAppliedIds } = useQuery({
+    queryKey: ["my-application-job-ids", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => {
+      const { data } = await supabase.from("job_applications").select("job_id").eq("worker_id", user!.id);
+      return new Set((data ?? []).map((r: any) => r.job_id));
+    },
+  });
+
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["job-requests", category],
+    queryKey: ["job-requests", category, role, workerCategoryId, workerArea],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, status, urgency, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, service_area, status, urgency, preferred_at, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status","open")
         .order("urgency", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(50);
-      if (category) {
+      if (role === "worker" && workerCategoryId) {
+        q = q.eq("category_id", workerCategoryId);
+      } else if (category) {
         const cat = (cats ?? []).find(c => c.slug === category);
         if (cat) q = q.eq("category_id", cat.id);
       }
-      return (await q).data ?? [];
+      const { data } = await q;
+      let rows = data ?? [];
+      if (role === "worker" && workerArea) {
+        // Soft area match: keep jobs whose city/service_area contains the worker's area, else fall back to all
+        const matched = rows.filter((j: any) =>
+          (j.city ?? "").toLowerCase().includes(workerArea) ||
+          (j.service_area ?? "").toLowerCase().includes(workerArea)
+        );
+        if (matched.length > 0) rows = matched;
+      }
+      return rows;
     },
+    enabled: role !== "worker" || !!workerProfile,
   });
 
   return (
@@ -43,10 +79,18 @@ function JobsBoard() {
           <div>
             <h1 className="font-display text-2xl font-bold">Job board</h1>
             <p className="text-sm opacity-80">
-              {role === "worker" ? "Find jobs near you — call customers directly." : "Posted by customers in Ghana."}
+              {role === "worker"
+                ? (isVerifiedWorker
+                    ? "Jobs matching your profession."
+                    : "Get verified to apply for jobs.")
+                : "Posted by customers in Ghana."}
             </p>
           </div>
-          {role !== "worker" && (
+          {role === "worker" ? (
+            <Link to="/worker/applications" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1">
+              <ListChecks className="size-4"/> My apps
+            </Link>
+          ) : (
             <div className="flex items-center gap-2">
               <Link to="/jobs/mine" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1" aria-label="My posts">
                 <ListChecks className="size-4"/> My posts
@@ -60,12 +104,19 @@ function JobsBoard() {
       </header>
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
-        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
-          <Chip active={!category} onClick={() => setCategory(undefined)} label="All" />
-          {(cats ?? []).map(c => (
-            <Chip key={c.id} active={category === c.slug} onClick={() => setCategory(c.slug)} label={c.name} />
-          ))}
-        </div>
+        {role === "worker" && workerProfile && !isVerifiedWorker && (
+          <div className="rounded-xl bg-gold/10 border border-gold/30 p-3 text-xs text-foreground">
+            Your account is <b>{workerProfile.verification_status}</b>. You can browse jobs, but you'll be able to apply once an admin approves your profile.
+          </div>
+        )}
+        {role !== "worker" && (
+          <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
+            <Chip active={!category} onClick={() => setCategory(undefined)} label="All" />
+            {(cats ?? []).map(c => (
+              <Chip key={c.id} active={category === c.slug} onClick={() => setCategory(c.slug)} label={c.name} />
+            ))}
+          </div>
+        )}
 
         {isLoading ? (
           <p className="text-center text-sm text-muted-foreground py-10">Loading…</p>
@@ -95,6 +146,7 @@ function JobsBoard() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {j.urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
                     {j.urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
+                    {role === "worker" && myAppliedIds?.has(j.id) && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success">Applied</span>}
                     <p className="font-semibold truncate">{j.title}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{j.categories?.name ?? "General"}</p>

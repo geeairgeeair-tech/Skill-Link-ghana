@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare } from "lucide-react";
+import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
@@ -12,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Job board" },
+        { to: "/worker/applications", icon: FileText, label: "Applied" },
         { to: "/worker/jobs", icon: Calendar, label: "My jobs" },
         { to: "/profile", icon: User, label: "Profile" },
       ]

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -250,7 +250,7 @@ function AdminPage() {
                   <span>{new Date(j.created_at).toLocaleDateString()}</span>
                 </div>
                 <div className="mt-2">
-                  <a href={`/jobs/${j.id}`} className="text-[11px] font-semibold text-primary">View →</a>
+                  <Link to="/admin/jobs/$jobId" params={{ jobId: j.id }} className="text-[11px] font-semibold text-primary">View →</Link>
                 </div>
               </div>
             ))}

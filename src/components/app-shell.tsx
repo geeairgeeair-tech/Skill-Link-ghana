@@ -19,8 +19,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     : role === "admin"
     ? [
         { to: "/admin", icon: LayoutDashboard, label: "Admin" },
-        { to: "/workers", icon: Search, label: "Workers" },
-        { to: "/jobs", icon: Briefcase, label: "Jobs" },
+        { to: "/admin/workers", icon: Search, label: "Workers" },
+        { to: "/admin/jobs", icon: Briefcase, label: "Jobs" },
         { to: "/profile", icon: User, label: "Profile" },
       ]
     : [

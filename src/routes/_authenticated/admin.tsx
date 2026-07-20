@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "pending" | "all-workers" | "jobs" | "bookings";
+type Tab = "pending" | "all-workers" | "users" | "jobs" | "bookings";
 
 async function attachProfiles<T extends { user_id: string }>(rows: T[]) {
   if (!rows.length) return rows as (T & { profile?: any })[];

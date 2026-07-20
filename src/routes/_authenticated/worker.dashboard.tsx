@@ -18,11 +18,36 @@ function WorkerDashboard() {
     enabled: !!user,
     queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, rejection_reason, rejected_at, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
   });
-  const { data: bookings } = useQuery({
+  const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("bookings").select("*, profiles!bookings_customer_id_fkey(full_name)").eq("worker_id", user!.id).order("created_at",{ascending:false})).data ?? [],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("bookings")
+        .select("*, categories(name)")
+        .eq("worker_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
+      let profMap: Record<string, any> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
+      }
+      return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.customer_id] ?? null }));
+    },
   });
+
+  // Realtime: refresh when new bookings arrive for this worker
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`worker-bookings:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
+        () => { qc.invalidateQueries({ queryKey: ["worker-bookings", user.id] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, qc]);
 
   const toggleAvailable = async (next: boolean) => {
     if (!user) return;

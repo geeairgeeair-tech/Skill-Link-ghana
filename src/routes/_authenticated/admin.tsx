@@ -377,8 +377,93 @@ function Detail({ label, value }: any) {
   );
 }
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} className={`flex-1 px-2 py-2 rounded-lg transition ${active ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>{children}</button>;
+  return <button onClick={onClick} className={`flex-1 whitespace-nowrap px-2 py-2 rounded-lg transition ${active ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>{children}</button>;
 }
 function Stat({ label, value }: any) {
   return <div className="rounded-xl bg-card border border-border p-3 text-center"><p className="font-display font-bold text-xl text-primary">{value}</p><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p></div>;
+}
+
+function UsersPanel({ users }: { users: any[] }) {
+  const [q, setQ] = useState("");
+  const [role, setRole] = useState("");
+  const [verif, setVerif] = useState("");
+  const [status, setStatus] = useState("");
+  const [since, setSince] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const filtered = users.filter((u) => {
+    const query = q.trim().toLowerCase();
+    if (query && !((u.full_name ?? "").toLowerCase().includes(query) || (u.email ?? "").toLowerCase().includes(query))) return false;
+    if (role && !(u.roles ?? []).includes(role)) return false;
+    if (verif && (u.verification_status ?? "") !== verif) return false;
+    if (status === "active" && u.is_suspended) return false;
+    if (status === "suspended" && !u.is_suspended) return false;
+    if (since && new Date(u.created_at) < new Date(since)) return false;
+    return true;
+  });
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+      <h3 className="font-display font-bold">Users ({filtered.length})</h3>
+      <div className="space-y-2">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or email…" className="w-full rounded-xl border border-input bg-card p-2.5 text-sm" />
+        <div className="grid grid-cols-2 gap-2">
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">All roles</option>
+            <option value="customer">Customer</option>
+            <option value="worker">Worker</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select value={verif} onChange={(e) => setVerif(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">Any verification</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">Any status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <input type="date" value={since} onChange={(e) => setSince(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs" />
+        </div>
+      </div>
+
+      {filtered.length === 0 && <p className="text-sm text-muted-foreground">No users match.</p>}
+      {filtered.map((u) => {
+        const isOpen = openId === u.user_id;
+        return (
+          <div key={u.user_id} className="py-2 border-t border-border first:border-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm truncate">{u.full_name ?? "—"}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{u.email ?? "—"} · {u.phone ?? "no phone"}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Roles: {(u.roles ?? []).join(", ") || "—"} · Joined {new Date(u.created_at).toLocaleDateString()}
+                  {u.verification_status ? ` · ${u.verification_status}` : ""}
+                </p>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${u.is_suspended ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}>
+                {u.is_suspended ? "Suspended" : "Active"}
+              </span>
+            </div>
+            <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
+              <Eye className="size-3" /> {isOpen ? "Hide" : "View"} details
+            </button>
+            {isOpen && (
+              <div className="mt-2 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
+                <Detail label="Full name" value={u.full_name} />
+                <Detail label="Registration email" value={u.email ?? "—"} />
+                <Detail label="Phone" value={u.phone ?? "—"} />
+                <Detail label="Roles" value={(u.roles ?? []).join(", ") || "—"} />
+                <Detail label="Verification status" value={u.verification_status ?? "—"} />
+                <Detail label="Account status" value={u.is_suspended ? "Suspended" : "Active"} />
+                <Detail label="Joined" value={new Date(u.created_at).toLocaleString()} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
+  );
 }

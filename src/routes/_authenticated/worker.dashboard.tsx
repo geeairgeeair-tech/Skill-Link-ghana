@@ -33,7 +33,7 @@ function WorkerDashboard() {
   };
 
   const isVerified = (wp as any)?.verification_status === "approved";
-  const isSubscribed = (wp as any)?.subscription_expires_at && new Date((wp as any).subscription_expires_at) > new Date();
+  const isSubscribed = true; // Free beta: all approved workers have marketplace access
   const available = (wp as any)?.is_available ?? true;
   const stats = (bookings ?? []).reduce((acc:any, b:any) => {
     acc.total++;

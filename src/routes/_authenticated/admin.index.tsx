@@ -7,7 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { BadgeCheck, X, FileText, Image as ImageIcon, Eye, ChevronDown, ChevronUp } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminPage,
 });
 

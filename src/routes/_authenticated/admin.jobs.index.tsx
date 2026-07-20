@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/hooks/use-auth";
 
-export const Route = createFileRoute("/_authenticated/admin/jobs")({
+export const Route = createFileRoute("/_authenticated/admin/jobs/")({
   component: AdminJobsPage,
 });
 

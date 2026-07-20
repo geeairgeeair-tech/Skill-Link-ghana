@@ -24,15 +24,23 @@ const featuredQuery = queryOptions({
   queryFn: async (): Promise<WorkerCardData[]> => {
     const { data, error } = await supabase
       .from("worker_profiles")
-      .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, categories(name), profiles!worker_profiles_user_id_fkey(full_name, avatar_url)")
+      .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, categories(name)")
+      .eq("verification_status", "approved")
       .order("is_featured", { ascending: false })
       .order("rating", { ascending: false })
       .limit(6);
     if (error) return [];
-    return (data ?? []).map((w: any) => ({
+    const rows = data ?? [];
+    const ids = rows.map((w: any) => w.user_id);
+    const profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+    if (ids.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+      (profs ?? []).forEach((p: any) => profilesMap.set(p.id, { full_name: p.full_name, avatar_url: p.avatar_url }));
+    }
+    return rows.map((w: any) => ({
       user_id: w.user_id,
-      full_name: w.profiles?.full_name ?? "Pro",
-      avatar_url: w.profiles?.avatar_url ?? null,
+      full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
+      avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
       category_name: w.categories?.name ?? null,
       city: w.city, service_area: w.service_area,
       rating: w.rating, reviews_count: w.reviews_count,

@@ -97,6 +97,25 @@ function Onboarding() {
           <Field label="Ghana Card number">
             <input required value={form.ghana_card_number} onChange={e => setForm({...form, ghana_card_number: e.target.value})} placeholder="GHA-XXXXXXXXX-X" className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
           </Field>
+          <Field label="Date of birth">
+            <input
+              required
+              type="date"
+              value={form.date_of_birth}
+              max={maxDobStr}
+              min="1900-01-01"
+              onChange={e => setForm({...form, date_of_birth: e.target.value})}
+              className="w-full rounded-xl border border-input bg-card p-3 text-sm"
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Used for identity and age verification. This information is private and will not appear on your public profile.
+            </p>
+            {!form.date_of_birth && (
+              <p className="text-[11px] text-warning mt-1 font-semibold">
+                Please add your date of birth before submitting for verification.
+              </p>
+            )}
+          </Field>
         </div>
 
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3">

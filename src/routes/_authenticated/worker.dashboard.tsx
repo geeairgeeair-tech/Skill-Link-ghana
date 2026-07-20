@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { BadgeCheck, AlertCircle, Sparkles, MessageCircle } from "lucide-react";
+import { BadgeCheck, AlertCircle, Sparkles, MessageCircle, LifeBuoy, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
   component: WorkerDashboard,

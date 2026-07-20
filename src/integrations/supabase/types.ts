@@ -729,7 +729,7 @@ export type Database = {
         | "completed"
       job_urgency: "normal" | "urgent" | "emergency"
       subscription_plan: "basic" | "premium" | "elite"
-      verification_status: "pending" | "approved" | "rejected"
+      verification_status: "pending" | "approved" | "rejected" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -878,7 +878,7 @@ export const Constants = {
       ],
       job_urgency: ["normal", "urgent", "emergency"],
       subscription_plan: ["basic", "premium", "elite"],
-      verification_status: ["pending", "approved", "rejected"],
+      verification_status: ["pending", "approved", "rejected", "suspended"],
     },
   },
 } as const

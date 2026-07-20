@@ -26,7 +26,14 @@ function ApplyPage() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request-brief", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, budget, status, customer_id, categories(name)").eq("id", id).maybeSingle()).data,
+      .select("id, title, budget, status, customer_id, category_id, categories(name)").eq("id", id).maybeSingle()).data,
+  });
+
+  const { data: workerProfile } = useQuery({
+    queryKey: ["worker-profile-self", user?.id],
+    enabled: !!user,
+    queryFn: async () => (await supabase.from("worker_profiles")
+      .select("verification_status, category_id, categories(name)").eq("user_id", user!.id).maybeSingle()).data,
   });
 
   const { data: existing } = useQuery({

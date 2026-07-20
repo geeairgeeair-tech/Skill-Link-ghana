@@ -393,6 +393,54 @@ export type Database = {
           },
         ]
       }
+      support_tickets: {
+        Row: {
+          admin_id: string | null
+          admin_response: string | null
+          attachment_url: string | null
+          category: string
+          created_at: string
+          id: string
+          message: string
+          related_worker_id: string | null
+          responded_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          admin_response?: string | null
+          attachment_url?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message: string
+          related_worker_id?: string | null
+          responded_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_id?: string | null
+          admin_response?: string | null
+          attachment_url?: string | null
+          category?: string
+          created_at?: string
+          id?: string
+          message?: string
+          related_worker_id?: string | null
+          responded_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -476,6 +524,8 @@ export type Database = {
           phone_verified: boolean | null
           portfolio_images: Json
           rating: number | null
+          rejected_at: string | null
+          rejection_reason: string | null
           reviews_count: number | null
           selfie_url: string | null
           service_area: string | null
@@ -506,6 +556,8 @@ export type Database = {
           phone_verified?: boolean | null
           portfolio_images?: Json
           rating?: number | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
           reviews_count?: number | null
           selfie_url?: string | null
           service_area?: string | null
@@ -536,6 +588,8 @@ export type Database = {
           phone_verified?: boolean | null
           portfolio_images?: Json
           rating?: number | null
+          rejected_at?: string | null
+          rejection_reason?: string | null
           reviews_count?: number | null
           selfie_url?: string | null
           service_area?: string | null
@@ -647,6 +701,45 @@ export type Database = {
       }
     }
     Functions: {
+      admin_get_user_detail: {
+        Args: { _user_id: string }
+        Returns: {
+          address: string
+          age: number
+          applications_count: number
+          avatar_url: string
+          bio: string
+          bookings_as_customer_count: number
+          bookings_as_worker_count: number
+          category_name: string
+          city: string
+          created_at: string
+          date_of_birth: string
+          email: string
+          full_name: string
+          ghana_card_number: string
+          ghana_card_url: string
+          is_available: boolean
+          is_suspended: boolean
+          is_worker: boolean
+          jobs_completed: number
+          jobs_posted_count: number
+          last_sign_in_at: string
+          phone: string
+          rating: number
+          rejected_at: string
+          rejection_reason: string
+          reviews_count: number
+          reviews_received_count: number
+          reviews_written_count: number
+          roles: string[]
+          selfie_url: string
+          service_area: string
+          user_id: string
+          verification_status: string
+          years_experience: number
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -683,6 +776,10 @@ export type Database = {
           years_experience: number
         }[]
       }
+      admin_reject_worker: {
+        Args: { _reason: string; _user_id: string }
+        Returns: undefined
+      }
       get_job_request_address: { Args: { _id: string }; Returns: string }
       get_profile_contact: {
         Args: { _id: string }
@@ -708,6 +805,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      worker_resubmit_verification: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "customer" | "worker" | "admin"

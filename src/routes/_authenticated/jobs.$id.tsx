@@ -37,12 +37,12 @@ function JobDetail() {
     enabled: !!user && !!job && (job as any).customer_id === user.id,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
-  // Worker verification status (gates Apply)
+  // Worker verification status + category (gates Apply)
   const { data: workerProfile } = useQuery({
     queryKey: ["worker-profile-self", user?.id],
     enabled: !!user && role === "worker",
     queryFn: async () => (await supabase.from("worker_profiles")
-      .select("verification_status").eq("user_id", user!.id).maybeSingle()).data,
+      .select("verification_status, category_id, categories(name)").eq("user_id", user!.id).maybeSingle()).data,
   });
 
   // Existing application by this worker for this job

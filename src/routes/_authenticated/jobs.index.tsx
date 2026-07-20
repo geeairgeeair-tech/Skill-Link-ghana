@@ -79,10 +79,18 @@ function JobsBoard() {
           <div>
             <h1 className="font-display text-2xl font-bold">Job board</h1>
             <p className="text-sm opacity-80">
-              {role === "worker" ? "Find jobs near you — call customers directly." : "Posted by customers in Ghana."}
+              {role === "worker"
+                ? (isVerifiedWorker
+                    ? "Jobs matching your profession."
+                    : "Get verified to apply for jobs.")
+                : "Posted by customers in Ghana."}
             </p>
           </div>
-          {role !== "worker" && (
+          {role === "worker" ? (
+            <Link to="/worker/applications" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1">
+              <ListChecks className="size-4"/> My apps
+            </Link>
+          ) : (
             <div className="flex items-center gap-2">
               <Link to="/jobs/mine" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1" aria-label="My posts">
                 <ListChecks className="size-4"/> My posts
@@ -96,6 +104,11 @@ function JobsBoard() {
       </header>
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
+        {role === "worker" && workerProfile && !isVerifiedWorker && (
+          <div className="rounded-xl bg-gold/10 border border-gold/30 p-3 text-xs text-foreground">
+            Your account is <b>{workerProfile.verification_status}</b>. You can browse jobs, but you'll be able to apply once an admin approves your profile.
+          </div>
+        )}
         <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
           <Chip active={!category} onClick={() => setCategory(undefined)} label="All" />
           {(cats ?? []).map(c => (

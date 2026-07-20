@@ -109,12 +109,14 @@ function JobsBoard() {
             Your account is <b>{workerProfile.verification_status}</b>. You can browse jobs, but you'll be able to apply once an admin approves your profile.
           </div>
         )}
-        <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
-          <Chip active={!category} onClick={() => setCategory(undefined)} label="All" />
-          {(cats ?? []).map(c => (
-            <Chip key={c.id} active={category === c.slug} onClick={() => setCategory(c.slug)} label={c.name} />
-          ))}
-        </div>
+        {role !== "worker" && (
+          <div className="flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
+            <Chip active={!category} onClick={() => setCategory(undefined)} label="All" />
+            {(cats ?? []).map(c => (
+              <Chip key={c.id} active={category === c.slug} onClick={() => setCategory(c.slug)} label={c.name} />
+            ))}
+          </div>
+        )}
 
         {isLoading ? (
           <p className="text-center text-sm text-muted-foreground py-10">Loading…</p>

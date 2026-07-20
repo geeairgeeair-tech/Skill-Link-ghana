@@ -29,6 +29,7 @@ import { Route as AuthenticatedJobsIdRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedChatBookingIdRouteImport } from './routes/_authenticated/chat.$bookingId'
 import { Route as AuthenticatedBookWorkerIdRouteImport } from './routes/_authenticated/book.$workerId'
 import { Route as AuthenticatedAdminWorkersRouteImport } from './routes/_authenticated/admin.workers'
+import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authenticated/admin.users'
 import { Route as AuthenticatedJobsIdEditRouteImport } from './routes/_authenticated/jobs.$id.edit'
 import { Route as AuthenticatedJobsIdApplyRouteImport } from './routes/_authenticated/jobs.$id.apply'
 
@@ -138,6 +139,11 @@ const AuthenticatedAdminWorkersRoute =
     path: '/workers',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminUsersRoute = AuthenticatedAdminUsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedJobsIdEditRoute = AuthenticatedJobsIdEditRouteImport.update({
   id: '/edit',
   path: '/edit',
@@ -158,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
+  '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/_authenticated/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
@@ -231,6 +240,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bookings'
     | '/workers/$id'
+    | '/admin/users'
     | '/admin/workers'
     | '/book/$workerId'
     | '/chat/$bookingId'
@@ -254,6 +264,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/bookings'
     | '/workers/$id'
+    | '/admin/users'
     | '/admin/workers'
     | '/book/$workerId'
     | '/chat/$bookingId'
@@ -278,6 +289,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/bookings'
     | '/workers/$id'
+    | '/_authenticated/admin/users'
     | '/_authenticated/admin/workers'
     | '/_authenticated/book/$workerId'
     | '/_authenticated/chat/$bookingId'
@@ -444,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminWorkersRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/users': {
+      id: '/_authenticated/admin/users'
+      path: '/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AuthenticatedAdminUsersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/jobs/$id/edit': {
       id: '/_authenticated/jobs/$id/edit'
       path: '/edit'
@@ -462,10 +481,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminWorkersRoute: typeof AuthenticatedAdminWorkersRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminWorkersRoute: AuthenticatedAdminWorkersRoute,
 }
 

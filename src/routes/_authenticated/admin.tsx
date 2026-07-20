@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "pending" | "all-workers" | "bookings";
+type Tab = "pending" | "all-workers" | "jobs" | "bookings";
 
 async function attachProfiles<T extends { user_id: string }>(rows: T[]) {
   if (!rows.length) return rows as (T & { profile?: any })[];
@@ -56,9 +56,35 @@ function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("worker_profiles")
-        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, categories(name)")
+        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, subscription_expires_at, created_at, categories(name)")
         .order("created_at", { ascending: false });
       return await attachProfiles((rows as any) ?? []);
+    },
+  });
+
+  const { data: allJobs } = useQuery({
+    queryKey: ["admin-all-jobs"],
+    enabled: role === "admin" && tab === "jobs",
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("job_requests")
+        .select("id, title, status, urgency, budget, city, service_area, created_at, customer_id, categories(name)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const list = rows ?? [];
+      // Attach customer profile
+      const custIds = Array.from(new Set(list.map((r: any) => r.customer_id)));
+      const { data: profs } = custIds.length
+        ? await supabase.from("profiles").select("id, full_name").in("id", custIds)
+        : { data: [] as any[] };
+      const pmap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      const ids = list.map((r: any) => r.id);
+      const { data: apps } = ids.length
+        ? await supabase.from("job_applications").select("job_id").in("job_id", ids)
+        : { data: [] as any[] };
+      const cmap = new Map<string, number>();
+      (apps ?? []).forEach((a: any) => cmap.set(a.job_id, (cmap.get(a.job_id) ?? 0) + 1));
+      return list.map((r: any) => ({ ...r, customer: pmap.get(r.customer_id), app_count: cmap.get(r.id) ?? 0 }));
     },
   });
 
@@ -131,7 +157,8 @@ function AdminPage() {
         <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold">
           <TabBtn active={tab === "pending"} onClick={() => setTab("pending")}>Pending ({pending?.length ?? 0})</TabBtn>
           <TabBtn active={tab === "all-workers"} onClick={() => setTab("all-workers")}>Workers</TabBtn>
-          <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")}>Jobs</TabBtn>
+          <TabBtn active={tab === "jobs"} onClick={() => setTab("jobs")}>Jobs</TabBtn>
+          <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")}>Bookings</TabBtn>
         </div>
 
         {tab === "pending" && (
@@ -151,22 +178,59 @@ function AdminPage() {
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
             <h3 className="font-display font-bold">All workers</h3>
             {(allWorkers ?? []).length === 0 && <p className="text-sm text-muted-foreground">No workers yet.</p>}
-            {(allWorkers ?? []).map((w: any) => (
-              <div key={w.user_id} className="flex items-center justify-between py-2 border-t border-border first:border-0">
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm truncate">{w.profile?.full_name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {w.categories?.name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
-                  </p>
+            {(allWorkers ?? []).map((w: any) => {
+              const subActive = w.subscription_expires_at && new Date(w.subscription_expires_at) > new Date();
+              return (
+                <div key={w.user_id} className="py-2 border-t border-border first:border-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-sm truncate">{w.profile?.full_name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {w.categories?.name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
+                      </p>
+                    </div>
+                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {w.verification_status !== "approved" && (
+                      <button onClick={() => decide(w.user_id, "approved")} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">Approve</button>
+                    )}
+                    {w.verification_status !== "rejected" && (
+                      <button onClick={() => decide(w.user_id, "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">
+                        {w.verification_status === "approved" ? "Suspend" : "Reject"}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="text-right shrink-0 flex items-center gap-2">
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
-                  {w.verification_status !== "approved" && (
-                    <button onClick={() => decide(w.user_id, "approved")} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">Approve</button>
-                  )}
-                  {w.verification_status !== "rejected" && (
-                    <button onClick={() => decide(w.user_id, "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Reject</button>
-                  )}
+              );
+            })}
+          </section>
+        )}
+
+        {tab === "jobs" && (
+          <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+            <h3 className="font-display font-bold">All job posts</h3>
+            {(allJobs ?? []).length === 0 && <p className="text-sm text-muted-foreground">No job posts yet.</p>}
+            {(allJobs ?? []).map((j: any) => (
+              <div key={j.id} className="py-2 border-t border-border first:border-0">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-sm truncate">{j.title}</p>
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground shrink-0">{j.status}</span>
+                </div>
+                <p className="text-xs text-muted-foreground truncate">
+                  {j.categories?.name ?? "—"} · by {j.customer?.full_name ?? "—"} · {j.service_area ?? j.city ?? "—"}
+                </p>
+                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
+                  {j.urgency && j.urgency !== "normal" && <span className="uppercase font-bold">{j.urgency}</span>}
+                  {j.budget ? <span>GH₵{j.budget}</span> : null}
+                  <span>{j.app_count} applications</span>
+                  <span>{new Date(j.created_at).toLocaleDateString()}</span>
+                </div>
+                <div className="mt-2">
+                  <a href={`/jobs/${j.id}`} className="text-[11px] font-semibold text-primary">View →</a>
                 </div>
               </div>
             ))}

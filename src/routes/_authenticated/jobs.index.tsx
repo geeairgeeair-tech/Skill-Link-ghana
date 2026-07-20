@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/jobs/")({
 });
 
 function JobsBoard() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const [category, setCategory] = useState<string | undefined>();
 
   const { data: cats } = useQuery({
@@ -19,21 +19,57 @@ function JobsBoard() {
     queryFn: async () => (await supabase.from("categories").select("id, slug, name").eq("active", true).order("sort_order")).data ?? [],
   });
 
+  // Worker's own profile (for category + service area filtering + verification gate)
+  const { data: workerProfile } = useQuery({
+    queryKey: ["worker-profile-self", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => (await supabase.from("worker_profiles")
+      .select("category_id, service_area, city, verification_status")
+      .eq("user_id", user!.id).maybeSingle()).data,
+  });
+
+  const isVerifiedWorker = role === "worker" && workerProfile?.verification_status === "approved";
+  const workerCategoryId = workerProfile?.category_id;
+  const workerArea = (workerProfile?.service_area ?? workerProfile?.city ?? "").toLowerCase().trim();
+
+  // Applications this worker has already made (to hide "Apply" on cards they've applied to)
+  const { data: myAppliedIds } = useQuery({
+    queryKey: ["my-application-job-ids", user?.id],
+    enabled: !!user && role === "worker",
+    queryFn: async () => {
+      const { data } = await supabase.from("job_applications").select("job_id").eq("worker_id", user!.id);
+      return new Set((data ?? []).map((r: any) => r.job_id));
+    },
+  });
+
   const { data: jobs, isLoading } = useQuery({
-    queryKey: ["job-requests", category],
+    queryKey: ["job-requests", category, role, workerCategoryId, workerArea],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, status, urgency, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, service_area, status, urgency, preferred_at, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status","open")
         .order("urgency", { ascending: false })
         .order("created_at", { ascending: false })
         .limit(50);
-      if (category) {
+      if (role === "worker" && workerCategoryId) {
+        q = q.eq("category_id", workerCategoryId);
+      } else if (category) {
         const cat = (cats ?? []).find(c => c.slug === category);
         if (cat) q = q.eq("category_id", cat.id);
       }
-      return (await q).data ?? [];
+      const { data } = await q;
+      let rows = data ?? [];
+      if (role === "worker" && workerArea) {
+        // Soft area match: keep jobs whose city/service_area contains the worker's area, else fall back to all
+        const matched = rows.filter((j: any) =>
+          (j.city ?? "").toLowerCase().includes(workerArea) ||
+          (j.service_area ?? "").toLowerCase().includes(workerArea)
+        );
+        if (matched.length > 0) rows = matched;
+      }
+      return rows;
     },
+    enabled: role !== "worker" || !!workerProfile,
   });
 
   return (

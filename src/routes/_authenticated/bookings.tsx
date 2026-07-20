@@ -15,9 +15,11 @@ const STATUS_COLORS: Record<string, string> = {
   pending: "bg-warning/20 text-warning-foreground",
   accepted: "bg-primary-soft text-primary",
   on_the_way: "bg-primary-soft text-primary",
+  arrived: "bg-primary-soft text-primary",
   in_progress: "bg-primary-soft text-primary",
   completed: "bg-success/20 text-success-foreground",
   cancelled: "bg-destructive/15 text-destructive",
+  declined: "bg-destructive/15 text-destructive",
 };
 
 function BookingsPage() {

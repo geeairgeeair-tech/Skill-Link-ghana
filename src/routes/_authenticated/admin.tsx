@@ -289,14 +289,14 @@ function PendingRow({ w, decide, signedUrl }: any) {
     <div className="py-3 border-t border-border first:border-0">
       <div className="flex items-start gap-3">
         <div className="size-12 shrink-0 rounded-xl bg-primary-soft overflow-hidden flex items-center justify-center text-primary font-bold">
-          {w.profile?.avatar_url ? (
-            <img src={w.profile.avatar_url} alt={w.profile?.full_name} className="size-full object-cover" />
-          ) : (w.profile?.full_name?.[0]?.toUpperCase() ?? "?")}
+          {w.avatar_url ? (
+            <img src={w.avatar_url} alt={w.full_name} className="size-full object-cover" />
+          ) : (w.full_name?.[0]?.toUpperCase() ?? "?")}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate">{w.profile?.full_name ?? "Unnamed"}</p>
+          <p className="font-semibold truncate">{w.full_name ?? "Unnamed"}</p>
           <p className="text-xs text-muted-foreground truncate">
-            {w.categories?.name ?? "—"} · {w.years_experience ?? 0}y exp · {w.service_area ?? w.city ?? "—"}
+            {w.category_name ?? "—"} · {w.years_experience ?? 0}y exp · {w.service_area ?? w.city ?? "—"}
           </p>
           <p className="text-[10px] text-muted-foreground">
             Submitted {new Date(w.created_at).toLocaleDateString()} · <span className="uppercase font-bold text-warning">pending</span>
@@ -318,16 +318,19 @@ function PendingRow({ w, decide, signedUrl }: any) {
 
       {open && (
         <div className="mt-3 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
-          <Detail label="Category" value={w.categories?.name} />
+          <Detail label="Full name" value={w.full_name} />
+          <Detail label="Registration email" value={w.email ?? "—"} />
+          <Detail label="Phone" value={w.phone ?? "—"} />
+          <div className="grid grid-cols-2 gap-2">
+            <Detail label="Date of birth" value={w.date_of_birth ?? "—"} />
+            <Detail label="Age" value={w.age ? `${w.age} years` : "—"} />
+          </div>
+          <Detail label="Category" value={w.category_name} />
           <Detail label="Experience" value={`${w.years_experience ?? 0} years`} />
           <Detail label="Service area" value={w.service_area ?? w.city} />
-          <Detail label="Phone" value={w.phone ?? "—"} />
+          <Detail label="Verification status" value={w.verification_status} />
+          <Detail label="Joined" value={new Date(w.created_at).toLocaleDateString()} />
           <Detail label="Ghana Card #" value={w.ghana_card_number ?? "—"} />
-          <div className="grid grid-cols-3 gap-2">
-            <Detail label="From (GH₵)" value={w.starting_price ?? "—"} />
-            <Detail label="Hourly (GH₵)" value={w.hourly_rate ?? "—"} />
-            <Detail label="Call-out (GH₵)" value={w.callout_fee ?? "—"} />
-          </div>
           {w.bio && (
             <div>
               <p className="text-[10px] uppercase font-bold text-muted-foreground">Bio</p>

@@ -56,9 +56,35 @@ function AdminPage() {
     queryFn: async () => {
       const { data: rows } = await supabase
         .from("worker_profiles")
-        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, categories(name)")
+        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, subscription_expires_at, created_at, categories(name)")
         .order("created_at", { ascending: false });
       return await attachProfiles((rows as any) ?? []);
+    },
+  });
+
+  const { data: allJobs } = useQuery({
+    queryKey: ["admin-all-jobs"],
+    enabled: role === "admin" && tab === "jobs",
+    queryFn: async () => {
+      const { data: rows } = await supabase
+        .from("job_requests")
+        .select("id, title, status, urgency, budget, city, service_area, created_at, customer_id, categories(name)")
+        .order("created_at", { ascending: false })
+        .limit(200);
+      const list = rows ?? [];
+      // Attach customer profile
+      const custIds = Array.from(new Set(list.map((r: any) => r.customer_id)));
+      const { data: profs } = custIds.length
+        ? await supabase.from("profiles").select("id, full_name").in("id", custIds)
+        : { data: [] as any[] };
+      const pmap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      const ids = list.map((r: any) => r.id);
+      const { data: apps } = ids.length
+        ? await supabase.from("job_applications").select("job_id").in("job_id", ids)
+        : { data: [] as any[] };
+      const cmap = new Map<string, number>();
+      (apps ?? []).forEach((a: any) => cmap.set(a.job_id, (cmap.get(a.job_id) ?? 0) + 1));
+      return list.map((r: any) => ({ ...r, customer: pmap.get(r.customer_id), app_count: cmap.get(r.id) ?? 0 }));
     },
   });
 

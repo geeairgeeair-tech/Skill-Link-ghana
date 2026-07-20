@@ -123,17 +123,23 @@ function AdminPage() {
   });
 
   const decide = async (id: string, status: "approved" | "rejected" | "suspended") => {
-    const { error } = await supabase.from("worker_profiles").update({ verification_status: status }).eq("user_id", id);
-    if (error) return toast.error(error.message);
-    // Audit log — non-blocking
-    if (user?.id) {
-      await supabase.from("admin_audit_logs").insert({
-        admin_id: user.id,
-        action: status === "approved" ? "worker_approved" : status === "suspended" ? "worker_suspended" : "worker_rejected",
-        target_user_id: id,
-        target_type: "worker",
-        details: { status },
-      });
+    if (status === "rejected") {
+      const reason = window.prompt("Enter rejection reason (min 5 chars):");
+      if (!reason || reason.trim().length < 5) { toast.error("Rejection reason is required"); return; }
+      const { error } = await supabase.rpc("admin_reject_worker", { _user_id: id, _reason: reason.trim() });
+      if (error) return toast.error(error.message);
+    } else {
+      const { error } = await supabase.from("worker_profiles")
+        .update({ verification_status: status, rejection_reason: null, rejected_at: null })
+        .eq("user_id", id);
+      if (error) return toast.error(error.message);
+      if (user?.id) {
+        await supabase.from("admin_audit_logs").insert({
+          admin_id: user.id,
+          action: status === "approved" ? "worker_approved" : "worker_suspended",
+          target_user_id: id, target_type: "worker", details: { status },
+        });
+      }
     }
     toast.success(`Worker ${status}`);
     qc.invalidateQueries({ queryKey: ["admin-pending"] });

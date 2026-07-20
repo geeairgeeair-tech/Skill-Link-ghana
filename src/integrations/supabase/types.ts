@@ -94,6 +94,50 @@ export type Database = {
         }
         Relationships: []
       }
+      job_applications: {
+        Row: {
+          created_at: string
+          estimated_start: string | null
+          id: string
+          job_id: string
+          message: string | null
+          quoted_price: number
+          status: Database["public"]["Enums"]["job_application_status"]
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_start?: string | null
+          id?: string
+          job_id: string
+          message?: string | null
+          quoted_price: number
+          status?: Database["public"]["Enums"]["job_application_status"]
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          estimated_start?: string | null
+          id?: string
+          job_id?: string
+          message?: string | null
+          quoted_price?: number
+          status?: Database["public"]["Enums"]["job_application_status"]
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_requests: {
         Row: {
           address: string | null
@@ -603,6 +647,7 @@ export type Database = {
         | "in_progress"
         | "completed"
         | "cancelled"
+      job_application_status: "pending" | "withdrawn" | "accepted" | "rejected"
       job_request_status:
         | "open"
         | "assigned"
@@ -750,6 +795,7 @@ export const Constants = {
         "completed",
         "cancelled",
       ],
+      job_application_status: ["pending", "withdrawn", "accepted", "rejected"],
       job_request_status: [
         "open",
         "assigned",

@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 export function AppShell({ children }: { children: ReactNode }) {
   const { role } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const effectiveRole = role ?? (pathname.startsWith("/admin") ? "admin" : null);
+  const effectiveRole = pathname.startsWith("/admin") ? "admin" : role;
 
   const nav = effectiveRole === "worker"
     ? [

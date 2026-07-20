@@ -12,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Job board" },
+        { to: "/worker/applications", icon: FileText, label: "Applied" },
         { to: "/worker/jobs", icon: Calendar, label: "My jobs" },
         { to: "/profile", icon: User, label: "Profile" },
       ]

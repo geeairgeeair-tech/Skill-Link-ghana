@@ -125,9 +125,20 @@ function AdminPage() {
   const decide = async (id: string, status: "approved" | "rejected") => {
     const { error } = await supabase.from("worker_profiles").update({ verification_status: status }).eq("user_id", id);
     if (error) return toast.error(error.message);
+    // Audit log — non-blocking
+    if (user?.id) {
+      await supabase.from("admin_audit_logs").insert({
+        admin_id: user.id,
+        action: status === "approved" ? "worker_approved" : "worker_rejected",
+        target_user_id: id,
+        target_type: "worker",
+        details: { status },
+      });
+    }
     toast.success(`Worker ${status}`);
     qc.invalidateQueries({ queryKey: ["admin-pending"] });
     qc.invalidateQueries({ queryKey: ["admin-all-workers"] });
+    qc.invalidateQueries({ queryKey: ["admin-all-users"] });
     qc.invalidateQueries({ queryKey: ["admin-stats"] });
   };
 

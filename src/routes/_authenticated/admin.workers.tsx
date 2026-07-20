@@ -22,7 +22,7 @@ function AdminWorkersPage() {
     enabled: role === "admin",
     queryFn: async () => {
       const { data, error } = await supabase.rpc("admin_list_workers", {
-        _status: status === "all" ? null : status,
+        _status: status === "all" ? undefined : status,
       });
       if (error) throw error;
       return (data as any[]) ?? [];

@@ -33,6 +33,7 @@ import { Route as AuthenticatedAdminUsersRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAdminJobsRouteImport } from './routes/_authenticated/admin.jobs'
 import { Route as AuthenticatedJobsIdEditRouteImport } from './routes/_authenticated/jobs.$id.edit'
 import { Route as AuthenticatedJobsIdApplyRouteImport } from './routes/_authenticated/jobs.$id.apply'
+import { Route as AuthenticatedAdminJobsJobIdRouteImport } from './routes/_authenticated/admin.jobs.$jobId'
 
 const WorkersRoute = WorkersRouteImport.update({
   id: '/workers',
@@ -161,6 +162,12 @@ const AuthenticatedJobsIdApplyRoute =
     path: '/apply',
     getParentRoute: () => AuthenticatedJobsIdRoute,
   } as any)
+const AuthenticatedAdminJobsJobIdRoute =
+  AuthenticatedAdminJobsJobIdRouteImport.update({
+    id: '/$jobId',
+    path: '/$jobId',
+    getParentRoute: () => AuthenticatedAdminJobsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -170,7 +177,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
-  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/admin/jobs/$jobId': typeof AuthenticatedAdminJobsJobIdRoute
   '/jobs/$id/apply': typeof AuthenticatedJobsIdApplyRoute
   '/jobs/$id/edit': typeof AuthenticatedJobsIdEditRoute
 }
@@ -195,7 +203,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
-  '/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
@@ -209,6 +217,7 @@ export interface FileRoutesByTo {
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
+  '/admin/jobs/$jobId': typeof AuthenticatedAdminJobsJobIdRoute
   '/jobs/$id/apply': typeof AuthenticatedJobsIdApplyRoute
   '/jobs/$id/edit': typeof AuthenticatedJobsIdEditRoute
 }
@@ -222,7 +231,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/workers/$id': typeof WorkersIdRoute
-  '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRoute
+  '/_authenticated/admin/jobs': typeof AuthenticatedAdminJobsRouteWithChildren
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/admin/workers': typeof AuthenticatedAdminWorkersRoute
   '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
   '/_authenticated/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
+  '/_authenticated/admin/jobs/$jobId': typeof AuthenticatedAdminJobsJobIdRoute
   '/_authenticated/jobs/$id/apply': typeof AuthenticatedJobsIdApplyRoute
   '/_authenticated/jobs/$id/edit': typeof AuthenticatedJobsIdEditRoute
 }
@@ -263,6 +273,7 @@ export interface FileRouteTypes {
     | '/worker/onboarding'
     | '/worker/subscription'
     | '/jobs/'
+    | '/admin/jobs/$jobId'
     | '/jobs/$id/apply'
     | '/jobs/$id/edit'
   fileRoutesByTo: FileRoutesByTo
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/worker/onboarding'
     | '/worker/subscription'
     | '/jobs'
+    | '/admin/jobs/$jobId'
     | '/jobs/$id/apply'
     | '/jobs/$id/edit'
   id:
@@ -314,6 +326,7 @@ export interface FileRouteTypes {
     | '/_authenticated/worker/onboarding'
     | '/_authenticated/worker/subscription'
     | '/_authenticated/jobs/'
+    | '/_authenticated/admin/jobs/$jobId'
     | '/_authenticated/jobs/$id/apply'
     | '/_authenticated/jobs/$id/edit'
   fileRoutesById: FileRoutesById
@@ -496,17 +509,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsIdApplyRouteImport
       parentRoute: typeof AuthenticatedJobsIdRoute
     }
+    '/_authenticated/admin/jobs/$jobId': {
+      id: '/_authenticated/admin/jobs/$jobId'
+      path: '/$jobId'
+      fullPath: '/admin/jobs/$jobId'
+      preLoaderRoute: typeof AuthenticatedAdminJobsJobIdRouteImport
+      parentRoute: typeof AuthenticatedAdminJobsRoute
+    }
   }
 }
 
+interface AuthenticatedAdminJobsRouteChildren {
+  AuthenticatedAdminJobsJobIdRoute: typeof AuthenticatedAdminJobsJobIdRoute
+}
+
+const AuthenticatedAdminJobsRouteChildren: AuthenticatedAdminJobsRouteChildren =
+  {
+    AuthenticatedAdminJobsJobIdRoute: AuthenticatedAdminJobsJobIdRoute,
+  }
+
+const AuthenticatedAdminJobsRouteWithChildren =
+  AuthenticatedAdminJobsRoute._addFileChildren(
+    AuthenticatedAdminJobsRouteChildren,
+  )
+
 interface AuthenticatedAdminRouteChildren {
-  AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRoute
+  AuthenticatedAdminJobsRoute: typeof AuthenticatedAdminJobsRouteWithChildren
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminWorkersRoute: typeof AuthenticatedAdminWorkersRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
-  AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRoute,
+  AuthenticatedAdminJobsRoute: AuthenticatedAdminJobsRouteWithChildren,
   AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
   AuthenticatedAdminWorkersRoute: AuthenticatedAdminWorkersRoute,
 }

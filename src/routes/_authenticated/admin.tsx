@@ -11,7 +11,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type Tab = "pending" | "all-workers" | "jobs" | "bookings";
+type Tab = "pending" | "all-workers" | "users" | "jobs" | "bookings";
 
 async function attachProfiles<T extends { user_id: string }>(rows: T[]) {
   if (!rows.length) return rows as (T & { profile?: any })[];
@@ -25,7 +25,7 @@ async function attachProfiles<T extends { user_id: string }>(rows: T[]) {
 }
 
 function AdminPage() {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>("pending");
 
@@ -33,19 +33,13 @@ function AdminPage() {
     queryKey: ["admin-pending"],
     enabled: role === "admin",
     queryFn: async () => {
-      const { data: rows, error } = await supabase
-        .from("worker_profiles")
-        .select("user_id, years_experience, bio, service_area, city, hourly_rate, callout_fee, starting_price, created_at, category_id, categories(name)")
-        .eq("verification_status", "pending")
-        .order("created_at", { ascending: false });
+      const { data: rows, error } = await supabase.rpc("admin_list_workers", { _status: "pending" });
       if (error) { toast.error(error.message); return []; }
-      const enriched = await attachProfiles(rows ?? []);
-      return await Promise.all(enriched.map(async (r: any) => {
+      // Attach identity docs for each pending worker
+      return await Promise.all(((rows as any[]) ?? []).map(async (r: any) => {
         const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: r.user_id });
-        const { data: contact } = await supabase.rpc("get_profile_contact", { _id: r.user_id });
         const i = (ident as any)?.[0] ?? {};
-        const c = (contact as any)?.[0] ?? {};
-        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url, phone: c?.phone };
+        return { ...r, ghana_card_number: i.ghana_card_number, ghana_card_url: i.ghana_card_url, selfie_url: i.selfie_url };
       }));
     },
   });
@@ -54,11 +48,19 @@ function AdminPage() {
     queryKey: ["admin-all-workers"],
     enabled: role === "admin" && tab === "all-workers",
     queryFn: async () => {
-      const { data: rows } = await supabase
-        .from("worker_profiles")
-        .select("user_id, verification_status, jobs_completed, rating, reviews_count, is_available, subscription_expires_at, created_at, categories(name)")
-        .order("created_at", { ascending: false });
-      return await attachProfiles((rows as any) ?? []);
+      const { data, error } = await supabase.rpc("admin_list_workers");
+      if (error) { toast.error(error.message); return []; }
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const { data: allUsers } = useQuery({
+    queryKey: ["admin-all-users"],
+    enabled: role === "admin" && tab === "users",
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_users");
+      if (error) { toast.error(error.message); return []; }
+      return (data as any[]) ?? [];
     },
   });
 
@@ -123,9 +125,20 @@ function AdminPage() {
   const decide = async (id: string, status: "approved" | "rejected") => {
     const { error } = await supabase.from("worker_profiles").update({ verification_status: status }).eq("user_id", id);
     if (error) return toast.error(error.message);
+    // Audit log — non-blocking
+    if (user?.id) {
+      await supabase.from("admin_audit_logs").insert({
+        admin_id: user.id,
+        action: status === "approved" ? "worker_approved" : "worker_rejected",
+        target_user_id: id,
+        target_type: "worker",
+        details: { status },
+      });
+    }
     toast.success(`Worker ${status}`);
     qc.invalidateQueries({ queryKey: ["admin-pending"] });
     qc.invalidateQueries({ queryKey: ["admin-all-workers"] });
+    qc.invalidateQueries({ queryKey: ["admin-all-users"] });
     qc.invalidateQueries({ queryKey: ["admin-stats"] });
   };
 
@@ -154,9 +167,10 @@ function AdminPage() {
           <Stat label="Done" value={stats?.completed ?? 0} />
         </div>
 
-        <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold">
+        <div className="flex gap-1 rounded-xl bg-muted p-1 text-xs font-semibold overflow-x-auto">
           <TabBtn active={tab === "pending"} onClick={() => setTab("pending")}>Pending ({pending?.length ?? 0})</TabBtn>
           <TabBtn active={tab === "all-workers"} onClick={() => setTab("all-workers")}>Workers</TabBtn>
+          <TabBtn active={tab === "users"} onClick={() => setTab("users")}>Users</TabBtn>
           <TabBtn active={tab === "jobs"} onClick={() => setTab("jobs")}>Jobs</TabBtn>
           <TabBtn active={tab === "bookings"} onClick={() => setTab("bookings")}>Bookings</TabBtn>
         </div>
@@ -184,12 +198,15 @@ function AdminPage() {
                 <div key={w.user_id} className="py-2 border-t border-border first:border-0">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-sm truncate">{w.profile?.full_name ?? "—"}</p>
+                      <p className="font-semibold text-sm truncate">{w.full_name ?? "—"}</p>
                       <p className="text-xs text-muted-foreground truncate">
-                        {w.categories?.name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
+                        {w.category_name ?? "—"} · {w.jobs_completed ?? 0} jobs · ★{Number(w.rating ?? 0).toFixed(1)} ({w.reviews_count ?? 0})
+                      </p>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        {w.email ?? "—"} · {w.phone ?? "no phone"} · DOB: {w.date_of_birth ?? "—"}{w.age ? ` (${w.age}y)` : ""}
                       </p>
                       <p className="text-[10px] text-muted-foreground">
-                        Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
+                        {w.service_area ?? w.city ?? "—"} · {w.years_experience ?? 0}y exp · Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
                       </p>
                     </div>
                     <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
@@ -209,6 +226,9 @@ function AdminPage() {
             })}
           </section>
         )}
+
+        {tab === "users" && <UsersPanel users={allUsers ?? []} />}
+
 
         {tab === "jobs" && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
@@ -269,14 +289,14 @@ function PendingRow({ w, decide, signedUrl }: any) {
     <div className="py-3 border-t border-border first:border-0">
       <div className="flex items-start gap-3">
         <div className="size-12 shrink-0 rounded-xl bg-primary-soft overflow-hidden flex items-center justify-center text-primary font-bold">
-          {w.profile?.avatar_url ? (
-            <img src={w.profile.avatar_url} alt={w.profile?.full_name} className="size-full object-cover" />
-          ) : (w.profile?.full_name?.[0]?.toUpperCase() ?? "?")}
+          {w.avatar_url ? (
+            <img src={w.avatar_url} alt={w.full_name} className="size-full object-cover" />
+          ) : (w.full_name?.[0]?.toUpperCase() ?? "?")}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate">{w.profile?.full_name ?? "Unnamed"}</p>
+          <p className="font-semibold truncate">{w.full_name ?? "Unnamed"}</p>
           <p className="text-xs text-muted-foreground truncate">
-            {w.categories?.name ?? "—"} · {w.years_experience ?? 0}y exp · {w.service_area ?? w.city ?? "—"}
+            {w.category_name ?? "—"} · {w.years_experience ?? 0}y exp · {w.service_area ?? w.city ?? "—"}
           </p>
           <p className="text-[10px] text-muted-foreground">
             Submitted {new Date(w.created_at).toLocaleDateString()} · <span className="uppercase font-bold text-warning">pending</span>
@@ -298,16 +318,19 @@ function PendingRow({ w, decide, signedUrl }: any) {
 
       {open && (
         <div className="mt-3 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
-          <Detail label="Category" value={w.categories?.name} />
+          <Detail label="Full name" value={w.full_name} />
+          <Detail label="Registration email" value={w.email ?? "—"} />
+          <Detail label="Phone" value={w.phone ?? "—"} />
+          <div className="grid grid-cols-2 gap-2">
+            <Detail label="Date of birth" value={w.date_of_birth ?? "—"} />
+            <Detail label="Age" value={w.age ? `${w.age} years` : "—"} />
+          </div>
+          <Detail label="Category" value={w.category_name} />
           <Detail label="Experience" value={`${w.years_experience ?? 0} years`} />
           <Detail label="Service area" value={w.service_area ?? w.city} />
-          <Detail label="Phone" value={w.phone ?? "—"} />
+          <Detail label="Verification status" value={w.verification_status} />
+          <Detail label="Joined" value={new Date(w.created_at).toLocaleDateString()} />
           <Detail label="Ghana Card #" value={w.ghana_card_number ?? "—"} />
-          <div className="grid grid-cols-3 gap-2">
-            <Detail label="From (GH₵)" value={w.starting_price ?? "—"} />
-            <Detail label="Hourly (GH₵)" value={w.hourly_rate ?? "—"} />
-            <Detail label="Call-out (GH₵)" value={w.callout_fee ?? "—"} />
-          </div>
           {w.bio && (
             <div>
               <p className="text-[10px] uppercase font-bold text-muted-foreground">Bio</p>
@@ -354,8 +377,93 @@ function Detail({ label, value }: any) {
   );
 }
 function TabBtn({ active, onClick, children }: any) {
-  return <button onClick={onClick} className={`flex-1 px-2 py-2 rounded-lg transition ${active ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>{children}</button>;
+  return <button onClick={onClick} className={`flex-1 whitespace-nowrap px-2 py-2 rounded-lg transition ${active ? "bg-card shadow text-foreground" : "text-muted-foreground"}`}>{children}</button>;
 }
 function Stat({ label, value }: any) {
   return <div className="rounded-xl bg-card border border-border p-3 text-center"><p className="font-display font-bold text-xl text-primary">{value}</p><p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p></div>;
+}
+
+function UsersPanel({ users }: { users: any[] }) {
+  const [q, setQ] = useState("");
+  const [role, setRole] = useState("");
+  const [verif, setVerif] = useState("");
+  const [status, setStatus] = useState("");
+  const [since, setSince] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const filtered = users.filter((u) => {
+    const query = q.trim().toLowerCase();
+    if (query && !((u.full_name ?? "").toLowerCase().includes(query) || (u.email ?? "").toLowerCase().includes(query))) return false;
+    if (role && !(u.roles ?? []).includes(role)) return false;
+    if (verif && (u.verification_status ?? "") !== verif) return false;
+    if (status === "active" && u.is_suspended) return false;
+    if (status === "suspended" && !u.is_suspended) return false;
+    if (since && new Date(u.created_at) < new Date(since)) return false;
+    return true;
+  });
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+      <h3 className="font-display font-bold">Users ({filtered.length})</h3>
+      <div className="space-y-2">
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name or email…" className="w-full rounded-xl border border-input bg-card p-2.5 text-sm" />
+        <div className="grid grid-cols-2 gap-2">
+          <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">All roles</option>
+            <option value="customer">Customer</option>
+            <option value="worker">Worker</option>
+            <option value="admin">Admin</option>
+          </select>
+          <select value={verif} onChange={(e) => setVerif(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">Any verification</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs">
+            <option value="">Any status</option>
+            <option value="active">Active</option>
+            <option value="suspended">Suspended</option>
+          </select>
+          <input type="date" value={since} onChange={(e) => setSince(e.target.value)} className="rounded-xl border border-input bg-card p-2.5 text-xs" />
+        </div>
+      </div>
+
+      {filtered.length === 0 && <p className="text-sm text-muted-foreground">No users match.</p>}
+      {filtered.map((u) => {
+        const isOpen = openId === u.user_id;
+        return (
+          <div key={u.user_id} className="py-2 border-t border-border first:border-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm truncate">{u.full_name ?? "—"}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{u.email ?? "—"} · {u.phone ?? "no phone"}</p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  Roles: {(u.roles ?? []).join(", ") || "—"} · Joined {new Date(u.created_at).toLocaleDateString()}
+                  {u.verification_status ? ` · ${u.verification_status}` : ""}
+                </p>
+              </div>
+              <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${u.is_suspended ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}>
+                {u.is_suspended ? "Suspended" : "Active"}
+              </span>
+            </div>
+            <button onClick={() => setOpenId(isOpen ? null : u.user_id)} className="mt-1 inline-flex items-center gap-1 px-2 py-1 rounded bg-muted text-[11px] font-semibold">
+              <Eye className="size-3" /> {isOpen ? "Hide" : "View"} details
+            </button>
+            {isOpen && (
+              <div className="mt-2 rounded-xl bg-muted/40 p-3 space-y-2 text-sm">
+                <Detail label="Full name" value={u.full_name} />
+                <Detail label="Registration email" value={u.email ?? "—"} />
+                <Detail label="Phone" value={u.phone ?? "—"} />
+                <Detail label="Roles" value={(u.roles ?? []).join(", ") || "—"} />
+                <Detail label="Verification status" value={u.verification_status ?? "—"} />
+                <Detail label="Account status" value={u.is_suspended ? "Suspended" : "Active"} />
+                <Detail label="Joined" value={new Date(u.created_at).toLocaleString()} />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </section>
+  );
 }

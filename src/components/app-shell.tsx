@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare } from "lucide-react";
+import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, FileText } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";

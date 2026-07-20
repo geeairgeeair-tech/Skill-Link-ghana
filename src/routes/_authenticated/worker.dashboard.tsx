@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { BadgeCheck, AlertCircle, Sparkles, MessageCircle, LifeBuoy, RefreshCw } from "lucide-react";
+import { BadgeCheck, AlertCircle, MessageCircle, LifeBuoy, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
   component: WorkerDashboard,
@@ -33,7 +33,7 @@ function WorkerDashboard() {
   };
 
   const isVerified = (wp as any)?.verification_status === "approved";
-  const isSubscribed = (wp as any)?.subscription_expires_at && new Date((wp as any).subscription_expires_at) > new Date();
+  const isSubscribed = true; // Free beta: all approved workers have marketplace access
   const available = (wp as any)?.is_available ?? true;
   const stats = (bookings ?? []).reduce((acc:any, b:any) => {
     acc.total++;
@@ -93,17 +93,9 @@ function WorkerDashboard() {
             <p className="text-sm text-muted-foreground mt-1">Your account is pending admin approval.</p>
           </div>
         )}
-        {wp && isVerified && !isSubscribed && (
-          <Link to="/worker/subscription" className="block rounded-2xl bg-primary text-primary-foreground p-4 shadow-elevated">
-            <div className="flex items-center gap-3">
-              <Sparkles className="size-6"/>
-              <div><p className="font-bold">Activate subscription</p><p className="text-xs opacity-90">Required to appear in search & receive jobs.</p></div>
-            </div>
-          </Link>
-        )}
         {wp && isVerified && isSubscribed && (
           <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
-            <BadgeCheck className="size-4 text-success"/> Verified & active
+            <BadgeCheck className="size-4 text-success"/> Free Beta Access — you're live in the marketplace
           </div>
         )}
 

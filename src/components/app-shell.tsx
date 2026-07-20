@@ -7,8 +7,9 @@ import type { ReactNode } from "react";
 export function AppShell({ children }: { children: ReactNode }) {
   const { role } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const effectiveRole = role ?? (pathname.startsWith("/admin") ? "admin" : null);
 
-  const nav = role === "worker"
+  const nav = effectiveRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Job board" },
@@ -16,7 +17,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         { to: "/worker/jobs", icon: Calendar, label: "My jobs" },
         { to: "/profile", icon: User, label: "Profile" },
       ]
-    : role === "admin"
+    : effectiveRole === "admin"
     ? [
         { to: "/admin", icon: LayoutDashboard, label: "Admin" },
         { to: "/admin/workers", icon: Search, label: "Workers" },

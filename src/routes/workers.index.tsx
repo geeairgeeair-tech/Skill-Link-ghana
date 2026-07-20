@@ -21,7 +21,7 @@ const searchSchema = z.object({
   sort: fallback(z.string(), "rating").default("rating"),
 });
 
-export const Route = createFileRoute("/workers")({
+export const Route = createFileRoute("/workers/")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [

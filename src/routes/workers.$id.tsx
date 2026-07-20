@@ -26,13 +26,20 @@ function WorkerDetail() {
   const workerQ = useQuery({
     queryKey: ["worker", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: wp, error } = await supabase
         .from("worker_profiles")
-        .select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, verification_status, created_at, categories(name, slug), profiles!worker_profiles_user_id_fkey(full_name, avatar_url, city, created_at)")
+        .select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, verification_status, created_at, categories(name, slug)")
         .eq("user_id", id)
+        .eq("verification_status", "approved")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      if (!wp) return null;
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, city, created_at")
+        .eq("id", id)
+        .maybeSingle();
+      return { ...wp, profiles: prof ?? {} };
     },
   });
 
@@ -84,7 +91,7 @@ function WorkerDetail() {
       navigate({ to: "/auth" });
       return;
     }
-    toast.info("Booking is coming next — this feature is being built.");
+    navigate({ to: "/book/$workerId", params: { workerId: id } });
   };
 
   return (

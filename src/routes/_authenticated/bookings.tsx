@@ -28,11 +28,21 @@ function BookingsPage() {
   const { data } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase
-      .from("bookings")
-      .select("*, categories(name), profiles!bookings_worker_id_fkey(full_name), reviews(id, rating, comment)")
-      .eq("customer_id", user!.id)
-      .order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("bookings")
+        .select("*, categories(name), reviews(id, rating, comment)")
+        .eq("customer_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = Array.from(new Set((rows ?? []).map((r: any) => r.worker_id).filter(Boolean)));
+      let profMap: Record<string, any> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
+      }
+      return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.worker_id] ?? null }));
+    },
   });
 
   const [open, setOpen] = useState<string | null>(null);

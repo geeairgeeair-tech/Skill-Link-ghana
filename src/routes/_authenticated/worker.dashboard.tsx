@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -18,11 +19,36 @@ function WorkerDashboard() {
     enabled: !!user,
     queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, rejection_reason, rejected_at, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
   });
-  const { data: bookings } = useQuery({
+  const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("bookings").select("*, profiles!bookings_customer_id_fkey(full_name)").eq("worker_id", user!.id).order("created_at",{ascending:false})).data ?? [],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("bookings")
+        .select("*, categories(name)")
+        .eq("worker_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
+      let profMap: Record<string, any> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
+      }
+      return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.customer_id] ?? null }));
+    },
   });
+
+  // Realtime: refresh when new bookings arrive for this worker
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`worker-bookings:${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
+        () => { qc.invalidateQueries({ queryKey: ["worker-bookings", user.id] }); })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id, qc]);
 
   const toggleAvailable = async (next: boolean) => {
     if (!user) return;
@@ -127,20 +153,37 @@ function WorkerDashboard() {
         </div>
 
         <section className="rounded-2xl bg-card border border-border p-4">
-          <h3 className="font-display font-bold mb-3">Recent bookings</h3>
-          {(bookings ?? []).length === 0 ? (
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display font-bold">Recent bookings</h3>
+            <Link to="/worker/jobs" className="text-xs font-semibold text-primary">View all →</Link>
+          </div>
+          {bookingsLoading ? (
+            <p className="text-sm text-muted-foreground">Loading bookings…</p>
+          ) : bookingsError ? (
+            <div className="text-sm">
+              <p className="text-destructive">Couldn't load bookings.</p>
+              <button onClick={() => refetchBookings()} className="mt-2 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold">Retry</button>
+            </div>
+          ) : (bookings ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">No bookings yet.</p>
-          ) : (bookings ?? []).slice(0,5).map((b:any) => (
-            <div key={b.id} className="flex items-center justify-between py-2 border-t border-border first:border-0">
-              <div className="min-w-0">
-                <p className="font-semibold text-sm truncate">{b.profiles?.full_name}</p>
-                <p className="text-xs text-muted-foreground line-clamp-1">{b.description}</p>
+          ) : (bookings ?? []).slice(0, 5).map((b: any) => (
+            <div key={b.id} className="py-3 border-t border-border first:border-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm truncate">{b.profiles?.full_name ?? "Customer"}</p>
+                  <p className="text-xs text-muted-foreground">{b.categories?.name ?? "Service"}{b.urgency && b.urgency !== "normal" ? ` · ${b.urgency}` : ""}</p>
+                </div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">{b.status.replace(/_/g, " ")}</span>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="size-8 grid place-items-center rounded-full bg-muted" aria-label="Chat">
-                  <MessageCircle className="size-4"/>
-                </Link>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">{b.status}</span>
+              <p className="text-xs mt-1 line-clamp-2">{b.description}</p>
+              <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
+                <span>{b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"}{b.service_area ? ` · ${b.service_area}` : ""}</span>
+                <div className="flex items-center gap-2">
+                  <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="size-7 grid place-items-center rounded-full bg-muted" aria-label="Chat">
+                    <MessageCircle className="size-3.5"/>
+                  </Link>
+                  <Link to="/worker/jobs" className="text-primary font-semibold">Details →</Link>
+                </div>
               </div>
             </div>
           ))}

@@ -20,9 +20,16 @@ function ChatPage() {
 
   const { data: booking } = useQuery({
     queryKey: ["chat-booking", bookingId],
-    queryFn: async () => (await supabase.from("bookings")
-      .select("id, customer_id, worker_id, description, customer:profiles!bookings_customer_id_fkey(full_name), worker:profiles!bookings_worker_id_fkey(full_name)")
-      .eq("id", bookingId).maybeSingle()).data,
+    queryFn: async () => {
+      const { data: b } = await supabase.from("bookings")
+        .select("id, customer_id, worker_id, description")
+        .eq("id", bookingId).maybeSingle();
+      if (!b) return null;
+      const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", [b.customer_id, b.worker_id]);
+      const map: Record<string, any> = {};
+      (profs ?? []).forEach((p: any) => { map[p.id] = p; });
+      return { ...b, customer: map[b.customer_id] ?? null, worker: map[b.worker_id] ?? null } as any;
+    },
   });
 
   const { data: messages } = useQuery({

@@ -69,7 +69,39 @@ function JobDetail() {
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
   const cust = (job as any).profiles;
   const isVerifiedWorker = workerProfile?.verification_status === "approved";
+  const isPendingOrRejected = role === "worker" && !!workerProfile && workerProfile.verification_status !== "approved";
   const isOwner = user?.id === (job as any).customer_id;
+  const jobCategoryName = (job as any).categories?.name ?? "this category";
+  const categoryMatches = isVerifiedWorker && workerProfile?.category_id === (job as any).category_id;
+
+  // Limited preview for pending/rejected workers who don't own the post
+  if (isPendingOrRejected && !isOwner) {
+    return (
+      <div className="min-h-screen bg-background pb-28">
+        <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6">
+          <BackButton fallback="/jobs" />
+        </div>
+        <main className="mx-auto max-w-md px-5 -mt-3 space-y-4">
+          <div className="rounded-2xl bg-card border border-border p-5 shadow-elevated">
+            <p className="text-xs uppercase font-bold text-primary tracking-wide">{jobCategoryName}</p>
+            <h1 className="font-display text-xl font-bold mt-1">{(job as any).title}</h1>
+            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
+              <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_area ?? (job as any).city ?? "Ghana"}</span>
+              {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
+              {(job as any).urgency && (job as any).urgency !== "normal" && <span className="uppercase text-[10px] font-bold">{(job as any).urgency}</span>}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-gold/10 border border-gold/30 p-4 text-sm">
+            <p className="font-semibold mb-1">Verification required</p>
+            <p className="text-xs text-muted-foreground">
+              Your account is <b>{workerProfile!.verification_status}</b>. Full job details, customer information and applications unlock after admin approval.
+            </p>
+            <Link to="/worker/dashboard" className="inline-block mt-3 text-xs font-semibold text-primary">Go to worker dashboard →</Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -79,19 +111,19 @@ function JobDetail() {
       <main className="mx-auto max-w-md px-5 -mt-3 space-y-4">
         <div className="rounded-2xl bg-card border border-border p-5 shadow-elevated">
           <div className="flex items-center gap-2 flex-wrap mb-1">
-            <p className="text-xs uppercase font-bold text-primary tracking-wide">{(job as any).categories?.name ?? "Job"}</p>
+            <p className="text-xs uppercase font-bold text-primary tracking-wide">{jobCategoryName}</p>
             {(job as any).urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
             {(job as any).urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
           </div>
           <h1 className="font-display text-xl font-bold mt-1">{(job as any).title}</h1>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
-            <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).city ?? cust?.city ?? "Ghana"}</span>
+            <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_area ?? (job as any).city ?? cust?.city ?? "Ghana"}</span>
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
             {(job as any).preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date((job as any).preferred_at).toLocaleString()}</span>}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
           {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}
-          {user?.id === (job as any).customer_id && (job as any).status === "open" && (
+          {isOwner && (job as any).status === "open" && (
             <Link to="/jobs/$id/edit" params={{ id }} className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
               <Pencil className="size-3.5"/> Edit this post
             </Link>
@@ -114,7 +146,7 @@ function JobDetail() {
 
         <section className="rounded-2xl bg-card border border-border p-4">
           <h3 className="font-display font-bold mb-2 text-sm">Location</h3>
-          <LocationMap area={(job as any).city ?? cust?.city} height={160} />
+          <LocationMap area={(job as any).service_area ?? (job as any).city ?? cust?.city} height={160} />
         </section>
 
         <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
@@ -144,9 +176,7 @@ function JobDetail() {
 
         {role === "worker" && !isOwner && (
           <section className="rounded-2xl bg-card border border-border p-4 text-sm">
-            {!isVerifiedWorker ? (
-              <p className="text-xs text-muted-foreground">Get verified by an admin to apply for jobs.</p>
-            ) : myApp ? (
+            {myApp ? (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-success">
                   <CheckCircle2 className="size-4"/>
@@ -157,6 +187,15 @@ function JobDetail() {
               </div>
             ) : (job as any).status !== "open" ? (
               <p className="text-xs text-muted-foreground">This job is no longer open.</p>
+            ) : !categoryMatches ? (
+              <div className="space-y-2">
+                <button disabled className="w-full h-12 rounded-xl bg-muted text-muted-foreground font-semibold cursor-not-allowed">
+                  Apply for this Job
+                </button>
+                <p className="text-xs text-muted-foreground">
+                  You can view this job, but only verified workers in the <b>{jobCategoryName}</b> category can apply.
+                </p>
+              </div>
             ) : (
               <Link to="/jobs/$id/apply" params={{ id }} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
                 Apply for this Job
@@ -169,3 +208,4 @@ function JobDetail() {
     </div>
   );
 }
+

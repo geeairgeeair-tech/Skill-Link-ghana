@@ -35,6 +35,18 @@ function MyJobPosts() {
       .order("created_at", { ascending: false })).data ?? [],
   });
 
+  const jobIds = (jobs ?? []).map((j: any) => j.id);
+  const { data: appCounts } = useQuery({
+    queryKey: ["my-jobs-app-counts", user?.id, jobIds.join(",")],
+    enabled: !!user && jobIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("job_applications").select("job_id").in("job_id", jobIds);
+      const map: Record<string, number> = {};
+      (data ?? []).forEach((r: any) => { map[r.job_id] = (map[r.job_id] ?? 0) + 1; });
+      return map;
+    },
+  });
+
   const cancel = async (id: string) => {
     if (!confirm("Cancel this job post? Workers will no longer see it.")) return;
     const { error } = await supabase.from("job_requests").update({ status: "cancelled" as any }).eq("id", id);

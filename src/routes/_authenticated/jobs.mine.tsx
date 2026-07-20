@@ -105,9 +105,12 @@ function MyJobPosts() {
                   </div>
                   <p className="font-semibold truncate mt-1">{j.title}</p>
                   <p className="text-xs text-muted-foreground truncate">{j.categories?.name ?? "General"}</p>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                     <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{j.city ?? "Ghana"}</span>
                     {j.budget ? <span className="font-semibold text-primary">GH₵{j.budget}</span> : null}
+                    <span className="inline-flex items-center gap-1 font-semibold text-foreground">
+                      <FileText className="size-3"/>{appCounts?.[j.id] ?? 0} application{(appCounts?.[j.id] ?? 0) === 1 ? "" : "s"}
+                    </span>
                   </div>
                 </div>
               </Link>

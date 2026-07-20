@@ -17,6 +17,7 @@ function Onboarding() {
     category_id: "", bio: "", years_experience: 0,
     ghana_card_number: "", service_area: "Accra",
     hourly_rate: 50, callout_fee: 30, starting_price: 50,
+    date_of_birth: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -30,23 +31,33 @@ function Onboarding() {
     (async () => {
       const { data } = await supabase.from("worker_profiles").select("category_id, bio, years_experience, service_area, hourly_rate, callout_fee, starting_price").eq("user_id", user.id).maybeSingle();
       const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user.id });
+      const idRow: any = (ident as any)?.[0] ?? {};
       if (data) setForm({
         category_id: data.category_id ?? "", bio: data.bio ?? "",
         years_experience: data.years_experience ?? 0,
-        ghana_card_number: (ident as any)?.[0]?.ghana_card_number ?? "",
+        ghana_card_number: idRow.ghana_card_number ?? "",
         service_area: data.service_area ?? "Accra",
         hourly_rate: data.hourly_rate ?? 50,
         callout_fee: data.callout_fee ?? 30,
         starting_price: data.starting_price ?? 50,
+        date_of_birth: idRow.date_of_birth ?? "",
       });
-      // Ensure user has worker role
       await supabase.from("user_roles").insert({ user_id: user.id, role: "worker" }).select();
     })();
   }, [user?.id]);
 
+  const maxDob = new Date();
+  maxDob.setFullYear(maxDob.getFullYear() - 18);
+  const maxDobStr = maxDob.toISOString().slice(0, 10);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (!form.date_of_birth) return toast.error("Date of birth is required");
+    const dob = new Date(form.date_of_birth);
+    if (Number.isNaN(dob.getTime())) return toast.error("Invalid date of birth");
+    if (dob > new Date()) return toast.error("Date of birth cannot be in the future");
+    if (dob > maxDob) return toast.error("You must be at least 18 years old to register as a worker");
     setLoading(true);
     const { error } = await supabase.from("worker_profiles").upsert({
       user_id: user.id, ...form,

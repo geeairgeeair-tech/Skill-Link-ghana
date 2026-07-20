@@ -122,14 +122,14 @@ function AdminPage() {
     },
   });
 
-  const decide = async (id: string, status: "approved" | "rejected") => {
+  const decide = async (id: string, status: "approved" | "rejected" | "suspended") => {
     const { error } = await supabase.from("worker_profiles").update({ verification_status: status }).eq("user_id", id);
     if (error) return toast.error(error.message);
     // Audit log — non-blocking
     if (user?.id) {
       await supabase.from("admin_audit_logs").insert({
         admin_id: user.id,
-        action: status === "approved" ? "worker_approved" : "worker_rejected",
+        action: status === "approved" ? "worker_approved" : status === "suspended" ? "worker_suspended" : "worker_rejected",
         target_user_id: id,
         target_type: "worker",
         details: { status },
@@ -222,14 +222,14 @@ function AdminPage() {
                         {w.service_area ?? w.city ?? "—"} · {w.years_experience ?? 0}y exp · Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
                       </p>
                     </div>
-                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
+                    <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected", "suspended"].includes(w.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {w.verification_status !== "approved" && (
                       <button onClick={() => decide(w.user_id, "approved")} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">Approve</button>
                     )}
-                    {w.verification_status !== "rejected" && (
-                      <button onClick={() => decide(w.user_id, "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">
+                    {!["rejected", "suspended"].includes(w.verification_status) && (
+                      <button onClick={() => decide(w.user_id, w.verification_status === "approved" ? "suspended" : "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">
                         {w.verification_status === "approved" ? "Suspend" : "Reject"}
                       </button>
                     )}

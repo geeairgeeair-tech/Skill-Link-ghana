@@ -38,7 +38,7 @@ function AdminWorkersPage() {
     );
   }, [data, q]);
 
-  const act = async (id: string, next: "approved" | "rejected" | "pending") => {
+  const act = async (id: string, next: "approved" | "rejected" | "pending" | "suspended") => {
     const { error } = await supabase.from("worker_profiles").update({ verification_status: next }).eq("user_id", id);
     if (error) return toast.error(error.message);
     if (user?.id) {
@@ -74,7 +74,7 @@ function AdminWorkersPage() {
             className="w-full px-3 py-2 rounded-lg bg-muted text-sm"
           />
           <div className="flex gap-1 overflow-x-auto text-xs font-semibold">
-            {["all", "pending", "approved", "rejected"].map((s) => (
+            {["all", "pending", "approved", "rejected", "suspended"].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatus(s)}
@@ -116,16 +116,16 @@ function AdminWorkersPage() {
                       Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
                     </p>
                   </div>
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : w.verification_status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
+                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected", "suspended"].includes(w.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {w.verification_status !== "approved" && (
                     <button onClick={() => act(w.user_id, "approved")} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">
-                      {w.verification_status === "rejected" ? "Reactivate" : "Approve"}
+                      {["rejected", "suspended"].includes(w.verification_status) ? "Reactivate" : "Approve"}
                     </button>
                   )}
                   {w.verification_status === "approved" && (
-                    <button onClick={() => act(w.user_id, "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Suspend</button>
+                    <button onClick={() => act(w.user_id, "suspended")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Suspend</button>
                   )}
                   {w.verification_status === "pending" && (
                     <button onClick={() => act(w.user_id, "rejected")} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Reject</button>

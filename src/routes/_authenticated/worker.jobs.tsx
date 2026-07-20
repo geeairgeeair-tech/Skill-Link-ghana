@@ -44,7 +44,7 @@ function JobsPage() {
             <div className="flex flex-wrap gap-2 mt-3">
               {b.status === "pending" && <>
                 <Btn onClick={() => updateStatus(b.id,"accepted")}>Accept</Btn>
-                <Btn variant="ghost" onClick={() => updateStatus(b.id,"cancelled")}>Decline</Btn>
+                <Btn variant="ghost" onClick={() => updateStatus(b.id,"declined")}>Decline</Btn>
               </>}
               {b.status === "accepted" && <Btn onClick={() => updateStatus(b.id,"on_the_way")}>On the way</Btn>}
               {b.status === "on_the_way" && <Btn onClick={() => updateStatus(b.id,"in_progress")}>Start job</Btn>}

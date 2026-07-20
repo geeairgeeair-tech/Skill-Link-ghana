@@ -129,21 +129,41 @@ function JobDetail() {
           </div>
         </section>
 
-        {role === "worker" && phone && user?.id !== (job as any).customer_id && (
-          <div className="rounded-2xl bg-primary-soft border border-primary/20 p-3 text-sm">
-            <p className="font-semibold text-primary mb-2">Interested? Call the customer directly.</p>
-            <div className="flex gap-2">
-              <a href={`tel:${phone}`} className="flex-1 h-11 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
-                <Phone className="size-4"/> Call {phone}
-              </a>
-              <a href={`https://wa.me/${phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer" className="size-11 grid place-items-center rounded-xl bg-success text-success-foreground">
-                <MessageCircle className="size-4"/>
-              </a>
+        {isOwner && (
+          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="size-4 text-primary"/>
+                <p className="font-semibold">Applications received</p>
+              </div>
+              <span className="text-lg font-bold text-primary">{appCount ?? 0}</span>
             </div>
-          </div>
+            <p className="text-xs text-muted-foreground mt-1">Applicant review coming soon.</p>
+          </section>
         )}
-        {role === "worker" && !phone && (
-          <p className="text-xs text-muted-foreground text-center">No phone number on file — customer can be reached after booking.</p>
+
+        {role === "worker" && !isOwner && (
+          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
+            {!isVerifiedWorker ? (
+              <p className="text-xs text-muted-foreground">Get verified by an admin to apply for jobs.</p>
+            ) : myApp ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-success">
+                  <CheckCircle2 className="size-4"/>
+                  <p className="font-semibold">Application {myApp.status}</p>
+                </div>
+                <p className="text-xs text-muted-foreground">Your quote: <b className="text-foreground">GH₵{myApp.quoted_price}</b></p>
+                <Link to="/worker/applications" className="inline-block text-xs font-semibold text-primary">Manage in My Applications →</Link>
+              </div>
+            ) : (job as any).status !== "open" ? (
+              <p className="text-xs text-muted-foreground">This job is no longer open.</p>
+            ) : (
+              <Link to="/jobs/$id/apply" params={{ id }} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
+                Apply for this Job
+              </Link>
+            )}
+            <p className="text-[11px] text-muted-foreground mt-3">Customer contact details are shared only after your application is accepted.</p>
+          </section>
         )}
       </main>
     </div>

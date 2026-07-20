@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { MapPin, Phone, MessageCircle, Zap, AlertTriangle, Calendar, Pencil } from "lucide-react";
+import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";

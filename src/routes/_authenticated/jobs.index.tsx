@@ -146,6 +146,7 @@ function JobsBoard() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {j.urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
                     {j.urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
+                    {role === "worker" && myAppliedIds?.has(j.id) && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success">Applied</span>}
                     <p className="font-semibold truncate">{j.title}</p>
                   </div>
                   <p className="text-xs text-muted-foreground">{j.categories?.name ?? "General"}</p>

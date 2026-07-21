@@ -136,9 +136,17 @@ function AdminBookingsPage() {
                     <Info label="Booking status" value={String(b.status).replace(/_/g, " ")} />
                     <Info label="Scheduled date and time" value={b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"} />
                     <Info label="Location / service area" value={b.address ?? "—"} />
-                    <Info label="Amount / budget" value={b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
-                    <Info label="Created date" value={new Date(b.created_at).toLocaleString()} />
+                    <Info label="Estimated amount" value={b.estimated_amount ? `GH₵${b.estimated_amount}` : b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
+                    <Info label="Worker final amount" value={b.final_amount ? `GH₵${b.final_amount}` : "—"} />
+                    <Info label="Customer amount paid" value={b.amount_paid ? `GH₵${b.amount_paid}` : "—"} />
                     <Info label="Description" value={b.description ?? "—"} />
+                    {b.completion_note && <Info label="Completion note" value={b.completion_note} />}
+                    {b.status === "disputed" && (
+                      <DisputePanel booking={b} onResolved={() => { setOpenId(null); qc.invalidateQueries({ queryKey: ["admin-bookings-page"] }); }} />
+                    )}
+                    {b.admin_resolution_note && (
+                      <Info label="Admin resolution" value={`${b.admin_resolution_note} (${new Date(b.admin_resolved_at).toLocaleString()})`} />
+                    )}
                   </div>
                 )}
               </div>

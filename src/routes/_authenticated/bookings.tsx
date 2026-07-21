@@ -229,7 +229,7 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: any; onClose: () 
       _amount_paid: paidNum,
       _rating: rating,
       _review_text: reviewText.trim() || undefined,
-      _would_hire_again: hireAgain,
+      _would_hire_again: hireAgain ?? undefined,
       _amount_note: amountNote.trim() || undefined,
     });
     setSaving(false);

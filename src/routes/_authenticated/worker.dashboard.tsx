@@ -17,7 +17,13 @@ function WorkerDashboard() {
   const { data: wp } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, rejection_reason, rejected_at, created_at, updated_at").eq("user_id", user!.id).maybeSingle()).data,
+    queryFn: async () => {
+      const { data } = await supabase.from("worker_profiles").select("user_id, category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, subscription_plan, subscription_expires_at, rating, reviews_count, jobs_completed, is_available, unavailable_note, is_featured, phone_verified, rejection_reason, rejected_at, created_at, updated_at").eq("user_id", user!.id).maybeSingle();
+      if (!data) return null;
+      const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user!.id });
+      const dob = (ident as any)?.[0]?.date_of_birth ?? null;
+      return { ...data, date_of_birth: dob } as any;
+    },
   });
   const { data: bookings, isLoading: bookingsLoading, error: bookingsError, refetch: refetchBookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],

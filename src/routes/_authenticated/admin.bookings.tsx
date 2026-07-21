@@ -31,7 +31,7 @@ function AdminBookingsPage() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select("id, customer_id, worker_id, category_id, description, address, scheduled_at, estimated_cost, status, created_at, categories(name)")
+        .select("id, customer_id, worker_id, category_id, description, address, scheduled_at, estimated_cost, estimated_amount, final_amount, amount_paid, status, dispute_reason, dispute_details, disputed_at, admin_resolution_note, admin_resolved_at, completion_note, created_at, categories(name)")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;

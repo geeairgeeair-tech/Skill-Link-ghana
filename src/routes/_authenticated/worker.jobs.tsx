@@ -235,7 +235,7 @@ function DeclineModal({ bookingId, onClose, onDone }: { bookingId: string; onClo
     if (reason === "other" && !note.trim()) return toast.error("Please explain your reason");
     setSaving(true);
     const { error } = await supabase.rpc("worker_decline_booking", {
-      _booking_id: bookingId, _reason_code: reason, _reason_note: note.trim() || null,
+      _booking_id: bookingId, _reason_code: reason, _reason_note: note.trim() || undefined,
     });
     setSaving(false);
     if (error) return toast.error(error.message);

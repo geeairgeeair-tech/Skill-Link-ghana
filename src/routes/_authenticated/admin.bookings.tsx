@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/bookings")({
   component: AdminBookingsPage,
 });
 
-const BOOKING_STATUSES = ["all", "pending", "accepted", "on_the_way", "in_progress", "completed", "cancelled"];
+const BOOKING_STATUSES = ["all", "pending", "accepted", "on_the_way", "in_progress", "awaiting_customer_confirmation", "completed", "disputed", "cancelled", "declined"];
 
 function AdminBookingsPage() {
   const qc = useQueryClient();

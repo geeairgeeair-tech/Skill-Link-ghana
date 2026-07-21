@@ -885,6 +885,7 @@ export type Database = {
         | "closed"
         | "disputed"
         | "no_show"
+        | "awaiting_customer_confirmation"
       job_application_status: "pending" | "withdrawn" | "accepted" | "rejected"
       job_request_status:
         | "open"
@@ -1041,6 +1042,7 @@ export const Constants = {
         "closed",
         "disputed",
         "no_show",
+        "awaiting_customer_confirmation",
       ],
       job_application_status: ["pending", "withdrawn", "accepted", "rejected"],
       job_request_status: [

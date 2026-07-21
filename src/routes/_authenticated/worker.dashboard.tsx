@@ -32,7 +32,7 @@ function WorkerDashboard() {
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
       let profMap: Record<string, any> = {};
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
         (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
       }
       return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.customer_id] ?? null }));
@@ -168,21 +168,36 @@ function WorkerDashboard() {
             <p className="text-sm text-muted-foreground">No bookings yet.</p>
           ) : (bookings ?? []).slice(0, 5).map((b: any) => (
             <div key={b.id} className="py-3 border-t border-border first:border-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="font-semibold text-sm truncate">{b.profiles?.full_name ?? "Customer"}</p>
-                  <p className="text-xs text-muted-foreground">{b.categories?.name ?? "Service"}{b.urgency && b.urgency !== "normal" ? ` · ${b.urgency}` : ""}</p>
+              <div className="flex items-start gap-3">
+                <div className="size-10 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-sm">
+                  {b.profiles?.avatar_url
+                    ? <img src={b.profiles.avatar_url} alt="" className="size-full object-cover"/>
+                    : (b.profiles?.full_name?.[0] ?? "?")}
                 </div>
-                <span className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">{b.status.replace(/_/g, " ")}</span>
-              </div>
-              <p className="text-xs mt-1 line-clamp-2">{b.description}</p>
-              <div className="flex items-center justify-between mt-2 text-[11px] text-muted-foreground">
-                <span>{b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"}{b.service_area ? ` · ${b.service_area}` : ""}</span>
-                <div className="flex items-center gap-2">
-                  <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="size-7 grid place-items-center rounded-full bg-muted" aria-label="Chat">
-                    <MessageCircle className="size-3.5"/>
-                  </Link>
-                  <Link to="/worker/jobs" className="text-primary font-semibold">Details →</Link>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate">{b.profiles?.full_name ?? "Customer"}</p>
+                      <p className="text-xs text-muted-foreground">{b.categories?.name ?? "Service"}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[10px] uppercase font-bold text-muted-foreground whitespace-nowrap">{b.status.replace(/_/g, " ")}</span>
+                      {b.urgency === "urgent" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground">Urgent</span>}
+                      {b.urgency === "emergency" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground">Emergency</span>}
+                    </div>
+                  </div>
+                  <p className="text-xs mt-1 line-clamp-2 text-foreground/80">{b.description}</p>
+                  <div className="flex items-center gap-2 mt-1.5 text-[11px] text-muted-foreground flex-wrap">
+                    {b.scheduled_at && <span>📅 {new Date(b.scheduled_at).toLocaleString()}</span>}
+                    {b.service_area && <span>📍 {b.service_area}</span>}
+                    {b.budget ? <span className="font-semibold text-primary">GH₵{b.budget}</span> : null}
+                  </div>
+                  <div className="flex items-center justify-end gap-2 mt-2">
+                    <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="text-[11px] px-2.5 py-1 rounded-full bg-muted font-semibold inline-flex items-center gap-1">
+                      <MessageCircle className="size-3"/> Chat
+                    </Link>
+                    <Link to="/worker/jobs" className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-semibold">View details →</Link>
+                  </div>
                 </div>
               </div>
             </div>

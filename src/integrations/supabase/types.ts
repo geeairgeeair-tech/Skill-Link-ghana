@@ -47,68 +47,107 @@ export type Database = {
       bookings: {
         Row: {
           address: string | null
+          admin_review_requested_at: string | null
+          amount_paid: number | null
           budget: number | null
           category_id: string | null
+          completion_note: string | null
           created_at: string
+          customer_confirmed_at: string | null
           customer_id: string
           decline_note: string | null
           decline_reason: string | null
           declined_at: string | null
           description: string
+          dispute_details: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
+          estimated_amount: number | null
           estimated_cost: number | null
+          final_amount: number | null
           id: string
           latitude: number | null
           longitude: number | null
+          payment_confirmed_at: string | null
+          payment_status: string
           photos: Json
           scheduled_at: string | null
           service_area: string | null
+          started_at: string | null
           status: Database["public"]["Enums"]["booking_status"]
           updated_at: string
           urgency: string
+          worker_completed_at: string | null
           worker_id: string
         }
         Insert: {
           address?: string | null
+          admin_review_requested_at?: string | null
+          amount_paid?: number | null
           budget?: number | null
           category_id?: string | null
+          completion_note?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
           customer_id: string
           decline_note?: string | null
           decline_reason?: string | null
           declined_at?: string | null
           description?: string
+          dispute_details?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
+          estimated_amount?: number | null
           estimated_cost?: number | null
+          final_amount?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          payment_confirmed_at?: string | null
+          payment_status?: string
           photos?: Json
           scheduled_at?: string | null
           service_area?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           urgency?: string
+          worker_completed_at?: string | null
           worker_id: string
         }
         Update: {
           address?: string | null
+          admin_review_requested_at?: string | null
+          amount_paid?: number | null
           budget?: number | null
           category_id?: string | null
+          completion_note?: string | null
           created_at?: string
+          customer_confirmed_at?: string | null
           customer_id?: string
           decline_note?: string | null
           decline_reason?: string | null
           declined_at?: string | null
           description?: string
+          dispute_details?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
+          estimated_amount?: number | null
           estimated_cost?: number | null
+          final_amount?: number | null
           id?: string
           latitude?: number | null
           longitude?: number | null
+          payment_confirmed_at?: string | null
+          payment_status?: string
           photos?: Json
           scheduled_at?: string | null
           service_area?: string | null
+          started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           updated_at?: string
           urgency?: string
+          worker_completed_at?: string | null
           worker_id?: string
         }
         Relationships: [
@@ -416,6 +455,7 @@ export type Database = {
           id: string
           rating: number
           worker_id: string
+          would_hire_again: boolean | null
         }
         Insert: {
           booking_id?: string | null
@@ -425,6 +465,7 @@ export type Database = {
           id?: string
           rating: number
           worker_id: string
+          would_hire_again?: boolean | null
         }
         Update: {
           booking_id?: string | null
@@ -434,6 +475,7 @@ export type Database = {
           id?: string
           rating?: number
           worker_id?: string
+          would_hire_again?: boolean | null
         }
         Relationships: [
           {
@@ -832,6 +874,21 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      customer_confirm_booking_completion: {
+        Args: {
+          _amount_note?: string
+          _amount_paid: number
+          _booking_id: string
+          _rating: number
+          _review_text?: string
+          _would_hire_again?: boolean
+        }
+        Returns: undefined
+      }
+      customer_dispute_booking: {
+        Args: { _booking_id: string; _details: string; _reason_code: string }
+        Returns: undefined
+      }
       get_job_request_address: { Args: { _id: string }; Returns: string }
       get_profile_contact: {
         Args: { _id: string }
@@ -850,6 +907,10 @@ export type Database = {
           selfie_url: string
         }[]
       }
+      get_worker_public_status: {
+        Args: { _worker_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -865,7 +926,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      worker_mark_booking_completed: {
+        Args: {
+          _booking_id: string
+          _completion_note?: string
+          _final_amount: number
+        }
+        Returns: undefined
+      }
+      worker_request_admin_review: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
       worker_resubmit_verification: { Args: never; Returns: undefined }
+      worker_start_booking: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "customer" | "worker" | "admin"

@@ -166,3 +166,43 @@ function Info({ label, value }: { label: string; value: string }) {
     </div>
   );
 }
+
+const ACTIONS = [
+  { code: "mark_completed", label: "Mark completed + confirm payment" },
+  { code: "return_in_progress", label: "Return to in progress" },
+  { code: "cancel", label: "Cancel booking" },
+  { code: "resolve_no_penalty", label: "Resolve without penalty" },
+];
+
+function DisputePanel({ booking, onResolved }: { booking: any; onResolved: () => void }) {
+  const [action, setAction] = useState<string>("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (!action) return toast.error("Choose an action");
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_resolve_dispute", { _booking_id: booking.id, _action: action, _note: note.trim() || null });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Dispute resolved");
+    onResolved();
+  };
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+      <p className="text-xs font-bold text-destructive uppercase">Dispute</p>
+      {booking.dispute_reason && <p className="text-xs"><b>Reason:</b> {booking.dispute_reason}</p>}
+      {booking.dispute_details && <p className="text-xs italic">"{booking.dispute_details}"</p>}
+      {booking.disputed_at && <p className="text-[10px] text-muted-foreground">Opened {new Date(booking.disputed_at).toLocaleString()}</p>}
+      <select value={action} onChange={(e) => setAction(e.target.value)} className="w-full px-2 py-2 rounded-lg bg-background border border-input text-xs">
+        <option value="">Select resolution…</option>
+        {ACTIONS.map(a => <option key={a.code} value={a.code}>{a.label}</option>)}
+      </select>
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Resolution note (optional, logged)…"
+        className="w-full rounded-lg border border-input bg-background p-2 text-xs min-h-[60px]" />
+      <button onClick={submit} disabled={saving || !action}
+        className="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground disabled:opacity-60">
+        {saving ? "Resolving…" : "Resolve dispute"}
+      </button>
+    </div>
+  );
+}

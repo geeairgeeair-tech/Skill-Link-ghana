@@ -51,6 +51,9 @@ export type Database = {
           category_id: string | null
           created_at: string
           customer_id: string
+          decline_note: string | null
+          decline_reason: string | null
+          declined_at: string | null
           description: string
           estimated_cost: number | null
           id: string
@@ -70,6 +73,9 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id: string
+          decline_note?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
           description?: string
           estimated_cost?: number | null
           id?: string
@@ -89,6 +95,9 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           customer_id?: string
+          decline_note?: string | null
+          decline_reason?: string | null
+          declined_at?: string | null
           description?: string
           estimated_cost?: number | null
           id?: string
@@ -847,6 +856,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      worker_decline_booking: {
+        Args: {
+          _booking_id: string
+          _reason_code: string
+          _reason_note?: string
+        }
+        Returns: undefined
       }
       worker_resubmit_verification: { Args: never; Returns: undefined }
     }

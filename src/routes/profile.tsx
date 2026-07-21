@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
+import { AvatarUpload } from "@/components/avatar-upload";
 import { useAuth } from "@/hooks/use-auth";
 import { LogOut, BadgeCheck, Wrench, ClipboardList } from "lucide-react";
 
@@ -16,11 +17,12 @@ function ProfilePage() {
   const [full_name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setName(data.full_name ?? "");
+    supabase.from("profiles").select("full_name, avatar_url").eq("id", user.id).maybeSingle().then(({ data }) => {
+      if (data) { setName(data.full_name ?? ""); setAvatarUrl(data.avatar_url ?? null); }
     });
     supabase.rpc("get_profile_contact", { _id: user.id }).then(({ data }) => {
       const c = (data as any)?.[0];
@@ -58,6 +60,16 @@ function ProfilePage() {
         </div>
       </header>
       <main className="mx-auto max-w-md px-5 -mt-6 space-y-3">
+        <div className="rounded-2xl bg-card border border-border p-4 shadow-card">
+          <p className="text-[11px] font-semibold mb-3 text-muted-foreground uppercase tracking-wide">Profile photo</p>
+          <AvatarUpload
+            userId={user.id}
+            currentUrl={avatarUrl}
+            fallbackText={full_name || user.email || "?"}
+            onChange={setAvatarUrl}
+          />
+        </div>
+
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3 shadow-card">
           <Field label="Full name"><input value={full_name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
           <Field label="Phone"><input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>

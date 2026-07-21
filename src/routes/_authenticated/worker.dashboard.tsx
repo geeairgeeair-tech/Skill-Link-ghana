@@ -119,6 +119,13 @@ function WorkerDashboard() {
             <p className="text-sm text-muted-foreground mt-1">Your account is pending admin approval.</p>
           </div>
         )}
+        {wp && !(wp as any).date_of_birth && (
+          <div className="rounded-2xl bg-gold/20 border border-gold/40 p-4">
+            <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4"/> Complete your date of birth</p>
+            <p className="text-sm text-muted-foreground mt-1">Your date of birth is required before verification can continue. It stays private.</p>
+            <Link to="/worker/onboarding" className="mt-2 inline-block text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold">Update information</Link>
+          </div>
+        )}
         {wp && isVerified && isSubscribed && (
           <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
             <BadgeCheck className="size-4 text-success"/> Free Beta Access — you're live in the marketplace

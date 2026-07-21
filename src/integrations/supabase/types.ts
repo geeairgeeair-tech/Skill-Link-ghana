@@ -110,6 +110,20 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       categories: {
@@ -181,6 +195,13 @@ export type Database = {
             referencedRelation: "job_requests"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "job_applications_worker_id_fkey"
+            columns: ["worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       job_requests: {
@@ -247,6 +268,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -833,6 +861,13 @@ export type Database = {
         | "cancelled"
         | "declined"
         | "arrived"
+        | "worker_on_the_way"
+        | "work_started"
+        | "worker_marked_complete"
+        | "customer_confirmed_complete"
+        | "closed"
+        | "disputed"
+        | "no_show"
       job_application_status: "pending" | "withdrawn" | "accepted" | "rejected"
       job_request_status:
         | "open"
@@ -982,6 +1017,13 @@ export const Constants = {
         "cancelled",
         "declined",
         "arrived",
+        "worker_on_the_way",
+        "work_started",
+        "worker_marked_complete",
+        "customer_confirmed_complete",
+        "closed",
+        "disputed",
+        "no_show",
       ],
       job_application_status: ["pending", "withdrawn", "accepted", "rejected"],
       job_request_status: [

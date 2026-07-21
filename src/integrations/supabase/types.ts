@@ -47,6 +47,8 @@ export type Database = {
       bookings: {
         Row: {
           address: string | null
+          admin_resolution_note: string | null
+          admin_resolved_at: string | null
           admin_review_requested_at: string | null
           amount_paid: number | null
           budget: number | null
@@ -66,11 +68,13 @@ export type Database = {
           estimated_cost: number | null
           final_amount: number | null
           id: string
+          last_reminder_at: string | null
           latitude: number | null
           longitude: number | null
           payment_confirmed_at: string | null
           payment_status: string
           photos: Json
+          reminder_count: number | null
           scheduled_at: string | null
           service_area: string | null
           started_at: string | null
@@ -82,6 +86,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          admin_resolution_note?: string | null
+          admin_resolved_at?: string | null
           admin_review_requested_at?: string | null
           amount_paid?: number | null
           budget?: number | null
@@ -101,11 +107,13 @@ export type Database = {
           estimated_cost?: number | null
           final_amount?: number | null
           id?: string
+          last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          reminder_count?: number | null
           scheduled_at?: string | null
           service_area?: string | null
           started_at?: string | null
@@ -117,6 +125,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          admin_resolution_note?: string | null
+          admin_resolved_at?: string | null
           admin_review_requested_at?: string | null
           amount_paid?: number | null
           budget?: number | null
@@ -136,11 +146,13 @@ export type Database = {
           estimated_cost?: number | null
           final_amount?: number | null
           id?: string
+          last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          reminder_count?: number | null
           scheduled_at?: string | null
           service_area?: string | null
           started_at?: string | null
@@ -874,6 +886,10 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      admin_resolve_dispute: {
+        Args: { _action: string; _booking_id: string; _note?: string }
+        Returns: undefined
+      }
       customer_confirm_booking_completion: {
         Args: {
           _amount_note?: string
@@ -918,6 +934,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       worker_decline_booking: {
         Args: {
           _booking_id: string

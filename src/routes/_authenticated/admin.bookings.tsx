@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
@@ -9,7 +10,7 @@ export const Route = createFileRoute("/_authenticated/admin/bookings")({
   component: AdminBookingsPage,
 });
 
-const BOOKING_STATUSES = ["all", "pending", "accepted", "on_the_way", "in_progress", "completed", "cancelled"];
+const BOOKING_STATUSES = ["all", "pending", "accepted", "on_the_way", "in_progress", "awaiting_customer_confirmation", "completed", "disputed", "cancelled", "declined"];
 
 function AdminBookingsPage() {
   const qc = useQueryClient();
@@ -30,7 +31,7 @@ function AdminBookingsPage() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select("id, customer_id, worker_id, category_id, description, address, scheduled_at, estimated_cost, status, created_at, categories(name)")
+        .select("id, customer_id, worker_id, category_id, description, address, scheduled_at, estimated_cost, estimated_amount, final_amount, amount_paid, status, dispute_reason, dispute_details, disputed_at, admin_resolution_note, admin_resolved_at, completion_note, created_at, categories(name)")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -135,9 +136,17 @@ function AdminBookingsPage() {
                     <Info label="Booking status" value={String(b.status).replace(/_/g, " ")} />
                     <Info label="Scheduled date and time" value={b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"} />
                     <Info label="Location / service area" value={b.address ?? "—"} />
-                    <Info label="Amount / budget" value={b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
-                    <Info label="Created date" value={new Date(b.created_at).toLocaleString()} />
+                    <Info label="Estimated amount" value={b.estimated_amount ? `GH₵${b.estimated_amount}` : b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
+                    <Info label="Worker final amount" value={b.final_amount ? `GH₵${b.final_amount}` : "—"} />
+                    <Info label="Customer amount paid" value={b.amount_paid ? `GH₵${b.amount_paid}` : "—"} />
                     <Info label="Description" value={b.description ?? "—"} />
+                    {b.completion_note && <Info label="Completion note" value={b.completion_note} />}
+                    {b.status === "disputed" && (
+                      <DisputePanel booking={b} onResolved={() => { setOpenId(null); qc.invalidateQueries({ queryKey: ["admin-bookings-page"] }); }} />
+                    )}
+                    {b.admin_resolution_note && (
+                      <Info label="Admin resolution" value={`${b.admin_resolution_note} (${new Date(b.admin_resolved_at).toLocaleString()})`} />
+                    )}
                   </div>
                 )}
               </div>
@@ -154,6 +163,46 @@ function Info({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-[10px] uppercase font-bold text-muted-foreground">{label}</p>
       <p className="text-sm break-words">{value}</p>
+    </div>
+  );
+}
+
+const ACTIONS = [
+  { code: "mark_completed", label: "Mark completed + confirm payment" },
+  { code: "return_in_progress", label: "Return to in progress" },
+  { code: "cancel", label: "Cancel booking" },
+  { code: "resolve_no_penalty", label: "Resolve without penalty" },
+];
+
+function DisputePanel({ booking, onResolved }: { booking: any; onResolved: () => void }) {
+  const [action, setAction] = useState<string>("");
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (!action) return toast.error("Choose an action");
+    setSaving(true);
+    const { error } = await supabase.rpc("admin_resolve_dispute", { _booking_id: booking.id, _action: action, _note: note.trim() || undefined });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Dispute resolved");
+    onResolved();
+  };
+  return (
+    <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-2">
+      <p className="text-xs font-bold text-destructive uppercase">Dispute</p>
+      {booking.dispute_reason && <p className="text-xs"><b>Reason:</b> {booking.dispute_reason}</p>}
+      {booking.dispute_details && <p className="text-xs italic">"{booking.dispute_details}"</p>}
+      {booking.disputed_at && <p className="text-[10px] text-muted-foreground">Opened {new Date(booking.disputed_at).toLocaleString()}</p>}
+      <select value={action} onChange={(e) => setAction(e.target.value)} className="w-full px-2 py-2 rounded-lg bg-background border border-input text-xs">
+        <option value="">Select resolution…</option>
+        {ACTIONS.map(a => <option key={a.code} value={a.code}>{a.label}</option>)}
+      </select>
+      <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Resolution note (optional, logged)…"
+        className="w-full rounded-lg border border-input bg-background p-2 text-xs min-h-[60px]" />
+      <button onClick={submit} disabled={saving || !action}
+        className="w-full px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground disabled:opacity-60">
+        {saving ? "Resolving…" : "Resolve dispute"}
+      </button>
     </div>
   );
 }

@@ -46,6 +46,14 @@ function ChatPage() {
     return () => { supabase.removeChannel(channel); };
   }, [bookingId, qc]);
 
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("notifications").update({ read_at: new Date().toISOString() })
+      .eq("user_id", user.id).eq("type", "chat_message").is("read_at", null)
+      .contains("data", { booking_id: bookingId })
+      .then(() => qc.invalidateQueries({ queryKey: ["unread-notifications"] }));
+  }, [bookingId, user?.id, qc]);
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages?.length]);
 
   const send = async () => {

@@ -234,7 +234,7 @@ function WorkerDetail() {
           {phone && (
             <a href={`tel:${phone}`} aria-label="Call" className="size-12 grid place-items-center rounded-xl border border-input"><Phone className="size-4" /></a>
           )}
-          <button aria-label="Message" className="size-12 grid place-items-center rounded-xl border border-input" onClick={() => toast.info("Messaging is coming soon.")}>
+          <button aria-label="Message" className="size-12 grid place-items-center rounded-xl border border-input" onClick={() => toast.info("Messaging becomes available after you book this professional.")}>
             <MessageCircle className="size-4" />
           </button>
           <button

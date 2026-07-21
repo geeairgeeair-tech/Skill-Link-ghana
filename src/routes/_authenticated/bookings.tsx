@@ -5,7 +5,19 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Star, MessageCircle, ClipboardList } from "lucide-react";
+import { Calendar, Star, MessageCircle, ClipboardList, XCircle } from "lucide-react";
+
+const DECLINE_LABELS: Record<string, string> = {
+  schedule_conflict: "Schedule conflict",
+  too_far: "Too far from service area",
+  budget_low: "Budget is too low",
+  no_equipment: "Missing required equipment",
+  unavailable: "Currently unavailable",
+  unclear_details: "Job details are unclear",
+  safety_concern: "Safety concern",
+  wrong_category: "Wrong category or service",
+  other: "Other",
+};
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
@@ -81,6 +93,13 @@ function BookingsPage() {
               <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
               {b.scheduled_at && <p className="text-xs text-muted-foreground mt-2">📅 {new Date(b.scheduled_at).toLocaleString()}</p>}
               {b.estimated_cost ? <p className="text-sm font-semibold text-primary mt-1">~ GH₵{b.estimated_cost}</p> : null}
+              {b.status === "declined" && (
+                <div className="mt-3 rounded-xl bg-destructive/5 border border-destructive/20 p-3 text-sm">
+                  <p className="font-semibold text-destructive inline-flex items-center gap-1"><XCircle className="size-4"/> This professional declined the booking.</p>
+                  {b.decline_reason && <p className="text-xs mt-1"><span className="font-semibold">Reason:</span> {DECLINE_LABELS[b.decline_reason] ?? b.decline_reason}</p>}
+                  {b.decline_note && <p className="text-xs text-muted-foreground mt-1 italic">"{b.decline_note}"</p>}
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold">
                   <MessageCircle className="size-3" /> Chat

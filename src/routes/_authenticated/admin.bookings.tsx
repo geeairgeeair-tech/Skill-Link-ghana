@@ -181,7 +181,7 @@ function DisputePanel({ booking, onResolved }: { booking: any; onResolved: () =>
   const submit = async () => {
     if (!action) return toast.error("Choose an action");
     setSaving(true);
-    const { error } = await supabase.rpc("admin_resolve_dispute", { _booking_id: booking.id, _action: action, _note: note.trim() || null });
+    const { error } = await supabase.rpc("admin_resolve_dispute", { _booking_id: booking.id, _action: action, _note: note.trim() || undefined });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Dispute resolved");

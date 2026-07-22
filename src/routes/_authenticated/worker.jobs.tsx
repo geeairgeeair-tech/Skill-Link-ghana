@@ -228,6 +228,12 @@ function JobsPage() {
                   <button type="button" onClick={() => setDeclineFor(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground">Decline</button>
                 </>}
                 {b.status === "accepted" && (
+                  <>
+                    <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
+                    <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
+                  </>
+                )}
+                {b.status === "on_the_way" && (
                   <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
                 )}
                 {inProg && (

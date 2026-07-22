@@ -54,24 +54,23 @@ function EditJobPage() {
   });
 
   useEffect(() => {
-    if (job && !form) {
-      const j = job as any;
-      setForm({
-        title: j.title ?? "",
-        description: j.description ?? "",
-        category_id: j.category_id ?? "",
-        city: j.city ?? "",
-        address: addr ?? j.address ?? "",
-        service_area: j.service_area ?? "",
-        region: j.region ?? "",
-        area: j.area ?? "",
-        landmark: j.landmark ?? "",
-        location_instructions: j.location_instructions ?? "",
-        budget: j.budget?.toString() ?? "",
-        urgency: j.urgency ?? "normal",
-        preferred_at: j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : "",
-      });
-    }
+    if (!job) return;
+    const j = job as any;
+    setForm((prev: any) => ({
+      title: prev?.title ?? j.title ?? "",
+      description: prev?.description ?? j.description ?? "",
+      category_id: prev?.category_id ?? j.category_id ?? "",
+      city: prev?.city ?? j.city ?? "",
+      address: prev?.address ?? addr ?? j.address ?? "",
+      service_area: prev?.service_area ?? j.service_area ?? "",
+      region: prev?.region ?? j.region ?? "",
+      area: prev?.area ?? j.area ?? "",
+      landmark: prev?.landmark ?? j.landmark ?? "",
+      location_instructions: prev?.location_instructions ?? j.location_instructions ?? "",
+      budget: prev?.budget ?? (j.budget?.toString() ?? ""),
+      urgency: prev?.urgency ?? j.urgency ?? "normal",
+      preferred_at: prev?.preferred_at ?? (j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : ""),
+    }));
   }, [job, addr]);
 
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;

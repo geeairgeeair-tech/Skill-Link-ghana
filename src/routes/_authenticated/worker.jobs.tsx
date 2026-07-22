@@ -252,18 +252,18 @@ function JobsPage() {
                   <button type="button" onClick={() => setDeclineFor(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground">Decline</button>
                 </>}
                 {b.status === "accepted" && (
-                  <>
-                    <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
-                    <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
-                  </>
+                  <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
                 )}
                 {b.status === "on_the_way" && (
+                  <button type="button" onClick={() => markArrived(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I've Arrived</button>
+                )}
+                {b.status === "arrived" && (
                   <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
                 )}
                 {inProg && (
                   <button type="button" onClick={() => setCompleteFor(b)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Mark Job Completed</button>
                 )}
-                {!declined && b.status !== "disputed" && b.status !== "completed" && b.status !== "closed" && (
+                {["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started"].includes(b.status) && (
                   <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2 rounded-lg text-xs font-semibold bg-muted inline-flex items-center gap-1">
                     <MessageCircle className="size-3.5"/> Chat
                   </Link>

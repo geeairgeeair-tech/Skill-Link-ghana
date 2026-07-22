@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
@@ -25,6 +26,9 @@ const STATUS_STYLES: Record<string, string> = {
 function MyJobPosts() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [cancelFor, setCancelFor] = useState<{ id: string; title: string } | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const { data: jobs, isLoading } = useQuery({
     queryKey: ["my-job-requests", user?.id],
     enabled: !!user,
@@ -47,11 +51,17 @@ function MyJobPosts() {
     },
   });
 
-  const cancel = async (id: string) => {
-    if (!confirm("Cancel this job post? Workers will no longer see it.")) return;
-    const { error } = await supabase.from("job_requests").update({ status: "cancelled" as any }).eq("id", id);
+  const submitCancel = async () => {
+    if (!cancelFor) return;
+    if (cancelReason.trim().length < 4) return toast.error("Please give a short reason");
+    setCancelling(true);
+    const { error } = await supabase.rpc("customer_cancel_job_request", {
+      _job_id: cancelFor.id, _reason: cancelReason.trim(),
+    } as any);
+    setCancelling(false);
     if (error) return toast.error(error.message);
     toast.success("Job cancelled");
+    setCancelFor(null); setCancelReason("");
     qc.invalidateQueries({ queryKey: ["my-job-requests"] });
   };
 
@@ -122,7 +132,7 @@ function MyJobPosts() {
                     </Link>
                   )}
                   {canCancel && (
-                    <button onClick={() => cancel(j.id)} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
+                    <button onClick={() => setCancelFor({ id: j.id, title: j.title })} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
                       <XCircle className="size-3.5"/> Cancel
                     </button>
                   )}
@@ -132,6 +142,29 @@ function MyJobPosts() {
           );
         })}
       </main>
+
+      {cancelFor && (
+        <div className="fixed inset-0 z-50 bg-black/60 grid place-items-center px-4" onClick={() => !cancelling && setCancelFor(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-5 shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display font-bold text-lg">Cancel job post?</h3>
+            <p className="text-xs text-muted-foreground mt-1 truncate">"{cancelFor.title}"</p>
+            <p className="text-xs text-muted-foreground mt-2">Applicants will be notified. Why are you cancelling?</p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value.slice(0, 500))}
+              rows={3}
+              placeholder="e.g. Found someone offline, no longer needed…"
+              className="mt-2 w-full px-3 py-2 rounded-lg bg-muted text-sm"
+            />
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => setCancelFor(null)} disabled={cancelling} className="flex-1 h-10 rounded-lg border border-border text-sm font-semibold">Keep job</button>
+              <button onClick={submitCancel} disabled={cancelling} className="flex-1 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-50">
+                {cancelling ? "Cancelling…" : "Cancel job"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

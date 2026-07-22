@@ -12,13 +12,19 @@ export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({
 });
 
 const schema = z.object({
-  title: z.string().trim().min(4).max(120),
-  description: z.string().trim().min(10).max(2000),
-  city: z.string().trim().min(2).max(60),
-  address: z.string().trim().min(3).max(200),
+  title: z.string().trim().min(4, "Title must be at least 4 characters").max(120),
+  description: z.string().trim().min(10, "Description must be at least 10 characters").max(2000),
+  category_id: z.string().uuid("Pick a category"),
+  city: z.string().trim().min(2, "City is required").max(60),
+  address: z.string().trim().min(3, "Address is required").max(200),
   service_area: z.string().trim().max(120).optional(),
+  region: z.string().trim().max(60).optional(),
+  area: z.string().trim().max(120).optional(),
+  landmark: z.string().trim().max(160).optional(),
+  location_instructions: z.string().trim().max(500).optional(),
   budget: z.number().int().min(0).max(1_000_000).optional(),
   urgency: z.enum(["normal","urgent","emergency"]),
+  preferred_at: z.string().optional(),
 });
 
 function EditJobPage() {
@@ -31,7 +37,7 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id")
+      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id")
       .eq("id", id).maybeSingle()).data,
   });
   const { data: addr } = useQuery({
@@ -39,17 +45,28 @@ function EditJobPage() {
     enabled: !!job && !!user,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
+  const { data: categories } = useQuery({
+    queryKey: ["categories-all"],
+    queryFn: async () => (await supabase.from("categories").select("id, name").order("name")).data ?? [],
+  });
 
   useEffect(() => {
     if (job && !form) {
+      const j = job as any;
       setForm({
-        title: (job as any).title ?? "",
-        description: (job as any).description ?? "",
-        city: (job as any).city ?? "",
-        address: addr ?? (job as any).address ?? "",
-        service_area: (job as any).service_area ?? "",
-        budget: (job as any).budget?.toString() ?? "",
-        urgency: (job as any).urgency ?? "normal",
+        title: j.title ?? "",
+        description: j.description ?? "",
+        category_id: j.category_id ?? "",
+        city: j.city ?? "",
+        address: addr ?? j.address ?? "",
+        service_area: j.service_area ?? "",
+        region: j.region ?? "",
+        area: j.area ?? "",
+        landmark: j.landmark ?? "",
+        location_instructions: j.location_instructions ?? "",
+        budget: j.budget?.toString() ?? "",
+        urgency: j.urgency ?? "normal",
+        preferred_at: j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : "",
       });
     }
   }, [job, addr]);
@@ -57,6 +74,7 @@ function EditJobPage() {
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (user && (job as any).customer_id !== user.id) return <div className="p-8 text-center">You can't edit this job.</div>;
   if ((job as any).status !== "open") return <div className="p-8 text-center">This job can no longer be edited.</div>;
+  if ((job as any).assigned_worker_id) return <div className="p-8 text-center">A worker has already been selected — edits are locked.</div>;
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 
   const submit = async (e: React.FormEvent) => {
@@ -65,10 +83,30 @@ function EditJobPage() {
       ...form,
       budget: form.budget ? Number(form.budget) : undefined,
       service_area: form.service_area || undefined,
+      region: form.region || undefined,
+      area: form.area || undefined,
+      landmark: form.landmark || undefined,
+      location_instructions: form.location_instructions || undefined,
+      preferred_at: form.preferred_at || undefined,
     });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
-    const { error } = await supabase.from("job_requests").update(parsed.data as any).eq("id", id);
+    const { error } = await supabase.rpc("customer_update_job_request", {
+      _job_id: id,
+      _title: parsed.data.title,
+      _description: parsed.data.description,
+      _category_id: parsed.data.category_id,
+      _budget: parsed.data.budget ?? null,
+      _urgency: parsed.data.urgency,
+      _preferred_at: parsed.data.preferred_at ? new Date(parsed.data.preferred_at).toISOString() : null,
+      _city: parsed.data.city,
+      _address: parsed.data.address,
+      _service_area: parsed.data.service_area ?? null,
+      _region: parsed.data.region ?? null,
+      _area: parsed.data.area ?? null,
+      _landmark: parsed.data.landmark ?? null,
+      _location_instructions: parsed.data.location_instructions ?? null,
+    } as any);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Job updated");
@@ -85,16 +123,29 @@ function EditJobPage() {
       </header>
 
       <form onSubmit={submit} className="mx-auto max-w-md px-5 -mt-3 space-y-3">
-        <F label="Title"><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input" required /></F>
-        <F label="Description"><textarea rows={4} value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input resize-none" required /></F>
+        <F label="Title *"><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input" required /></F>
+        <F label="Description *"><textarea rows={4} value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input resize-none" required /></F>
+        <F label="Category *">
+          <select value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})} className="input" required>
+            <option value="">Pick a category…</option>
+            {(categories ?? []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </F>
         <div className="grid grid-cols-2 gap-3">
-          <F label="City"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required /></F>
-          <F label="Area"><input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" /></F>
+          <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required /></F>
+          <F label="Service area"><input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" /></F>
         </div>
-        <F label="Address"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" required /></F>
+        <div className="grid grid-cols-2 gap-3">
+          <F label="Region"><input value={form.region} onChange={e => setForm({...form, region: e.target.value})} className="input" /></F>
+          <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
+        </div>
+        <F label="Landmark"><input value={form.landmark} onChange={e => setForm({...form, landmark: e.target.value})} className="input" placeholder="e.g. Near Total filling station" /></F>
+        <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" required /></F>
+        <F label="Location instructions"><textarea rows={2} value={form.location_instructions} onChange={e => setForm({...form, location_instructions: e.target.value})} className="input resize-none" placeholder="Gate colour, how to find it, parking…" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
-        <F label="Urgency">
-          <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input">
+        <F label="Preferred date/time"><input type="datetime-local" value={form.preferred_at} onChange={e => setForm({...form, preferred_at: e.target.value})} className="input" /></F>
+        <F label="Urgency *">
+          <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input" required>
             <option value="normal">Normal</option>
             <option value="urgent">Urgent</option>
             <option value="emergency">Emergency</option>

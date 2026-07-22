@@ -11,12 +11,25 @@ export const Route = createFileRoute("/_authenticated/support")({
   component: SupportPage,
 });
 
+const TOPICS = [
+  { value: "booking", label: "Booking problem" },
+  { value: "payment", label: "Payment confirmation" },
+  { value: "verification", label: "Verification" },
+  { value: "complaint", label: "Worker or customer complaint" },
+  { value: "job_board", label: "Job Board" },
+  { value: "account", label: "Account access" },
+  { value: "safety", label: "Safety concern" },
+  { value: "technical", label: "Technical problem" },
+  { value: "general", label: "Other" },
+];
+
 function SupportPage() {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const qc = useQueryClient();
-  const [form, setForm] = useState({ subject: "", message: "", category: "verification" });
+  const [form, setForm] = useState({ subject: "", message: "", category: "booking", contact_email: "" });
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [lastRef, setLastRef] = useState<string | null>(null);
 
   const { data: tickets } = useQuery({
     queryKey: ["my-support-tickets", user?.id],
@@ -29,10 +42,18 @@ function SupportPage() {
     },
   });
 
+  // Prefill contact email from auth user
+  if (user && !form.contact_email && user.email) {
+    setForm((f) => ({ ...f, contact_email: user.email! }));
+  }
+
   const submit = async () => {
     if (!user) return;
-    if (form.subject.trim().length < 3) return toast.error("Subject too short");
-    if (form.message.trim().length < 10) return toast.error("Message too short");
+    if (form.subject.trim().length < 3) return toast.error("Subject is required");
+    if (form.message.trim().length < 10) return toast.error("Please describe the issue (min 10 chars)");
+    if (!form.contact_email.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.contact_email)) {
+      return toast.error("Enter a valid contact email");
+    }
     setSubmitting(true);
     try {
       let attachment_url: string | null = null;
@@ -42,17 +63,18 @@ function SupportPage() {
         if (upErr) throw upErr;
         attachment_url = path;
       }
-      const { error } = await supabase.from("support_tickets").insert({
-        user_id: user.id,
-        subject: form.subject.trim(),
-        message: form.message.trim(),
-        category: form.category,
-        related_worker_id: role === "worker" ? user.id : null,
-        attachment_url,
-      });
+      const { data: newId, error } = await supabase.rpc("submit_support_ticket", {
+        _subject: form.subject.trim(),
+        _message: `Contact: ${form.contact_email.trim()}\n\n${form.message.trim()}`,
+        _category: form.category,
+        _contact_email: form.contact_email.trim(),
+        _attachment_url: attachment_url,
+      } as any);
       if (error) throw error;
-      toast.success("Ticket submitted");
-      setForm({ subject: "", message: "", category: "verification" });
+      const ref = typeof newId === "string" ? newId.substring(0, 8).toUpperCase() : "";
+      setLastRef(ref);
+      toast.success(`Ticket #${ref} received — we'll respond soon`);
+      setForm({ subject: "", message: "", category: "booking", contact_email: form.contact_email });
       setFile(null);
       qc.invalidateQueries({ queryKey: ["my-support-tickets"] });
     } catch (e: any) {
@@ -72,14 +94,21 @@ function SupportPage() {
       <main className="mx-auto max-w-md px-5 -mt-3 space-y-3">
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
           <h3 className="font-display font-bold">Contact support</h3>
+          {lastRef && (
+            <div className="rounded-lg bg-success/10 border border-success/30 p-2 text-xs">
+              <p className="font-semibold text-success">Ticket #{lastRef} received</p>
+              <p>The Skill Link team will respond via email and in-app.</p>
+            </div>
+          )}
+          <label className="text-[11px] font-semibold text-muted-foreground">Topic *</label>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
-            <option value="verification">Verification issue</option>
-            <option value="account">Account</option>
-            <option value="payment">Payment</option>
-            <option value="booking">Booking</option>
-            <option value="general">General</option>
+            {TOPICS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Subject" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Contact email *</label>
+          <input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="you@example.com" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Subject *</label>
+          <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Short subject" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Message *</label>
           <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Describe your issue…" rows={4} className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
           <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs" />
           <button onClick={submit} disabled={submitting} className="w-full py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">

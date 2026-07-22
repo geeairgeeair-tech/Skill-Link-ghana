@@ -39,11 +39,28 @@ const fmtGHS = (n: number | null | undefined) =>
   n == null ? "—" : `GH₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function matchesTab(status: string, tab: TabKey) {
-  if (tab === "accepted") return status === "accepted";
-  if (tab === "in_progress") return ["in_progress", "on_the_way", "arrived", "worker_on_the_way", "work_started"].includes(status);
+  if (tab === "accepted") return ["accepted", "on_the_way", "arrived"].includes(status);
+  if (tab === "in_progress") return ["in_progress", "worker_on_the_way", "work_started"].includes(status);
   if (tab === "awaiting") return status === "awaiting_customer_confirmation" || status === "worker_marked_complete";
   if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
   return status === tab;
+}
+
+function statusLabel(s: string): string {
+  switch (s) {
+    case "pending": return "Awaiting your response";
+    case "accepted": return "Accepted";
+    case "on_the_way": return "On the way";
+    case "arrived": return "Arrived on site";
+    case "in_progress": return "In progress";
+    case "awaiting_customer_confirmation": return "Awaiting customer";
+    case "completed": return "Completed";
+    case "declined": return "Declined";
+    case "cancelled": return "Cancelled";
+    case "expired": return "Expired";
+    case "disputed": return "Disputed";
+    default: return s.replace(/_/g, " ");
+  }
 }
 
 function JobsPage() {
@@ -101,14 +118,21 @@ function JobsPage() {
   const markOnTheWay = async (id: string) => {
     const { error: rErr } = await supabase.rpc("worker_mark_on_the_way", { _booking_id: id });
     if (rErr) return toast.error(rErr.message);
-    toast.success("Customer notified");
+    toast.success("Customer notified — you're on the way");
+    qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+  };
+
+  const markArrived = async (id: string) => {
+    const { error: rErr } = await supabase.rpc("worker_mark_arrived", { _booking_id: id });
+    if (rErr) return toast.error(rErr.message);
+    toast.success("Customer notified — you've arrived");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
   };
 
   const startJob = async (id: string) => {
     const { error: rErr } = await supabase.rpc("worker_start_booking", { _booking_id: id });
     if (rErr) return toast.error(rErr.message);
-    toast.success("Job started");
+    toast.success("Job started successfully");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
   };
 
@@ -145,7 +169,7 @@ function JobsPage() {
         ) : visible.map((b: any) => {
           const declined = b.status === "declined" || b.status === "cancelled";
           const awaiting = b.status === "awaiting_customer_confirmation" || b.status === "worker_marked_complete";
-          const inProg = ["in_progress","on_the_way","arrived","worker_on_the_way","work_started"].includes(b.status);
+          const inProg = ["in_progress","worker_on_the_way","work_started"].includes(b.status);
           const declineLabel = DECLINE_REASONS.find(r => r.code === b.decline_reason)?.label;
           const customerName = b.profiles?.full_name?.trim() || "Skill Link Customer";
           const initial = (b.profiles?.full_name?.trim()?.[0] ?? "?").toUpperCase();
@@ -175,7 +199,7 @@ function JobsPage() {
                         : b.status === "disputed" ? "bg-destructive/15 text-destructive"
                         : awaiting ? "bg-gold/20 text-gold-foreground"
                         : "bg-primary-soft text-primary"
-                      }`}>{b.status.replace(/_/g," ")}</span>
+                      }`}>{statusLabel(b.status)}</span>
                       {b.urgency && b.urgency !== "normal" && !declined && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-warning-foreground bg-warning/20 px-2 py-0.5 rounded-full">
                           <AlertTriangle className="size-3"/>{b.urgency}
@@ -228,18 +252,18 @@ function JobsPage() {
                   <button type="button" onClick={() => setDeclineFor(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground">Decline</button>
                 </>}
                 {b.status === "accepted" && (
-                  <>
-                    <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
-                    <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
-                  </>
+                  <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
                 )}
                 {b.status === "on_the_way" && (
+                  <button type="button" onClick={() => markArrived(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I've Arrived</button>
+                )}
+                {b.status === "arrived" && (
                   <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
                 )}
                 {inProg && (
                   <button type="button" onClick={() => setCompleteFor(b)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Mark Job Completed</button>
                 )}
-                {!declined && b.status !== "disputed" && b.status !== "completed" && b.status !== "closed" && (
+                {["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started"].includes(b.status) && (
                   <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2 rounded-lg text-xs font-semibold bg-muted inline-flex items-center gap-1">
                     <MessageCircle className="size-3.5"/> Chat
                   </Link>

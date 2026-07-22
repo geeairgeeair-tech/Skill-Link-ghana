@@ -199,7 +199,7 @@ function JobsPage() {
                         : b.status === "disputed" ? "bg-destructive/15 text-destructive"
                         : awaiting ? "bg-gold/20 text-gold-foreground"
                         : "bg-primary-soft text-primary"
-                      }`}>{b.status.replace(/_/g," ")}</span>
+                      }`}>{statusLabel(b.status)}</span>
                       {b.urgency && b.urgency !== "normal" && !declined && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase text-warning-foreground bg-warning/20 px-2 py-0.5 rounded-full">
                           <AlertTriangle className="size-3"/>{b.urgency}

@@ -1,103 +1,57 @@
-# Skill Link — Sprint 2A → 2B → 2C Plan
 
-This is a very large scope (14 sections across 3 sprints, 37 test cases, multiple migrations). To keep changes safe and reviewable, I'll execute in **strict phases**, each ending with a testable checkpoint. I will NOT start 2B until 2A passes, and NOT start 2C until 2B is stable — as you requested.
+# Sprint 2A — Critical Workflow Corrections
 
-Below is the execution order. Each phase is one focused batch of migrations + code + verification.
+Single focused checkpoint. Preserves all existing auth, notifications, chat, reviews, payments, disputes, admin tools. No A3/timers/Pro/subscriptions/dashboard redesign.
 
----
-
-## SPRINT 2A — Critical fixes (in this order)
-
-**Phase A1 — Worker job application flow (Section 1)**
-- Migration: `worker_apply_to_job(_job_id, _proposed_amount, _estimated_start, _message, _note)` RPC — SECURITY DEFINER; validates auth, approved worker, category match, job open, no duplicate, not Busy. Emits exactly one customer notification.
-- Migration: `customer_accept_job_application(_application_id)` RPC — atomic: assigns worker, closes job, creates linked booking, marks other applications `rejected`, notifies all parties.
-- Add `assigned_worker_id`, `booking_id` columns to `job_requests` if missing; add `job_application_id` to `bookings`.
-- Wire `jobs.$id.apply.tsx` Apply button to the new RPC (replace direct insert).
-- Add "View Applicants" screen on `jobs.$id.tsx` for job owner with Accept button and applicant profile drawer.
-- Withdraw uses RPC-safe update.
-
-**Phase A2 — Direct booking accept via RPC (Section 2)**
-- Migration: `worker_accept_booking(_booking_id)` RPC — validates worker, pending status, not busy, not expired; sets `accepted_at`.
-- Migration: `worker_mark_on_the_way(_booking_id)` RPC.
-- Update `worker.dashboard.tsx` and `worker.jobs.tsx` and `bookings.tsx` Accept/OnTheWay buttons to call RPCs. Direct table UPDATEs remain blocked by existing `guard_booking_worker_updates` trigger.
-- Surface clear error toasts for each failure code.
-
-**Phase A3 — Customer identity everywhere (Section 3)**
-- Migration: `get_booking_counterparty(_booking_id)` RPC returning name, avatar_url, is_verified_customer for the *other* party (auth check inside).
-- Migration: batched helper `get_profiles_for_bookings(_ids uuid[])` for lists — returns only rows caller is authorized for via existing counterparty policy.
-- Replace all `.select("profiles(*)")` embeds in worker.dashboard, worker.jobs, bookings, chat header, admin views (where appropriate) with a single batched profile-map query keyed by counterparty id, showing real name + avatar + initials fallback + verified badge. "Skill Link Customer" only when profile row truly missing.
-
-**Phase A4 — Booking response timer (Section 4)**
-- Migration: add `response_window_minutes` to `worker_profiles` (default 60). Add `response_deadline_at`, `expired_at`, `worker_response_seconds` to `bookings`. On booking insert trigger, set `response_deadline_at = now() + interval`.
-- Migration: `expire_stale_bookings()` RPC + `pg_cron` every 5 min to flip pending→`expired`, notify customer with options.
-- Reject accept RPC if `now() > response_deadline_at`.
-- Update `worker_accept_booking` to record `worker_response_seconds`.
-- Add worker stats view: avg response, accept-rate, expired-count (guarded — hidden until N≥3 bookings).
-- UI: countdown timer component (server-computed deadline) on worker dashboard "Awaiting your response". Worker profile settings adds response-window selector. Customer expiry screen with "Post to Job Board / Browse similar / Send to another worker" actions.
-
-**Phase A5 — Busy state / one active job (Section 5)**
-- Migration: update `worker_apply_to_job` and `worker_accept_booking` to reject when `get_worker_public_status = 'busy'`.
-- Migration: RLS check function `worker_is_bookable(_worker_id)`.
-- `book.$workerId.tsx` — hide/replace "Book Now" with Busy CTA + Save/Follow/Choose Another.
-- Preserve manual `is_available` flag; Busy is derived, never overwrites.
-
-**Phase A6 — Location & GPS (Section 6)**
-- New reusable `<LocationPicker>` component: shows explainer, "Use my current location" button, handles denied/timeout/unsupported with clear fallback to manual entry (region, city, area, landmark, address, instructions). Never traps user.
-- Add fields to `job_requests` and `bookings`: `region`, `area`, `landmark`, `location_instructions` (if not present).
-- Public job cards on `jobs.index.tsx` show only city + area + landmark. `get_job_request_address` (already SECURITY DEFINER) continues to gate exact address to owner/admin; extend to include assigned worker post-acceptance.
-- Update `jobs.new.tsx`, `jobs.$id.edit.tsx`, `book.$workerId.tsx` to use LocationPicker.
-
-**Phase A7 — Phone release after acceptance (Section 7)**
-- Migration: `get_counterparty_phone(_booking_id)` RPC — returns phone only when caller is assigned worker AND booking status in ('accepted','on_the_way','in_progress','awaiting_customer_confirmation'), or caller is customer of an accepted booking. Records `contact_released_at`.
-- UI: tap-to-call button on accepted booking details for both sides; hidden otherwise.
-
-**Phase A8 — Job duration (Section 8)**
-- Compute in a `booking_duration_seconds` generated/derived helper using `started_at` → `customer_confirmed_at` (fallback `worker_completed_at`).
-- Add formatter `formatDuration()` in `src/lib/utils.ts`. Display on completed booking cards in `bookings.tsx`, `worker.jobs.tsx` history, admin booking detail.
-
-**Phase A9 — Customer & Worker history (Section 9)**
-- `bookings.tsx`: default to a smart tab (first non-empty of Pending → Accepted → Completed). Add "Previous Bookings" section under current. Show full record fields listed.
-- `worker.jobs.tsx`: separate `New Opportunities | Applications | Current Work | History` tabs. History includes completed, declined, expired, cancelled, disputed, unsuccessful applications.
-
-**Phase A10 — Admin access recovery (Section 10)**
-- Verify `/admin/login` exists (it does) + Forgot Password link (it does) + `/reset-password` route redirect.
-- Migration: idempotent `ensure_founder_admin(_email text)` SECURITY DEFINER — grants admin role to founder email if account exists and lacks role; no-op otherwise. Founder runs via authenticated call.
-- Verify Supabase auth `site_url` / redirect config includes preview + production domain (report exact steps — cannot expose secrets).
-- Provide clear founder self-service steps in the report; never expose passwords.
-
-**Phase A11 — Test pass** — run through 37-item checklist, report pass/fail. Fix regressions before 2B.
+I'll run this as **three sequential migration batches**, each followed by UI wiring, then a final typecheck. Enum changes must be committed before code paths reference them, so batches are split.
 
 ---
 
-## SPRINT 2B — UX improvements (after 2A passes)
+## Batch 1 — Booking lifecycle DB (adds `arrived` status + arrived_at, hardens RPCs)
 
-**Phase B1 — Notification drawer (Section 11)** — Sheet overlay from bell; blur backdrop; keeps user on page; mark-read; deep-link on tap; "View all" preserves existing `/notifications` route.
+Migration:
+- Add `arrived` to `booking_status` enum (idempotent).
+- Add `bookings.arrived_at timestamptz`, `on_the_way_at`, `accepted_at` (if missing).
+- Rewrite RPCs (all `SECURITY DEFINER`, existing sig preserved where possible):
+  - `worker_accept_booking(_booking_id)` — auth + assigned worker + status=pending + not-expired + not-busy → status=accepted, accepted_at=now(), notify customer once.
+  - `worker_mark_on_the_way(_booking_id)` — status=accepted → on_the_way, on_the_way_at=now(), notify.
+  - `worker_mark_arrived(_booking_id)` — NEW; status=on_the_way → arrived, arrived_at=now(), notify.
+  - `worker_start_booking(_booking_id)` — **change guard from `accepted` to `arrived`** → in_progress, started_at=now(), notify. Root cause of the "Only accepted bookings can be started" error.
+  - `worker_mark_booking_completed(...)` — keep existing; require status=in_progress.
+- Update `get_worker_public_status` busy set to include `arrived`.
+- Update `notify_booking_events` trigger to skip status changes now handled inside RPCs (avoid duplicate notifications) — RPCs insert notifications directly; trigger keeps INSERT/decline/customer-cancel paths only.
 
-**Phase B2 — Worker professional dashboard card (Section 12)** — profile-card hero at top of `worker.dashboard.tsx`; big availability control (Available/Unavailable/On Vacation) with derived Busy chip; shrink counters.
+## Batch 2 — Job edit / cancel / DOB / support DB
 
-**Phase B3 — Chat presence (Section 13)** — Supabase Realtime Presence channel per booking chat. Show Online/Active/Typing only from live presence, never from last_login. Handle disconnect/refresh.
+Migration:
+- `customer_update_job_request(...)` RPC — owner + status='open' + no assigned_worker_id → update fields, bump updated_at, notify existing applicants when material fields (budget, preferred_at, category_id, city/area/landmark) change.
+- `customer_cancel_job_request(_job_id, _reason)` RPC — owner + status in ('open','draft') + no assigned worker → status='cancelled', cancelled_at, cancel_reason; notify pending applicants; if assigned worker exists, raise error directing to booking cancel.
+- Add columns `job_requests.cancelled_at`, `cancel_reason`, `region`, `area`, `landmark`, `location_instructions` (if missing).
+- DOB: already required by `validate_worker_dob` trigger; add `profiles`-level nothing. Keep private (already gated via `get_worker_identity`).
+- Support: `support_tickets` table already exists — add `ticket_ref text unique` generated column + `admin_reply_support_ticket(_id, _reply, _new_status)` RPC that notifies user. Add `submit_support_ticket(_topic, _message, _contact_email)` RPC.
 
-**Phase B4 — Browse Pros categories (Section 14)** — `workers.index.tsx` opens with All selected; horizontal category chips (scroll-x on mobile); availability filter; rating sort; nearest sort when location available.
+## Batch 3 — UI wiring (no DB)
+
+Files edited:
+- `src/routes/_authenticated/worker.jobs.tsx` — button visibility rules per status; add "I've Arrived" button; Start Job only on `arrived`; Mark Completed only on `in_progress`; remove any direct-update Accept paths.
+- `src/routes/_authenticated/worker.dashboard.tsx` — same button rules; ensure Accept uses RPC.
+- `src/routes/_authenticated/bookings.tsx` — timeline shows Requested/Accepted/On the way/Arrived/Started/Worker completed/Customer confirmed with timestamps; human status labels.
+- `src/routes/_authenticated/jobs.$id.apply.tsx` — friendly error surfacing (map RPC error messages), Applied state, no silent fail.
+- `src/routes/_authenticated/jobs.$id.tsx` — ApplicantsPanel: list applicants w/ profile link, Hire button calling `customer_accept_job_application`.
+- `src/routes/_authenticated/jobs.$id.edit.tsx` — wire to `customer_update_job_request` RPC; load fields; validate required.
+- `src/routes/_authenticated/jobs.mine.tsx` — Cancel Job button → confirm modal → `customer_cancel_job_request`.
+- `src/routes/_authenticated/support.tsx` — form (topic/email/message) → RPC → ticket ref shown; history list.
+- `src/routes/_authenticated/admin.support.tsx` — reply box wired to `admin_reply_support_ticket`.
+- `src/routes/_authenticated/worker.onboarding.tsx` — DOB required; validation.
+- `src/routes/_authenticated/worker.dashboard.tsx` — DOB-missing banner (already present, verify).
+- `src/routes/_authenticated/admin.tsx` / `admin.users.$userId.tsx` — require reason on reject/suspend (already required in `admin_reject_worker`); confirm notification path.
+
+## Deferred (explicitly per instructions)
+- Section 4 response timers, A3 counterparty batching, Pro contract jobs, subscriptions, dashboard redesign, email provider integration (in-app ack only; email marked "deferred").
+
+## Testing
+Typecheck + build + smoke on: apply → hire → accept → on_the_way → arrived → start → complete → confirm. Report pass/fail against the 40-item list.
 
 ---
 
-## SPRINT 2C — Skill Link Pro contract-jobs MVP (after 2B stable)
-
-- New tables: `pro_contract_jobs`, `pro_contract_applications`, `pro_screening_questions`, `pro_screening_answers`.
-- Route tree: `_authenticated/pro/*` for customer (post/manage/shortlist) and worker (browse/apply). "Pro" badge component.
-- Admin moderation route under `_authenticated/admin/pro-jobs.tsx`.
-- Multi-worker selection flow; screening questions; shortlist/reject.
-- No paid subscription collection this sprint (per your instruction).
-
----
-
-## Ground rules I'll follow
-- No silent policy changes on existing working RLS. Any change is called out in migration description.
-- Every migration includes correct GRANTs.
-- Only additive schema changes where possible; no destructive data ops.
-- Each phase ends with a build + targeted verification before moving on.
-- Full implementation report at the end covering root causes, migrations, RPCs, RLS, cron, routes, tests passed/failed.
-
----
-
-**Please approve this plan (or tell me to trim/reorder scope).** Once approved, I'll start with **Phase A1 (worker application flow)** since that's the highest-severity broken feature, and progress through 2A in order.
+**Approve to proceed with Batch 1.** If you'd rather I trim (e.g. skip Sections 15 Support or 9-10 Edit/Cancel this turn), say which sections to defer and I'll shrink accordingly.

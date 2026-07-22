@@ -180,6 +180,8 @@ function BookingsPage() {
                 </div>
               )}
 
+              <BookingTimeline b={b} />
+
               <div className="mt-3 flex flex-wrap gap-2">
                 <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-muted text-xs font-semibold">
                   <MessageCircle className="size-3" /> Chat

@@ -94,14 +94,21 @@ function SupportPage() {
       <main className="mx-auto max-w-md px-5 -mt-3 space-y-3">
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
           <h3 className="font-display font-bold">Contact support</h3>
+          {lastRef && (
+            <div className="rounded-lg bg-success/10 border border-success/30 p-2 text-xs">
+              <p className="font-semibold text-success">Ticket #{lastRef} received</p>
+              <p>The Skill Link team will respond via email and in-app.</p>
+            </div>
+          )}
+          <label className="text-[11px] font-semibold text-muted-foreground">Topic *</label>
           <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 rounded-lg bg-muted text-sm">
-            <option value="verification">Verification issue</option>
-            <option value="account">Account</option>
-            <option value="payment">Payment</option>
-            <option value="booking">Booking</option>
-            <option value="general">General</option>
+            {TOPICS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
-          <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Subject" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Contact email *</label>
+          <input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="you@example.com" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Subject *</label>
+          <input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} placeholder="Short subject" className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
+          <label className="text-[11px] font-semibold text-muted-foreground">Message *</label>
           <textarea value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Describe your issue…" rows={4} className="w-full px-3 py-2 rounded-lg bg-muted text-sm" />
           <input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-xs" />
           <button onClick={submit} disabled={submitting} className="w-full py-2 rounded-lg bg-primary text-primary-foreground font-semibold text-sm disabled:opacity-50">

@@ -200,3 +200,102 @@ function JobDetail() {
   );
 }
 
+function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const { data: apps, isLoading } = useQuery({
+    queryKey: ["job-applicants", jobId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("job_applications")
+        .select("id, status, quoted_price, estimated_start, message, created_at, worker_id, profiles!job_applications_worker_id_fkey(full_name, avatar_url), worker_profiles!job_applications_worker_id_fkey(rating, reviews_count, jobs_completed, service_area)")
+        .eq("job_id", jobId)
+        .order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+
+  const accept = async (appId: string) => {
+    if (!confirm("Hire this applicant? Other applications will be marked not selected and a booking will be created.")) return;
+    setBusyId(appId);
+    const { data, error } = await supabase.rpc("customer_accept_job_application", { _application_id: appId });
+    setBusyId(null);
+    if (error) return toast.error(error.message);
+    toast.success("Worker hired! Booking created.");
+    qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
+    qc.invalidateQueries({ queryKey: ["job-request", jobId] });
+    if (data) navigate({ to: "/chat/$bookingId", params: { bookingId: data as string } });
+  };
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <FileText className="size-4 text-primary"/>
+          <p className="font-semibold">Applications received</p>
+        </div>
+        <span className="text-lg font-bold text-primary">{apps?.length ?? 0}</span>
+      </div>
+
+      {isLoading ? (
+        <p className="text-xs text-muted-foreground">Loading applicants…</p>
+      ) : !apps || apps.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No applications yet. Verified workers in this category will see your job on their board.</p>
+      ) : apps.map((a: any) => {
+        const wp = Array.isArray(a.worker_profiles) ? a.worker_profiles[0] : a.worker_profiles;
+        const p = Array.isArray(a.profiles) ? a.profiles[0] : a.profiles;
+        return (
+          <div key={a.id} className="rounded-xl border border-border p-3 space-y-2">
+            <div className="flex items-start gap-3">
+              <div className="size-11 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-sm">
+                {p?.avatar_url ? <img src={p.avatar_url} className="size-full object-cover" alt="" /> : (p?.full_name?.[0]?.toUpperCase() ?? <User className="size-4"/>)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <Link to="/workers/$id" params={{ id: a.worker_id }} className="font-semibold truncate hover:text-primary">
+                    {p?.full_name ?? "Worker"}
+                  </Link>
+                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+                    a.status === "accepted" ? "bg-success/20 text-success" :
+                    a.status === "rejected" ? "bg-muted text-muted-foreground" :
+                    a.status === "withdrawn" ? "bg-muted text-muted-foreground" :
+                    "bg-primary-soft text-primary"
+                  }`}>{a.status}</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  {wp?.rating ? `★ ${wp.rating}` : "New"}{wp?.reviews_count ? ` · ${wp.reviews_count} reviews` : ""}
+                  {wp?.jobs_completed != null ? ` · ${wp.jobs_completed} jobs` : ""}
+                  {wp?.service_area ? ` · ${wp.service_area}` : ""}
+                </p>
+              </div>
+              <span className="font-bold text-primary shrink-0">GH₵{a.quoted_price}</span>
+            </div>
+            {a.estimated_start && (
+              <p className="text-[11px] text-muted-foreground">Can start: {new Date(a.estimated_start).toLocaleString()}</p>
+            )}
+            {a.message && (
+              <p className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-2">{a.message}</p>
+            )}
+            <div className="flex gap-2 pt-1">
+              <Link to="/workers/$id" params={{ id: a.worker_id }} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
+                View profile
+              </Link>
+              {jobStatus === "open" && a.status === "pending" && (
+                <button
+                  disabled={busyId === a.id}
+                  onClick={() => accept(a.id)}
+                  className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
+                  {busyId === a.id ? "Hiring…" : "Hire this pro"}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
+
+

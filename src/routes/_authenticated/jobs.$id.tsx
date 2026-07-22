@@ -338,15 +338,25 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
   const navigate = useNavigate();
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const { data: apps, isLoading } = useQuery({
+  const { data: apps, isLoading, error: appsError } = useQuery({
     queryKey: ["job-applicants", jobId],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data: rows, error } = await supabase
         .from("job_applications")
-        .select("id, status, quoted_price, estimated_start, message, created_at, worker_id, profiles!job_applications_worker_id_fkey(full_name, avatar_url), worker_profiles!job_applications_worker_id_fkey(rating, reviews_count, jobs_completed, service_area)")
+        .select("id, status, quoted_price, estimated_start, message, created_at, worker_id")
         .eq("job_id", jobId)
         .order("created_at", { ascending: false });
-      return data ?? [];
+      if (error) { console.error("[job-applicants]", error); throw error; }
+      const list = rows ?? [];
+      if (list.length === 0) return [];
+      const ids = Array.from(new Set(list.map((r: any) => r.worker_id)));
+      const [{ data: profs }, { data: wps }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids),
+        supabase.from("worker_profiles").select("user_id, rating, reviews_count, jobs_completed, service_area, verification_status, categories(name)").in("user_id", ids),
+      ]);
+      const pMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      const wMap = new Map((wps ?? []).map((w: any) => [w.user_id, w]));
+      return list.map((a: any) => ({ ...a, profile: pMap.get(a.worker_id) ?? null, worker: wMap.get(a.worker_id) ?? null }));
     },
   });
 

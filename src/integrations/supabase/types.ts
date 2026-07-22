@@ -68,6 +68,7 @@ export type Database = {
           estimated_cost: number | null
           final_amount: number | null
           id: string
+          job_application_id: string | null
           last_reminder_at: string | null
           latitude: number | null
           longitude: number | null
@@ -107,6 +108,7 @@ export type Database = {
           estimated_cost?: number | null
           final_amount?: number | null
           id?: string
+          job_application_id?: string | null
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
@@ -146,6 +148,7 @@ export type Database = {
           estimated_cost?: number | null
           final_amount?: number | null
           id?: string
+          job_application_id?: string | null
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
@@ -175,6 +178,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_job_application_id_fkey"
+            columns: ["job_application_id"]
+            isOneToOne: false
+            referencedRelation: "job_applications"
             referencedColumns: ["id"]
           },
           {
@@ -267,6 +277,8 @@ export type Database = {
       job_requests: {
         Row: {
           address: string | null
+          assigned_worker_id: string | null
+          booking_id: string | null
           budget: number | null
           category_id: string | null
           city: string | null
@@ -286,6 +298,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          assigned_worker_id?: string | null
+          booking_id?: string | null
           budget?: number | null
           category_id?: string | null
           city?: string | null
@@ -305,6 +319,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          assigned_worker_id?: string | null
+          booking_id?: string | null
           budget?: number | null
           category_id?: string | null
           city?: string | null
@@ -323,6 +339,20 @@ export type Database = {
           urgency?: Database["public"]["Enums"]["job_urgency"]
         }
         Relationships: [
+          {
+            foreignKeyName: "job_requests_assigned_worker_id_fkey"
+            columns: ["assigned_worker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "job_requests_category_id_fkey"
             columns: ["category_id"]
@@ -890,6 +920,10 @@ export type Database = {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
       }
+      customer_accept_job_application: {
+        Args: { _application_id: string }
+        Returns: string
+      }
       customer_confirm_booking_completion: {
         Args: {
           _amount_note?: string
@@ -935,6 +969,20 @@ export type Database = {
         Returns: boolean
       }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
+      worker_accept_booking: {
+        Args: { _booking_id: string }
+        Returns: undefined
+      }
+      worker_apply_to_job: {
+        Args: {
+          _estimated_start: string
+          _job_id: string
+          _message?: string
+          _note?: string
+          _proposed_amount: number
+        }
+        Returns: string
+      }
       worker_decline_booking: {
         Args: {
           _booking_id: string
@@ -949,6 +997,10 @@ export type Database = {
           _completion_note?: string
           _final_amount: number
         }
+        Returns: undefined
+      }
+      worker_mark_on_the_way: {
+        Args: { _booking_id: string }
         Returns: undefined
       }
       worker_request_admin_review: {

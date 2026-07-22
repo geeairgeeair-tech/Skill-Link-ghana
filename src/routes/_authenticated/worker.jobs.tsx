@@ -92,9 +92,16 @@ function JobsPage() {
   const visible = (data ?? []).filter((b: any) => matchesTab(b.status, tab));
 
   const acceptBooking = async (id: string) => {
-    const { error: uErr } = await supabase.from("bookings").update({ status: "accepted" as any }).eq("id", id);
+    const { error: uErr } = await supabase.rpc("worker_accept_booking", { _booking_id: id });
     if (uErr) return toast.error(uErr.message);
     toast.success("Accepted");
+    qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+  };
+
+  const markOnTheWay = async (id: string) => {
+    const { error: rErr } = await supabase.rpc("worker_mark_on_the_way", { _booking_id: id });
+    if (rErr) return toast.error(rErr.message);
+    toast.success("Customer notified");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
   };
 
@@ -221,6 +228,12 @@ function JobsPage() {
                   <button type="button" onClick={() => setDeclineFor(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-destructive text-destructive-foreground">Decline</button>
                 </>}
                 {b.status === "accepted" && (
+                  <>
+                    <button type="button" onClick={() => markOnTheWay(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-gold text-gold-foreground">I'm on the way</button>
+                    <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
+                  </>
+                )}
+                {b.status === "on_the_way" && (
                   <button type="button" onClick={() => startJob(b.id)} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary text-primary-foreground">Start Job</button>
                 )}
                 {inProg && (

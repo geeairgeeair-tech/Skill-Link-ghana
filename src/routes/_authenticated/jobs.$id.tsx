@@ -161,18 +161,7 @@ function JobDetail() {
           </div>
         </section>
 
-        {isOwner && (
-          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <FileText className="size-4 text-primary"/>
-                <p className="font-semibold">Applications received</p>
-              </div>
-              <span className="text-lg font-bold text-primary">{appCount ?? 0}</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Applicant review coming soon.</p>
-          </section>
-        )}
+        {isOwner && <ApplicantsPanel jobId={id} jobStatus={(job as any).status} />}
 
         {role === "worker" && !isOwner && (
           <section className="rounded-2xl bg-card border border-border p-4 text-sm">

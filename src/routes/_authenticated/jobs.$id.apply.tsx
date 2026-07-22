@@ -104,7 +104,13 @@ function ApplyPage() {
     if (existing) {
       ({ error } = await supabase.from("job_applications").update(payload).eq("id", existing.id));
     } else {
-      ({ error } = await supabase.from("job_applications").insert({ job_id: id, worker_id: user.id, ...payload }));
+      const { error: rpcErr } = await supabase.rpc("worker_apply_to_job", {
+        _job_id: id,
+        _proposed_amount: parsed.data.quoted_price,
+        _estimated_start: payload.estimated_start,
+        _message: payload.message,
+      });
+      error = rpcErr;
     }
     setSubmitting(false);
     if (error) {

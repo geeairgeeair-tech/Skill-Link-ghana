@@ -1077,6 +1077,16 @@ export type Database = {
         Args: { _booking_id: string }
         Returns: undefined
       }
+      worker_update_job_application: {
+        Args: {
+          _application_id: string
+          _estimated_start: string
+          _message: string
+          _note?: string
+          _proposed_amount: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "customer" | "worker" | "admin"

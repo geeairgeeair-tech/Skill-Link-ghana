@@ -107,8 +107,8 @@ function ApplyPage() {
       const { error: rpcErr } = await supabase.rpc("worker_apply_to_job", {
         _job_id: id,
         _proposed_amount: parsed.data.quoted_price,
-        _estimated_start: payload.estimated_start ?? undefined,
-        _message: payload.message ?? undefined,
+        _estimated_start: (payload.estimated_start ?? undefined) as any,
+        _message: (payload.message ?? undefined) as any,
       });
       error = rpcErr;
     }

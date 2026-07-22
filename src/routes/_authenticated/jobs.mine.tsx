@@ -132,7 +132,7 @@ function MyJobPosts() {
                     </Link>
                   )}
                   {canCancel && (
-                    <button onClick={() => cancel(j.id)} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
+                    <button onClick={() => setCancelFor({ id: j.id, title: j.title })} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
                       <XCircle className="size-3.5"/> Cancel
                     </button>
                   )}

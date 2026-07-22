@@ -133,17 +133,17 @@ function EditJobPage() {
         </div>
       </header>
 
-      <form onSubmit={submit} className="mx-auto max-w-md px-5 -mt-3 space-y-3">
-        <F label="Title *"><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input" required /></F>
-        <F label="Description *"><textarea rows={4} value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input resize-none" required /></F>
+      <form onSubmit={submit} noValidate className="mx-auto max-w-md px-5 -mt-3 space-y-3">
+        <F label="Title *"><input value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="input" /></F>
+        <F label="Description *"><textarea rows={4} value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="input resize-none" /></F>
         <F label="Category *">
-          <select value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})} className="input" required>
+          <select value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})} className="input">
             <option value="">Pick a category…</option>
             {(categories ?? []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </F>
         <div className="grid grid-cols-2 gap-3">
-          <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required /></F>
+          <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
           <F label="Service area"><input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" /></F>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -151,12 +151,12 @@ function EditJobPage() {
           <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
         </div>
         <F label="Landmark"><input value={form.landmark} onChange={e => setForm({...form, landmark: e.target.value})} className="input" placeholder="e.g. Near Total filling station" /></F>
-        <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" required /></F>
+        <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" /></F>
         <F label="Location instructions"><textarea rows={2} value={form.location_instructions} onChange={e => setForm({...form, location_instructions: e.target.value})} className="input resize-none" placeholder="Gate colour, how to find it, parking…" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
         <F label="Preferred date/time"><input type="datetime-local" value={form.preferred_at} onChange={e => setForm({...form, preferred_at: e.target.value})} className="input" /></F>
         <F label="Urgency *">
-          <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input" required>
+          <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input">
             <option value="normal">Normal</option>
             <option value="urgent">Urgent</option>
             <option value="emergency">Emergency</option>
@@ -166,6 +166,7 @@ function EditJobPage() {
           {busy ? "Saving…" : "Save changes"}
         </button>
       </form>
+
 
       <style>{`.input{width:100%;padding:0.75rem 0.875rem;border-radius:0.75rem;border:1px solid hsl(var(--input));background:hsl(var(--card));font-size:0.875rem;outline:none;color:hsl(var(--foreground))}.input:focus{box-shadow:0 0 0 2px hsl(var(--ring)/0.4)}`}</style>
     </div>

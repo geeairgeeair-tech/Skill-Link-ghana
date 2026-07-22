@@ -31,9 +31,11 @@ const schema = z.object({
 function EditJobPage() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { user } = useAuth();
   const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
+
 
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],

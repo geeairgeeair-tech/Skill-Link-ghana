@@ -169,7 +169,7 @@ function JobsPage() {
         ) : visible.map((b: any) => {
           const declined = b.status === "declined" || b.status === "cancelled";
           const awaiting = b.status === "awaiting_customer_confirmation" || b.status === "worker_marked_complete";
-          const inProg = ["in_progress","on_the_way","arrived","worker_on_the_way","work_started"].includes(b.status);
+          const inProg = ["in_progress","worker_on_the_way","work_started"].includes(b.status);
           const declineLabel = DECLINE_REASONS.find(r => r.code === b.decline_reason)?.label;
           const customerName = b.profiles?.full_name?.trim() || "Skill Link Customer";
           const initial = (b.profiles?.full_name?.trim()?.[0] ?? "?").toUpperCase();

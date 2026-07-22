@@ -26,6 +26,9 @@ const STATUS_STYLES: Record<string, string> = {
 function MyJobPosts() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [cancelFor, setCancelFor] = useState<{ id: string; title: string } | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const { data: jobs, isLoading } = useQuery({
     queryKey: ["my-job-requests", user?.id],
     enabled: !!user,

@@ -384,11 +384,14 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
 
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading applicants…</p>
+      ) : appsError ? (
+        <p className="text-xs text-destructive">Could not load applicants: {(appsError as any).message}</p>
       ) : !apps || apps.length === 0 ? (
         <p className="text-xs text-muted-foreground">No applications yet. Verified workers in this category will see your job on their board.</p>
       ) : apps.map((a: any) => {
-        const wp = Array.isArray(a.worker_profiles) ? a.worker_profiles[0] : a.worker_profiles;
-        const p = Array.isArray(a.profiles) ? a.profiles[0] : a.profiles;
+        const wp = a.worker;
+        const p = a.profile;
+        const cat = wp?.categories?.name;
         return (
           <div key={a.id} className="rounded-xl border border-border p-3 space-y-2">
             <div className="flex items-start gap-3">
@@ -396,22 +399,29 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
                 {p?.avatar_url ? <img src={p.avatar_url} className="size-full object-cover" alt="" /> : (p?.full_name?.[0]?.toUpperCase() ?? <User className="size-4"/>)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Link to="/workers/$id" params={{ id: a.worker_id }} className="font-semibold truncate hover:text-primary">
                     {p?.full_name ?? "Worker"}
                   </Link>
+                  {wp?.verification_status === "approved" && (
+                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success inline-flex items-center gap-0.5">
+                      <CheckCircle2 className="size-2.5"/> Verified
+                    </span>
+                  )}
                   <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
                     a.status === "accepted" ? "bg-success/20 text-success" :
                     a.status === "rejected" ? "bg-muted text-muted-foreground" :
                     a.status === "withdrawn" ? "bg-muted text-muted-foreground" :
                     "bg-primary-soft text-primary"
-                  }`}>{a.status}</span>
+                  }`}>{a.status === "rejected" ? "not selected" : a.status}</span>
                 </div>
                 <p className="text-[11px] text-muted-foreground">
-                  {wp?.rating ? `★ ${wp.rating}` : "New"}{wp?.reviews_count ? ` · ${wp.reviews_count} reviews` : ""}
+                  {cat ? cat : "Worker"}
+                  {wp?.rating ? ` · ★ ${wp.rating}` : " · New"}{wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
                   {wp?.jobs_completed != null ? ` · ${wp.jobs_completed} jobs` : ""}
                   {wp?.service_area ? ` · ${wp.service_area}` : ""}
                 </p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Applied {new Date(a.created_at).toLocaleString()}</p>
               </div>
               <span className="font-bold text-primary shrink-0">GH₵{a.quoted_price}</span>
             </div>
@@ -430,7 +440,7 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
                   disabled={busyId === a.id}
                   onClick={() => accept(a.id)}
                   className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
-                  {busyId === a.id ? "Hiring…" : "Hire this pro"}
+                  {busyId === a.id ? "Hiring…" : "Accept application"}
                 </button>
               )}
             </div>

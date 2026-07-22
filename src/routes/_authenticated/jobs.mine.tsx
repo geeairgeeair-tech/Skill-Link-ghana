@@ -142,6 +142,29 @@ function MyJobPosts() {
           );
         })}
       </main>
+
+      {cancelFor && (
+        <div className="fixed inset-0 z-50 bg-black/60 grid place-items-center px-4" onClick={() => !cancelling && setCancelFor(null)}>
+          <div className="w-full max-w-sm rounded-2xl bg-card border border-border p-5 shadow-elevated" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display font-bold text-lg">Cancel job post?</h3>
+            <p className="text-xs text-muted-foreground mt-1 truncate">"{cancelFor.title}"</p>
+            <p className="text-xs text-muted-foreground mt-2">Applicants will be notified. Why are you cancelling?</p>
+            <textarea
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value.slice(0, 500))}
+              rows={3}
+              placeholder="e.g. Found someone offline, no longer needed…"
+              className="mt-2 w-full px-3 py-2 rounded-lg bg-muted text-sm"
+            />
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => setCancelFor(null)} disabled={cancelling} className="flex-1 h-10 rounded-lg border border-border text-sm font-semibold">Keep job</button>
+              <button onClick={submitCancel} disabled={cancelling} className="flex-1 h-10 rounded-lg bg-destructive text-destructive-foreground text-sm font-semibold disabled:opacity-50">
+                {cancelling ? "Cancelling…" : "Cancel job"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

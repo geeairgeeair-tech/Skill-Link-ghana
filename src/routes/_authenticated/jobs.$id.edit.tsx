@@ -111,10 +111,18 @@ function EditJobPage() {
       _location_instructions: parsed.data.location_instructions ?? null,
     } as any);
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      console.error("[customer_update_job_request]", error);
+      return toast.error(error.message || "Could not save changes.");
+    }
     toast.success("Job updated");
+    qc.invalidateQueries({ queryKey: ["job-request", id] });
+    qc.invalidateQueries({ queryKey: ["job-edit", id] });
+    qc.invalidateQueries({ queryKey: ["my-job-posts"] });
+    qc.invalidateQueries({ queryKey: ["worker-open-jobs"] });
     navigate({ to: "/jobs/$id", params: { id } });
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-12">

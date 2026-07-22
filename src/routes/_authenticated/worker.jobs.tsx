@@ -118,14 +118,21 @@ function JobsPage() {
   const markOnTheWay = async (id: string) => {
     const { error: rErr } = await supabase.rpc("worker_mark_on_the_way", { _booking_id: id });
     if (rErr) return toast.error(rErr.message);
-    toast.success("Customer notified");
+    toast.success("Customer notified — you're on the way");
+    qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+  };
+
+  const markArrived = async (id: string) => {
+    const { error: rErr } = await supabase.rpc("worker_mark_arrived", { _booking_id: id });
+    if (rErr) return toast.error(rErr.message);
+    toast.success("Customer notified — you've arrived");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
   };
 
   const startJob = async (id: string) => {
     const { error: rErr } = await supabase.rpc("worker_start_booking", { _booking_id: id });
     if (rErr) return toast.error(rErr.message);
-    toast.success("Job started");
+    toast.success("Job started successfully");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
   };
 

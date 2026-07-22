@@ -340,3 +340,30 @@ function DisputeModal({ booking, onClose, onDone }: { booking: any; onClose: () 
     </div>
   );
 }
+
+function BookingTimeline({ b }: { b: any }) {
+  const steps: { key: string; label: string; at: string | null }[] = [
+    { key: "requested", label: "Requested", at: b.created_at },
+    { key: "accepted", label: "Accepted", at: b.accepted_at },
+    { key: "on_the_way", label: "On the way", at: b.on_the_way_at },
+    { key: "arrived", label: "Arrived", at: b.arrived_at },
+    { key: "started", label: "Started", at: b.started_at },
+    { key: "completed", label: "Completed", at: b.customer_confirmed_at ?? b.worker_completed_at },
+  ];
+  const done = steps.filter((s) => s.at);
+  if (done.length < 2) return null;
+  return (
+    <div className="mt-3 rounded-xl bg-muted/40 border border-border p-2.5">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Timeline</p>
+      <ol className="space-y-1">
+        {done.map((s) => (
+          <li key={s.key} className="flex items-center gap-2 text-[11px]">
+            <span className="size-1.5 rounded-full bg-success shrink-0" />
+            <span className="font-semibold text-foreground">{s.label}</span>
+            <span className="text-muted-foreground ml-auto">{new Date(s.at!).toLocaleString()}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}

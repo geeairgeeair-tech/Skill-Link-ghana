@@ -39,11 +39,28 @@ const fmtGHS = (n: number | null | undefined) =>
   n == null ? "—" : `GH₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function matchesTab(status: string, tab: TabKey) {
-  if (tab === "accepted") return status === "accepted";
-  if (tab === "in_progress") return ["in_progress", "on_the_way", "arrived", "worker_on_the_way", "work_started"].includes(status);
+  if (tab === "accepted") return ["accepted", "on_the_way", "arrived"].includes(status);
+  if (tab === "in_progress") return ["in_progress", "worker_on_the_way", "work_started"].includes(status);
   if (tab === "awaiting") return status === "awaiting_customer_confirmation" || status === "worker_marked_complete";
   if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
   return status === tab;
+}
+
+function statusLabel(s: string): string {
+  switch (s) {
+    case "pending": return "Awaiting your response";
+    case "accepted": return "Accepted";
+    case "on_the_way": return "On the way";
+    case "arrived": return "Arrived on site";
+    case "in_progress": return "In progress";
+    case "awaiting_customer_confirmation": return "Awaiting customer";
+    case "completed": return "Completed";
+    case "declined": return "Declined";
+    case "cancelled": return "Cancelled";
+    case "expired": return "Expired";
+    case "disputed": return "Disputed";
+    default: return s.replace(/_/g, " ");
+  }
 }
 
 function JobsPage() {

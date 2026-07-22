@@ -37,11 +37,11 @@ function AdminSupportPage() {
   const respond = async (id: string) => {
     const text = (replies[id] ?? "").trim();
     if (text.length < 2) return toast.error("Enter a response");
-    const { error } = await supabase.from("support_tickets").update({
-      admin_response: text, admin_id: user?.id, responded_at: new Date().toISOString(), status: "in_review",
-    }).eq("id", id);
+    const { error } = await supabase.rpc("admin_reply_support_ticket", {
+      _ticket_id: id, _reply: text, _new_status: "in_review",
+    } as any);
     if (error) return toast.error(error.message);
-    toast.success("Response sent");
+    toast.success("Response sent — user notified");
     setReplies((r) => ({ ...r, [id]: "" }));
     qc.invalidateQueries({ queryKey: ["admin-support"] });
   };

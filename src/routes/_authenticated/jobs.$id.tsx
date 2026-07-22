@@ -166,35 +166,18 @@ function JobDetail() {
         {isOwner && <ApplicantsPanel jobId={id} jobStatus={(job as any).status} />}
 
         {role === "worker" && !isOwner && (
-          <section className="rounded-2xl bg-card border border-border p-4 text-sm">
-            {myApp ? (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-success">
-                  <CheckCircle2 className="size-4"/>
-                  <p className="font-semibold">Application {myApp.status}</p>
-                </div>
-                <p className="text-xs text-muted-foreground">Your quote: <b className="text-foreground">GH₵{myApp.quoted_price}</b></p>
-                <Link to="/worker/applications" className="inline-block text-xs font-semibold text-primary">Manage in My Applications →</Link>
-              </div>
-            ) : (job as any).status !== "open" ? (
-              <p className="text-xs text-muted-foreground">This job is no longer open.</p>
-            ) : !categoryMatches ? (
-              <div className="space-y-2">
-                <button disabled className="w-full h-12 rounded-xl bg-muted text-muted-foreground font-semibold cursor-not-allowed">
-                  Apply for this Job
-                </button>
-                <p className="text-xs text-muted-foreground">
-                  You can view this job, but only verified workers in the <b>{jobCategoryName}</b> category can apply.
-                </p>
-              </div>
-            ) : (
-              <Link to="/jobs/$id/apply" params={{ id }} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
-                Apply for this Job
-              </Link>
-            )}
-            <p className="text-[11px] text-muted-foreground mt-3">Customer contact details are shared only after your application is accepted.</p>
-          </section>
+          <WorkerApplySection
+            jobId={id}
+            jobStatus={(job as any).status}
+            jobBudget={(job as any).budget}
+            jobCategoryName={jobCategoryName}
+            isVerified={isVerifiedWorker}
+            verificationStatus={workerProfile?.verification_status ?? null}
+            categoryMatches={!!categoryMatches}
+            myApp={myApp ?? null}
+          />
         )}
+
       </main>
     </div>
   );

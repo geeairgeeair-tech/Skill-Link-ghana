@@ -51,11 +51,17 @@ function MyJobPosts() {
     },
   });
 
-  const cancel = async (id: string) => {
-    if (!confirm("Cancel this job post? Workers will no longer see it.")) return;
-    const { error } = await supabase.from("job_requests").update({ status: "cancelled" as any }).eq("id", id);
+  const submitCancel = async () => {
+    if (!cancelFor) return;
+    if (cancelReason.trim().length < 4) return toast.error("Please give a short reason");
+    setCancelling(true);
+    const { error } = await supabase.rpc("customer_cancel_job_request", {
+      _job_id: cancelFor.id, _reason: cancelReason.trim(),
+    } as any);
+    setCancelling(false);
     if (error) return toast.error(error.message);
     toast.success("Job cancelled");
+    setCancelFor(null); setCancelReason("");
     qc.invalidateQueries({ queryKey: ["my-job-requests"] });
   };
 

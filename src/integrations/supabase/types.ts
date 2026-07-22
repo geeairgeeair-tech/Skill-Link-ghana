@@ -46,11 +46,13 @@ export type Database = {
       }
       bookings: {
         Row: {
+          accepted_at: string | null
           address: string | null
           admin_resolution_note: string | null
           admin_resolved_at: string | null
           admin_review_requested_at: string | null
           amount_paid: number | null
+          arrived_at: string | null
           budget: number | null
           category_id: string | null
           completion_note: string | null
@@ -72,6 +74,7 @@ export type Database = {
           last_reminder_at: string | null
           latitude: number | null
           longitude: number | null
+          on_the_way_at: string | null
           payment_confirmed_at: string | null
           payment_status: string
           photos: Json
@@ -86,11 +89,13 @@ export type Database = {
           worker_id: string
         }
         Insert: {
+          accepted_at?: string | null
           address?: string | null
           admin_resolution_note?: string | null
           admin_resolved_at?: string | null
           admin_review_requested_at?: string | null
           amount_paid?: number | null
+          arrived_at?: string | null
           budget?: number | null
           category_id?: string | null
           completion_note?: string | null
@@ -112,6 +117,7 @@ export type Database = {
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
+          on_the_way_at?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
@@ -126,11 +132,13 @@ export type Database = {
           worker_id: string
         }
         Update: {
+          accepted_at?: string | null
           address?: string | null
           admin_resolution_note?: string | null
           admin_resolved_at?: string | null
           admin_review_requested_at?: string | null
           amount_paid?: number | null
+          arrived_at?: string | null
           budget?: number | null
           category_id?: string | null
           completion_note?: string | null
@@ -152,6 +160,7 @@ export type Database = {
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
+          on_the_way_at?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
@@ -277,19 +286,25 @@ export type Database = {
       job_requests: {
         Row: {
           address: string | null
+          area: string | null
           assigned_worker_id: string | null
           booking_id: string | null
           budget: number | null
+          cancel_reason: string | null
+          cancelled_at: string | null
           category_id: string | null
           city: string | null
           created_at: string
           customer_id: string
           description: string
           id: string
+          landmark: string | null
           lat: number | null
           lng: number | null
+          location_instructions: string | null
           media: Json
           preferred_at: string | null
+          region: string | null
           service_area: string | null
           status: Database["public"]["Enums"]["job_request_status"]
           title: string
@@ -298,19 +313,25 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          area?: string | null
           assigned_worker_id?: string | null
           booking_id?: string | null
           budget?: number | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           category_id?: string | null
           city?: string | null
           created_at?: string
           customer_id: string
           description: string
           id?: string
+          landmark?: string | null
           lat?: number | null
           lng?: number | null
+          location_instructions?: string | null
           media?: Json
           preferred_at?: string | null
+          region?: string | null
           service_area?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title: string
@@ -319,19 +340,25 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          area?: string | null
           assigned_worker_id?: string | null
           booking_id?: string | null
           budget?: number | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
           category_id?: string | null
           city?: string | null
           created_at?: string
           customer_id?: string
           description?: string
           id?: string
+          landmark?: string | null
           lat?: number | null
           lng?: number | null
+          location_instructions?: string | null
           media?: Json
           preferred_at?: string | null
+          region?: string | null
           service_area?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title?: string
@@ -916,6 +943,10 @@ export type Database = {
         Args: { _reason: string; _user_id: string }
         Returns: undefined
       }
+      admin_reply_support_ticket: {
+        Args: { _new_status?: string; _reply: string; _ticket_id: string }
+        Returns: undefined
+      }
       admin_resolve_dispute: {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
@@ -923,6 +954,10 @@ export type Database = {
       customer_accept_job_application: {
         Args: { _application_id: string }
         Returns: string
+      }
+      customer_cancel_job_request: {
+        Args: { _job_id: string; _reason: string }
+        Returns: undefined
       }
       customer_confirm_booking_completion: {
         Args: {
@@ -937,6 +972,25 @@ export type Database = {
       }
       customer_dispute_booking: {
         Args: { _booking_id: string; _details: string; _reason_code: string }
+        Returns: undefined
+      }
+      customer_update_job_request: {
+        Args: {
+          _address: string
+          _area: string
+          _budget: number
+          _category_id: string
+          _city: string
+          _description: string
+          _job_id: string
+          _landmark: string
+          _location_instructions: string
+          _preferred_at: string
+          _region: string
+          _service_area: string
+          _title: string
+          _urgency: string
+        }
         Returns: undefined
       }
       get_job_request_address: { Args: { _id: string }; Returns: string }
@@ -969,6 +1023,16 @@ export type Database = {
         Returns: boolean
       }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
+      submit_support_ticket: {
+        Args: {
+          _attachment_url?: string
+          _category: string
+          _contact_email?: string
+          _message: string
+          _subject: string
+        }
+        Returns: string
+      }
       worker_accept_booking: {
         Args: { _booking_id: string }
         Returns: undefined
@@ -991,6 +1055,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      worker_mark_arrived: { Args: { _booking_id: string }; Returns: undefined }
       worker_mark_booking_completed: {
         Args: {
           _booking_id: string

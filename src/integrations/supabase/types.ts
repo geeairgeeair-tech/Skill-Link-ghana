@@ -235,6 +235,8 @@ export type Database = {
       job_applications: {
         Row: {
           created_at: string
+          decline_reason: string | null
+          declined_at: string | null
           estimated_start: string | null
           id: string
           job_id: string
@@ -246,6 +248,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
           estimated_start?: string | null
           id?: string
           job_id: string
@@ -257,6 +261,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          decline_reason?: string | null
+          declined_at?: string | null
           estimated_start?: string | null
           id?: string
           job_id?: string
@@ -294,6 +300,7 @@ export type Database = {
           cancelled_at: string | null
           category_id: string | null
           city: string | null
+          completed_at: string | null
           created_at: string
           customer_id: string
           description: string
@@ -321,6 +328,7 @@ export type Database = {
           cancelled_at?: string | null
           category_id?: string | null
           city?: string | null
+          completed_at?: string | null
           created_at?: string
           customer_id: string
           description: string
@@ -348,6 +356,7 @@ export type Database = {
           cancelled_at?: string | null
           category_id?: string | null
           city?: string | null
+          completed_at?: string | null
           created_at?: string
           customer_id?: string
           description?: string
@@ -968,6 +977,10 @@ export type Database = {
           _review_text?: string
           _would_hire_again?: boolean
         }
+        Returns: undefined
+      }
+      customer_decline_job_application: {
+        Args: { _application_id: string; _reason: string }
         Returns: undefined
       }
       customer_dispute_booking: {

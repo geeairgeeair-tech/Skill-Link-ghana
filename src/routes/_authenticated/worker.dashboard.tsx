@@ -209,7 +209,7 @@ function WorkerDashboard() {
                     <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="text-[11px] px-2.5 py-1 rounded-full bg-muted font-semibold inline-flex items-center gap-1">
                       <MessageCircle className="size-3"/> Chat
                     </Link>
-                    <Link to="/worker/jobs" className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-semibold">View details →</Link>
+                    <Link to="/bookings/$bookingId" params={{ bookingId: b.id }} className="text-[11px] px-2.5 py-1 rounded-full bg-primary text-primary-foreground font-semibold">View details →</Link>
                   </div>
                 </div>
               </div>

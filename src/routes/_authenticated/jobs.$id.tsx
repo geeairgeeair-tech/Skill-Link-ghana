@@ -336,14 +336,15 @@ function WorkerApplySection({
 function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const [reviewFor, setReviewFor] = useState<any | null>(null);
+  const [declineFor, setDeclineFor] = useState<any | null>(null);
 
   const { data: apps, isLoading, error: appsError } = useQuery({
     queryKey: ["job-applicants", jobId],
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("job_applications")
-        .select("id, status, quoted_price, estimated_start, message, created_at, worker_id")
+        .select("id, status, quoted_price, estimated_start, message, created_at, decline_reason, declined_at, worker_id")
         .eq("job_id", jobId)
         .order("created_at", { ascending: false });
       if (error) { console.error("[job-applicants]", error); throw error; }
@@ -359,18 +360,6 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
       return list.map((a: any) => ({ ...a, profile: pMap.get(a.worker_id) ?? null, worker: wMap.get(a.worker_id) ?? null }));
     },
   });
-
-  const accept = async (appId: string) => {
-    if (!confirm("Hire this applicant? Other applications will be marked not selected and a booking will be created.")) return;
-    setBusyId(appId);
-    const { data, error } = await supabase.rpc("customer_accept_job_application", { _application_id: appId });
-    setBusyId(null);
-    if (error) return toast.error(error.message);
-    toast.success("Worker hired! Booking created.");
-    qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
-    qc.invalidateQueries({ queryKey: ["job-request", jobId] });
-    if (data) navigate({ to: "/chat/$bookingId", params: { bookingId: data as string } });
-  };
 
   return (
     <section className="rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
@@ -431,24 +420,158 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
             {a.message && (
               <p className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-2">{a.message}</p>
             )}
-            <div className="flex gap-2 pt-1">
+            {a.status === "rejected" && a.decline_reason && (
+              <p className="text-[11px] text-muted-foreground italic">Declined: "{a.decline_reason}"</p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-1">
               <Link to="/workers/$id" params={{ id: a.worker_id }} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
                 View profile
               </Link>
               {jobStatus === "open" && a.status === "pending" && (
-                <button
-                  disabled={busyId === a.id}
-                  onClick={() => accept(a.id)}
-                  className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold disabled:opacity-50">
-                  {busyId === a.id ? "Hiring…" : "Accept application"}
-                </button>
+                <>
+                  <button
+                    onClick={() => setReviewFor(a)}
+                    className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+                    Accept
+                  </button>
+                  <button
+                    onClick={() => setDeclineFor(a)}
+                    className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold">
+                    Decline
+                  </button>
+                </>
+              )}
+              {a.status === "accepted" && (
+                <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                  Open Booking →
+                </Link>
               )}
             </div>
           </div>
         );
       })}
+
+      {reviewFor && (
+        <ReviewAndConfirmModal
+          app={reviewFor}
+          onClose={() => setReviewFor(null)}
+          onDone={(bookingId) => {
+            setReviewFor(null);
+            qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
+            qc.invalidateQueries({ queryKey: ["job-request", jobId] });
+            qc.invalidateQueries({ queryKey: ["my-bookings"] });
+            if (bookingId) navigate({ to: "/bookings/$bookingId", params: { bookingId } });
+          }}
+        />
+      )}
+      {declineFor && (
+        <DeclineApplicationModal
+          app={declineFor}
+          onClose={() => setDeclineFor(null)}
+          onDone={() => {
+            setDeclineFor(null);
+            qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
+          }}
+        />
+      )}
     </section>
   );
 }
+
+function ReviewAndConfirmModal({ app, onClose, onDone }: { app: any; onClose: () => void; onDone: (bookingId: string | null) => void }) {
+  const [note, setNote] = useState("");
+  const [saving, setSaving] = useState(false);
+  const p = app.profile;
+  const wp = app.worker;
+
+  const submit = async () => {
+    if (saving) return;
+    setSaving(true);
+    const { data, error } = await supabase.rpc("customer_accept_job_application", { _application_id: app.id });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Worker hired! Booking created.");
+    onDone((data as any) ?? null);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !saving && onClose()}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border p-5 max-h-[92vh] overflow-y-auto">
+        <h3 className="font-display font-bold text-lg">Review & Confirm Worker</h3>
+        <p className="text-xs text-muted-foreground mt-1">Confirm hiring this professional. This will create a booking and close the job.</p>
+
+        <div className="mt-4 flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+          <div className="size-12 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold">
+            {p?.avatar_url ? <img src={p.avatar_url} alt="" className="size-full object-cover"/> : (p?.full_name?.[0]?.toUpperCase() ?? "?")}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1">
+              <p className="font-semibold truncate">{p?.full_name ?? "Worker"}</p>
+              {wp?.verification_status === "approved" && <CheckCircle2 className="size-3.5 text-success"/>}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              {wp?.categories?.name ?? "Pro"}
+              {wp?.rating ? ` · ★ ${wp.rating}` : " · New"}
+              {wp?.jobs_completed != null ? ` · ${wp.jobs_completed} jobs` : ""}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 rounded-xl border border-border p-3 text-xs space-y-1">
+          <p><span className="text-muted-foreground">Proposed amount:</span> <span className="font-bold text-primary">GH₵{app.quoted_price}</span></p>
+          {app.estimated_start && <p><span className="text-muted-foreground">Can start:</span> <span className="font-semibold">{new Date(app.estimated_start).toLocaleString()}</span></p>}
+          {app.message && <p className="italic bg-muted/40 rounded p-2 mt-1">"{app.message}"</p>}
+        </div>
+
+        <label className="block mt-4 text-xs font-semibold">Optional note to worker</label>
+        <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
+          placeholder="Anything else the worker should know…"
+          className="mt-1 w-full rounded-xl border border-input bg-background p-3 text-sm"/>
+
+        <div className="mt-4 flex gap-2 justify-end">
+          <button type="button" onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-muted">Back</button>
+          <button type="button" onClick={submit} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground disabled:opacity-60">
+            {saving ? "Hiring…" : "Confirm and Hire Worker"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeclineApplicationModal({ app, onClose, onDone }: { app: any; onClose: () => void; onDone: () => void }) {
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const submit = async () => {
+    if (reason.trim().length < 3) return toast.error("Please give a short reason (min 3 chars)");
+    setSaving(true);
+    const { error } = await supabase.rpc("customer_decline_job_application", {
+      _application_id: app.id, _reason: reason.trim(),
+    } as any);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Application declined");
+    onDone();
+  };
+  return (
+    <div className="fixed inset-0 z-[60] bg-black/50 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !saving && onClose()}>
+      <div onClick={(e) => e.stopPropagation()} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl border border-border p-5">
+        <h3 className="font-display font-bold text-lg">Decline application</h3>
+        <p className="text-xs text-muted-foreground mt-1">The worker will be notified once. Applications stay on record.</p>
+        <label className="block mt-3 text-xs font-semibold">Reason *</label>
+        <textarea value={reason} onChange={e => setReason(e.target.value.slice(0, 500))} rows={3}
+          placeholder="e.g. Chose another worker, price too high…"
+          className="mt-1 w-full rounded-xl border border-input bg-background p-3 text-sm"/>
+        <div className="mt-4 flex gap-2 justify-end">
+          <button type="button" onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-muted">Cancel</button>
+          <button type="button" onClick={submit} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-destructive text-destructive-foreground disabled:opacity-60">
+            {saving ? "Declining…" : "Confirm decline"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 

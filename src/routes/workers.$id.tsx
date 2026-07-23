@@ -51,7 +51,32 @@ function WorkerDetail() {
   const reviewsQ = useQuery({
     queryKey: ["reviews", id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("reviews").select("*, profiles!reviews_customer_id_fkey(full_name, avatar_url)").eq("worker_id", id).order("created_at", { ascending: false }).limit(20)).data ?? [],
+    queryFn: async () => {
+      const { data: rows, error } = await supabase
+        .from("reviews")
+        .select("id, rating, comment, created_at, would_hire_again, booking_id, customer_id")
+        .eq("worker_id", id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      const list = rows ?? [];
+      if (list.length === 0) return [];
+      const custIds = Array.from(new Set(list.map((r: any) => r.customer_id)));
+      const bookingIds = Array.from(new Set(list.map((r: any) => r.booking_id).filter(Boolean)));
+      const [{ data: profs }, { data: bks }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, avatar_url").in("id", custIds),
+        bookingIds.length
+          ? supabase.from("bookings").select("id, status").in("id", bookingIds)
+          : Promise.resolve({ data: [] as any[] } as any),
+      ]);
+      const pMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
+      const bMap = new Map(((bks as any)?.data ?? bks ?? []).map((b: any) => [b.id, b]));
+      return list.map((r: any) => ({
+        ...r,
+        customer: pMap.get(r.customer_id) ?? null,
+        verified: bMap.get(r.booking_id)?.status === "completed",
+      }));
+    },
   });
 
   const contactQ = useQuery({
@@ -197,7 +222,7 @@ function WorkerDetail() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground italic">No portfolio items yet.</p>
+            <p className="text-sm text-muted-foreground italic">No portfolio items added yet.</p>
           )}
         </Section>
 
@@ -214,12 +239,29 @@ function WorkerDetail() {
             <div className="space-y-3">
               {reviewsQ.data.map((r: any) => (
                 <div key={r.id} className="rounded-xl border border-border p-3">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm">{r.profiles?.full_name ?? "Customer"}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="size-8 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-xs">
+                        {r.customer?.avatar_url
+                          ? <img src={r.customer.avatar_url} alt="" className="size-full object-cover"/>
+                          : (r.customer?.full_name?.[0]?.toUpperCase() ?? "?")}
+                      </div>
+                      <p className="font-semibold text-sm truncate">{r.customer?.full_name ?? "Customer"}</p>
+                    </div>
                     <StarRating value={r.rating} />
                   </div>
                   {r.comment && <p className="text-sm text-muted-foreground mt-1">{r.comment}</p>}
-                  <p className="text-[10px] text-muted-foreground mt-1">{new Date(r.created_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</span>
+                    {r.verified && (
+                      <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/15 text-success inline-flex items-center gap-0.5">
+                        <BadgeCheck className="size-2.5"/> Verified Booking
+                      </span>
+                    )}
+                    {r.would_hire_again === true && (
+                      <span className="text-[10px] font-semibold text-primary">Would hire again</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

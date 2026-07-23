@@ -27,10 +27,27 @@ function MyApplicationsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["my-applications", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase.from("job_applications")
-      .select("id, status, quoted_price, estimated_start, message, created_at, job_id, job_requests(id, title, city, status, urgency, budget, categories(name))")
-      .eq("worker_id", user!.id)
-      .order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data: apps, error } = await supabase.from("job_applications")
+        .select("id, status, quoted_price, estimated_start, message, created_at, job_id, decline_reason, job_requests(id, title, city, status, urgency, budget, booking_id, categories(name))")
+        .eq("worker_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      const rows = apps ?? [];
+      // For accepted apps, prefer the booking linked via job_requests.booking_id;
+      // fall back to a lookup by job_application_id on bookings.
+      const acceptedNoBooking = rows.filter((a: any) => a.status === "accepted" && !a.job_requests?.booking_id).map((a: any) => a.id);
+      let bookingByApp: Record<string, string> = {};
+      if (acceptedNoBooking.length) {
+        const { data: bks } = await supabase.from("bookings")
+          .select("id, job_application_id").in("job_application_id", acceptedNoBooking);
+        (bks ?? []).forEach((b: any) => { bookingByApp[b.job_application_id] = b.id; });
+      }
+      return rows.map((a: any) => ({
+        ...a,
+        booking_id: a.job_requests?.booking_id ?? bookingByApp[a.id] ?? null,
+      }));
+    },
   });
 
   const withdraw = async (id: string) => {
@@ -64,6 +81,7 @@ function MyApplicationsPage() {
         ) : (data ?? []).map((a: any) => {
           const job = a.job_requests;
           const canEdit = a.status === "pending" && job?.status === "open";
+          const bookingId = a.booking_id as string | null;
           return (
             <div key={a.id} className="rounded-2xl bg-card border border-border p-4 shadow-card">
               <div className="flex items-center justify-between gap-2 mb-1">
@@ -72,30 +90,52 @@ function MyApplicationsPage() {
                 </span>
                 <span className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
               </div>
-              <Link to="/jobs/$id" params={{ id: a.job_id }} className="block">
-                <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
-                <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {job?.city ?? "Ghana"}</p>
-              </Link>
+              {a.status === "accepted" && bookingId ? (
+                <Link to="/bookings/$bookingId" params={{ bookingId }} className="block">
+                  <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {job?.city ?? "Ghana"}</p>
+                </Link>
+              ) : (
+                <Link to="/jobs/$id" params={{ id: a.job_id }} className="block">
+                  <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {job?.city ?? "Ghana"}</p>
+                </Link>
+              )}
               <div className="mt-2 flex items-center gap-3 text-xs">
                 <span className="font-semibold text-primary">Your quote: GH₵{a.quoted_price}</span>
                 {a.estimated_start && <span className="text-muted-foreground">Start: {new Date(a.estimated_start).toLocaleString()}</span>}
               </div>
               {a.message && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">"{a.message}"</p>}
+              {a.status === "rejected" && a.decline_reason && (
+                <p className="mt-2 text-[11px] text-muted-foreground italic">Customer note: "{a.decline_reason}"</p>
+              )}
               {a.status === "accepted" && (
                 <div className="mt-2 rounded-lg bg-success/10 p-2 text-xs text-success inline-flex items-center gap-1">
-                  <CheckCircle2 className="size-3.5"/> Accepted — the customer will be in touch.
+                  <CheckCircle2 className="size-3.5"/> Accepted — you were hired.
                 </div>
               )}
-              {canEdit && (
-                <div className="flex gap-2 mt-3 pt-3 border-t border-border">
-                  <button onClick={() => setEditing(a)} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
-                    <Pencil className="size-3.5"/> Edit
-                  </button>
-                  <button onClick={() => withdraw(a.id)} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
-                    <XCircle className="size-3.5"/> Withdraw
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                {a.status === "accepted" && bookingId && (
+                  <>
+                    <Link to="/bookings/$bookingId" params={{ bookingId }} className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1">
+                      Open Booking
+                    </Link>
+                    <Link to="/chat/$bookingId" params={{ bookingId }} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
+                      Chat
+                    </Link>
+                  </>
+                )}
+                {canEdit && (
+                  <>
+                    <button onClick={() => setEditing(a)} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
+                      <Pencil className="size-3.5"/> Edit
+                    </button>
+                    <button onClick={() => withdraw(a.id)} className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold inline-flex items-center justify-center gap-1">
+                      <XCircle className="size-3.5"/> Withdraw
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           );
         })}

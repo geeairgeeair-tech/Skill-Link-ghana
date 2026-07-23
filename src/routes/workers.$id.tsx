@@ -63,18 +63,19 @@ function WorkerDetail() {
       if (list.length === 0) return [];
       const custIds = Array.from(new Set(list.map((r: any) => r.customer_id)));
       const bookingIds = Array.from(new Set(list.map((r: any) => r.booking_id).filter(Boolean)));
-      const [{ data: profs }, { data: bks }] = await Promise.all([
+      const [{ data: profs }, bksRes] = await Promise.all([
         supabase.from("profiles").select("id, full_name, avatar_url").in("id", custIds),
         bookingIds.length
           ? supabase.from("bookings").select("id, status").in("id", bookingIds)
-          : Promise.resolve({ data: [] as any[] } as any),
+          : Promise.resolve({ data: [] as any[] }),
       ]);
-      const pMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
-      const bMap = new Map(((bks as any)?.data ?? bks ?? []).map((b: any) => [b.id, b]));
+      const bks = (bksRes as any)?.data ?? [];
+      const pMap = new Map<string, any>((profs ?? []).map((p: any) => [p.id, p]));
+      const bMap = new Map<string, any>((bks as any[]).map((b: any) => [b.id, b]));
       return list.map((r: any) => ({
         ...r,
         customer: pMap.get(r.customer_id) ?? null,
-        verified: bMap.get(r.booking_id)?.status === "completed",
+        verified: (bMap.get(r.booking_id) as any)?.status === "completed",
       }));
     },
   });

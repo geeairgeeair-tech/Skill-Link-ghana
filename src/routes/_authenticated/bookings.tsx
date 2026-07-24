@@ -66,7 +66,7 @@ const STATUS_COLORS: Record<string, string> = {
 function BookingsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("active");
+  const [tab, setTab] = useState<TabKey>("recent");
   const [confirmFor, setConfirmFor] = useState<any | null>(null);
   const [disputeFor, setDisputeFor] = useState<any | null>(null);
 

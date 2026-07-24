@@ -63,7 +63,7 @@ function statusLabel(s: string): string {
 function JobsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("pending");
+  const [tab, setTab] = useState<TabKey>("recent");
   const [declineFor, setDeclineFor] = useState<string | null>(null);
   const [completeFor, setCompleteFor] = useState<any | null>(null);
 

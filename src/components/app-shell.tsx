@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, FileText, Users, Bell } from "lucide-react";
+import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import { cn } from "@/lib/utils";
@@ -14,9 +14,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = effectiveRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { to: "/jobs", icon: Briefcase, label: "Job board" },
-        { to: "/worker/applications", icon: FileText, label: "Applied" },
-        { to: "/worker/jobs", icon: Calendar, label: "My jobs" },
+        { to: "/jobs", icon: Briefcase, label: "Jobs" },
+        { to: "/jobs/new", icon: PlusSquare, label: "Post job" },
+        { to: "/worker/jobs", icon: Calendar, label: "My work" },
         { to: "/profile", icon: User, label: "Profile" },
       ]
     : effectiveRole === "admin"

@@ -12,14 +12,10 @@ export const Route = createFileRoute("/_authenticated/worker/jobs")({
 });
 
 const TABS = [
-  { key: "pending", label: "Pending" },
-  { key: "accepted", label: "Accepted" },
-  { key: "in_progress", label: "In Progress" },
-  { key: "awaiting", label: "Awaiting Customer" },
+  { key: "recent", label: "Recent" },
+  { key: "active", label: "Active" },
   { key: "completed", label: "Completed" },
-  { key: "declined", label: "Declined" },
   { key: "cancelled", label: "Cancelled" },
-  { key: "disputed", label: "Disputed" },
 ] as const;
 type TabKey = typeof TABS[number]["key"];
 
@@ -38,12 +34,13 @@ const DECLINE_REASONS = [
 const fmtGHS = (n: number | null | undefined) =>
   n == null ? "—" : `GH₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+const ACTIVE_STATUSES = ["pending","accepted","in_progress","on_the_way","arrived","worker_on_the_way","work_started","awaiting_customer_confirmation","worker_marked_complete","disputed"];
 function matchesTab(status: string, tab: TabKey) {
-  if (tab === "accepted") return ["accepted", "on_the_way", "arrived"].includes(status);
-  if (tab === "in_progress") return ["in_progress", "worker_on_the_way", "work_started"].includes(status);
-  if (tab === "awaiting") return status === "awaiting_customer_confirmation" || status === "worker_marked_complete";
+  if (tab === "recent") return true;
+  if (tab === "active") return ACTIVE_STATUSES.includes(status);
   if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
-  return status === tab;
+  if (tab === "cancelled") return status === "cancelled" || status === "declined";
+  return false;
 }
 
 function statusLabel(s: string): string {
@@ -66,7 +63,7 @@ function statusLabel(s: string): string {
 function JobsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("pending");
+  const [tab, setTab] = useState<TabKey>("recent");
   const [declineFor, setDeclineFor] = useState<string | null>(null);
   const [completeFor, setCompleteFor] = useState<any | null>(null);
 
@@ -101,7 +98,7 @@ function JobsPage() {
   }, [user?.id, qc]);
 
   const counts = useMemo(() => {
-    const c: Record<TabKey, number> = { pending: 0, accepted: 0, in_progress: 0, awaiting: 0, completed: 0, declined: 0, cancelled: 0, disputed: 0 };
+    const c: Record<TabKey, number> = { recent: 0, active: 0, completed: 0, cancelled: 0 };
     (data ?? []).forEach((b: any) => { TABS.forEach(t => { if (matchesTab(b.status, t.key)) c[t.key]++; }); });
     return c;
   }, [data]);

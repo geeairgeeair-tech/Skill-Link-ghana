@@ -53,14 +53,34 @@ function WorkersPage() {
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],
     queryFn: async (): Promise<WorkerCardData[]> => {
+      // Resolve category slug → id, then union primary + additional profession workers
+      let categoryId: string | null = null;
+      let extraUserIds: string[] = [];
+      if (category) {
+        const { data: cat } = await supabase.from("categories").select("id, name").eq("slug", category).maybeSingle();
+        categoryId = (cat as any)?.id ?? null;
+        if (categoryId) {
+          const { data: prof } = await supabase.from("worker_professions")
+            .select("user_id").eq("category_id", categoryId).eq("verification_status", "approved");
+          extraUserIds = (prof ?? []).map((p: any) => p.user_id);
+        }
+      }
+
       let query = supabase
         .from("worker_profiles")
-        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, created_at, categories!inner(name, slug)")
+        .select("user_id, city, service_area, rating, reviews_count, starting_price, is_featured, jobs_completed, is_available, years_experience, created_at, category_id, categories(name, slug)")
         .eq("verification_status", "approved")
         .gte("rating", search.minRating)
         .gte("years_experience", search.minExperience)
-        .limit(100);
-      if (category) query = query.eq("categories.slug", category);
+        .limit(200);
+      if (categoryId) {
+        // primary category OR listed in extraUserIds (additional profession)
+        if (extraUserIds.length) {
+          query = query.or(`category_id.eq.${categoryId},user_id.in.(${extraUserIds.join(",")})`);
+        } else {
+          query = query.eq("category_id", categoryId);
+        }
+      }
       if (search.availableOnly) query = query.eq("is_available", true);
 
       if (sort === "rating") query = query.order("is_featured", { ascending: false }).order("rating", { ascending: false }).order("jobs_completed", { ascending: false }).order("is_available", { ascending: false });

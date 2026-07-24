@@ -165,6 +165,16 @@ function WorkerDashboard() {
           <Stat label="Done" value={stats.completed} />
         </div>
 
+        <Link to="/worker/professions" className="block rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-display font-bold">My professions</p>
+              <p className="text-xs text-muted-foreground">Add up to 3 verified skills</p>
+            </div>
+            <span className="text-primary font-semibold text-sm">Manage →</span>
+          </div>
+        </Link>
+
         <section className="rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display font-bold">Recent bookings</h3>

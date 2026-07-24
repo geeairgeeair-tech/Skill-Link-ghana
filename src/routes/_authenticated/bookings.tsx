@@ -33,24 +33,23 @@ export const Route = createFileRoute("/_authenticated/bookings")({
 });
 
 const TABS = [
-  { key: "pending", label: "Pending" },
+  { key: "recent", label: "Recent" },
   { key: "active", label: "Active" },
-  { key: "awaiting", label: "Awaiting Confirmation" },
   { key: "completed", label: "Completed" },
-  { key: "declined", label: "Declined" },
   { key: "cancelled", label: "Cancelled" },
-  { key: "disputed", label: "Disputed" },
 ] as const;
 type TabKey = typeof TABS[number]["key"];
 
 const fmtGHS = (n: number | null | undefined) =>
   n == null ? "—" : `GH₵${Number(n).toLocaleString("en-GH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+const ACTIVE_STATUSES = ["pending","accepted","in_progress","on_the_way","arrived","worker_on_the_way","work_started","awaiting_customer_confirmation","worker_marked_complete","disputed"];
 function matchesTab(status: string, tab: TabKey) {
-  if (tab === "active") return ["accepted","in_progress","on_the_way","arrived","worker_on_the_way","work_started"].includes(status);
-  if (tab === "awaiting") return status === "awaiting_customer_confirmation" || status === "worker_marked_complete";
-  if (tab === "completed") return status === "completed" || status === "closed";
-  return status === tab;
+  if (tab === "recent") return true;
+  if (tab === "active") return ACTIVE_STATUSES.includes(status);
+  if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
+  if (tab === "cancelled") return status === "cancelled" || status === "declined";
+  return false;
 }
 
 const STATUS_COLORS: Record<string, string> = {

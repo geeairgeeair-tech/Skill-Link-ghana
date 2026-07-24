@@ -679,6 +679,65 @@ export type Database = {
           },
         ]
       }
+      worker_professions: {
+        Row: {
+          bio: string | null
+          category_id: string
+          certificates: Json
+          created_at: string
+          id: string
+          is_primary: boolean
+          portfolio_images: Json
+          rejection_reason: string | null
+          reviewed_at: string | null
+          submitted_at: string
+          updated_at: string
+          user_id: string
+          verification_status: string
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          category_id: string
+          certificates?: Json
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          portfolio_images?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          category_id?: string
+          certificates?: Json
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          portfolio_images?: Json
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          submitted_at?: string
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_professions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       worker_profiles: {
         Row: {
           bio: string | null
@@ -873,6 +932,10 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_profession: {
+        Args: { _profession_id: string }
+        Returns: undefined
+      }
       admin_get_user_detail: {
         Args: { _user_id: string }
         Returns: {
@@ -947,6 +1010,10 @@ export type Database = {
           verification_status: string
           years_experience: number
         }[]
+      }
+      admin_reject_profession: {
+        Args: { _profession_id: string; _reason: string }
+        Returns: undefined
       }
       admin_reject_worker: {
         Args: { _reason: string; _user_id: string }
@@ -1050,6 +1117,16 @@ export type Database = {
         Args: { _booking_id: string }
         Returns: undefined
       }
+      worker_add_profession: {
+        Args: {
+          _bio: string
+          _category_id: string
+          _certificates?: Json
+          _portfolio?: Json
+          _years: number
+        }
+        Returns: string
+      }
       worker_apply_to_job: {
         Args: {
           _estimated_start: string
@@ -1099,6 +1176,12 @@ export type Database = {
           _proposed_amount: number
         }
         Returns: undefined
+      }
+      workers_in_category: {
+        Args: { _category_id: string }
+        Returns: {
+          user_id: string
+        }[]
       }
     }
     Enums: {

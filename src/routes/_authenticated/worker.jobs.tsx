@@ -98,7 +98,7 @@ function JobsPage() {
   }, [user?.id, qc]);
 
   const counts = useMemo(() => {
-    const c: Record<TabKey, number> = { pending: 0, accepted: 0, in_progress: 0, awaiting: 0, completed: 0, declined: 0, cancelled: 0, disputed: 0 };
+    const c: Record<TabKey, number> = { recent: 0, active: 0, completed: 0, cancelled: 0 };
     (data ?? []).forEach((b: any) => { TABS.forEach(t => { if (matchesTab(b.status, t.key)) c[t.key]++; }); });
     return c;
   }, [data]);

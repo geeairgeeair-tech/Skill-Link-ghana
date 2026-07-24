@@ -140,7 +140,68 @@ function AdminWorkersPage() {
             );
           })}
         </section>
+
+        <ProfessionsReviewPanel />
       </main>
     </AppShell>
+  );
+}
+
+function ProfessionsReviewPanel() {
+  const qc = useQueryClient();
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["admin-professions-pending"],
+    queryFn: async () => {
+      const { data } = await supabase.from("worker_professions")
+        .select("*, categories(name)")
+        .eq("verification_status", "pending")
+        .eq("is_primary", false)
+        .order("submitted_at", { ascending: true });
+      const rows = data ?? [];
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id)));
+      let map: Record<string, any> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        (profs ?? []).forEach((p: any) => { map[p.id] = p; });
+      }
+      return rows.map((r: any) => ({ ...r, profile: map[r.user_id] ?? null }));
+    },
+  });
+
+  const approve = async (id: string) => {
+    const { error } = await supabase.rpc("admin_approve_profession", { _profession_id: id });
+    if (error) return toast.error(error.message);
+    toast.success("Profession approved");
+    qc.invalidateQueries({ queryKey: ["admin-professions-pending"] });
+  };
+  const reject = async (id: string) => {
+    const reason = window.prompt("Reason (min 5 chars):");
+    if (!reason || reason.trim().length < 5) return toast.error("Reason required");
+    const { error } = await supabase.rpc("admin_reject_profession", { _profession_id: id, _reason: reason.trim() });
+    if (error) return toast.error(error.message);
+    toast.success("Rejected");
+    qc.invalidateQueries({ queryKey: ["admin-professions-pending"] });
+  };
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-display font-bold">Additional professions to verify</h3>
+        <button onClick={() => refetch()} className="text-xs text-primary font-semibold">Refresh</button>
+      </div>
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>
+        : (data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Nothing pending.</p>
+        : (data ?? []).map((p: any) => (
+          <div key={p.id} className="py-2 border-t border-border first:border-0">
+            <p className="text-sm font-semibold">{p.profile?.full_name ?? "Worker"} — {p.categories?.name}</p>
+            <p className="text-xs text-muted-foreground">{p.years_experience} yrs · Submitted {new Date(p.submitted_at ?? p.created_at).toLocaleDateString()}</p>
+            {p.bio && <p className="text-xs mt-1 text-foreground/80 line-clamp-3">{p.bio}</p>}
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => approve(p.id)} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">Approve</button>
+              <button onClick={() => reject(p.id)} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Reject</button>
+            </div>
+          </div>
+        ))}
+    </section>
   );
 }

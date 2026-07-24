@@ -25,6 +25,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedJobsIndexRouteImport } from './routes/_authenticated/jobs.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as AuthenticatedWorkerSubscriptionRouteImport } from './routes/_authenticated/worker.subscription'
+import { Route as AuthenticatedWorkerProfessionsRouteImport } from './routes/_authenticated/worker.professions'
 import { Route as AuthenticatedWorkerOnboardingRouteImport } from './routes/_authenticated/worker.onboarding'
 import { Route as AuthenticatedWorkerJobsRouteImport } from './routes/_authenticated/worker.jobs'
 import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_authenticated/worker.dashboard'
@@ -125,6 +126,12 @@ const AuthenticatedWorkerSubscriptionRoute =
   AuthenticatedWorkerSubscriptionRouteImport.update({
     id: '/worker/subscription',
     path: '/worker/subscription',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedWorkerProfessionsRoute =
+  AuthenticatedWorkerProfessionsRouteImport.update({
+    id: '/worker/professions',
+    path: '/worker/professions',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedWorkerOnboardingRoute =
@@ -269,6 +276,7 @@ export interface FileRoutesByFullPath {
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/worker/professions': typeof AuthenticatedWorkerProfessionsRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/jobs/': typeof AuthenticatedJobsIndexRoute
@@ -304,6 +312,7 @@ export interface FileRoutesByTo {
   '/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/worker/professions': typeof AuthenticatedWorkerProfessionsRoute
   '/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/jobs': typeof AuthenticatedJobsIndexRoute
@@ -343,6 +352,7 @@ export interface FileRoutesById {
   '/_authenticated/worker/dashboard': typeof AuthenticatedWorkerDashboardRoute
   '/_authenticated/worker/jobs': typeof AuthenticatedWorkerJobsRoute
   '/_authenticated/worker/onboarding': typeof AuthenticatedWorkerOnboardingRoute
+  '/_authenticated/worker/professions': typeof AuthenticatedWorkerProfessionsRoute
   '/_authenticated/worker/subscription': typeof AuthenticatedWorkerSubscriptionRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/jobs/': typeof AuthenticatedJobsIndexRoute
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
+    | '/worker/professions'
     | '/worker/subscription'
     | '/admin/'
     | '/jobs/'
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/worker/dashboard'
     | '/worker/jobs'
     | '/worker/onboarding'
+    | '/worker/professions'
     | '/worker/subscription'
     | '/admin'
     | '/jobs'
@@ -455,6 +467,7 @@ export interface FileRouteTypes {
     | '/_authenticated/worker/dashboard'
     | '/_authenticated/worker/jobs'
     | '/_authenticated/worker/onboarding'
+    | '/_authenticated/worker/professions'
     | '/_authenticated/worker/subscription'
     | '/_authenticated/admin/'
     | '/_authenticated/jobs/'
@@ -590,6 +603,13 @@ declare module '@tanstack/react-router' {
       path: '/worker/subscription'
       fullPath: '/worker/subscription'
       preLoaderRoute: typeof AuthenticatedWorkerSubscriptionRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/worker/professions': {
+      id: '/_authenticated/worker/professions'
+      path: '/worker/professions'
+      fullPath: '/worker/professions'
+      preLoaderRoute: typeof AuthenticatedWorkerProfessionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/worker/onboarding': {
@@ -814,6 +834,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWorkerDashboardRoute: typeof AuthenticatedWorkerDashboardRoute
   AuthenticatedWorkerJobsRoute: typeof AuthenticatedWorkerJobsRoute
   AuthenticatedWorkerOnboardingRoute: typeof AuthenticatedWorkerOnboardingRoute
+  AuthenticatedWorkerProfessionsRoute: typeof AuthenticatedWorkerProfessionsRoute
   AuthenticatedWorkerSubscriptionRoute: typeof AuthenticatedWorkerSubscriptionRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
 }
@@ -832,6 +853,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWorkerDashboardRoute: AuthenticatedWorkerDashboardRoute,
   AuthenticatedWorkerJobsRoute: AuthenticatedWorkerJobsRoute,
   AuthenticatedWorkerOnboardingRoute: AuthenticatedWorkerOnboardingRoute,
+  AuthenticatedWorkerProfessionsRoute: AuthenticatedWorkerProfessionsRoute,
   AuthenticatedWorkerSubscriptionRoute: AuthenticatedWorkerSubscriptionRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
 }

@@ -168,6 +168,15 @@ function ProfessionsReviewPanel() {
     },
   });
 
+  useEffect(() => {
+    const ch = supabase
+      .channel("admin-professions-pending")
+      .on("postgres_changes", { event: "*", schema: "public", table: "worker_professions" },
+        () => qc.invalidateQueries({ queryKey: ["admin-professions-pending"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [qc]);
+
   const approve = async (id: string) => {
     const { error } = await supabase.rpc("admin_approve_profession", { _profession_id: id });
     if (error) return toast.error(error.message);

@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import {
   MapPin, Calendar, Wallet, MessageCircle, User, BadgeCheck, Phone,
   CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
+  Navigation,
 } from "lucide-react";
+
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -86,6 +88,18 @@ function BookingDetail() {
   const canStart = isWorker && status === "arrived";
   const canComplete = isWorker && ["in_progress", "worker_on_the_way", "work_started"].includes(status);
   const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed"].includes(status);
+
+  // GPS navigation for the worker once the job is confirmed
+  const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
+  const destination =
+    b.latitude != null && b.longitude != null
+      ? `${b.latitude},${b.longitude}`
+      : [b.address, b.service_area].filter(Boolean).join(", ");
+  const navUrl = navAllowed && destination
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`
+    : null;
+
+
 
   const call = async (rpc: string) => {
     setBusy(rpc);
@@ -219,11 +233,18 @@ function BookingDetail() {
 
         {/* Action bar */}
         <section className="flex flex-wrap gap-2 pt-1">
+          {navUrl && (
+            <a href={navUrl} target="_blank" rel="noopener noreferrer"
+              className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">
+              <Navigation className="size-4"/> Navigate
+            </a>
+          )}
           {canChat && (
             <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
               <MessageCircle className="size-4"/> Open chat
             </Link>
           )}
+
           {canOnTheWay && (
             <button disabled={busy !== null} onClick={() => call("worker_mark_on_the_way")} className="px-3 py-2.5 rounded-xl bg-gold text-gold-foreground text-sm font-semibold disabled:opacity-50">
               I'm on the way

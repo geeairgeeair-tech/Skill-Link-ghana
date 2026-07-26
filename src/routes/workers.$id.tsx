@@ -191,8 +191,16 @@ function WorkerDetail() {
           <div className="flex flex-wrap gap-2">
             <span className="inline-flex items-center gap-1 text-xs font-semibold bg-primary-soft text-primary px-2.5 py-1.5 rounded-lg">
               {w.categories?.name ?? "General services"}
+              <span className="text-[10px] opacity-70">Primary</span>
             </span>
+            {(professionsQ.data ?? []).map((pr: any) => (
+              <span key={pr.id} className="inline-flex items-center gap-1 text-xs font-semibold bg-muted px-2.5 py-1.5 rounded-lg">
+                <BadgeCheck className="size-3 text-primary" />
+                {pr.categories?.name ?? "Service"}
+              </span>
+            ))}
           </div>
+
           <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
             <PriceRow label="Call-out fee" value={`GH₵${w.callout_fee ?? 0}`} />
             <PriceRow label="Hourly rate" value={`GH₵${w.hourly_rate ?? 0}/hr`} />

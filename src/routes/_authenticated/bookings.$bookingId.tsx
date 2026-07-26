@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import {
   MapPin, Calendar, Wallet, MessageCircle, User, BadgeCheck, Phone,
   CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
+  Navigation,
 } from "lucide-react";
+
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";

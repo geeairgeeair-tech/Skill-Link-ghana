@@ -143,8 +143,17 @@ function JobsPage() {
   return (
     <AppShell>
       <header className="px-5 pt-6 pb-3 mx-auto max-w-md">
-        <h1 className="font-display text-2xl font-bold">Jobs</h1>
+        <h1 className="font-display text-2xl font-bold">Bookings / Work</h1>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="h-10 rounded-xl bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5">
+            <Calendar className="size-3.5"/> Bookings
+          </div>
+          <Link to="/jobs/mine" className="h-10 rounded-xl border border-border bg-card text-xs font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-muted">
+            <ClipboardList className="size-3.5"/> My Job Posts
+          </Link>
+        </div>
         <div className="mt-3 flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 snap-x scrollbar-none">
+
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
               className={`shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${tab === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>

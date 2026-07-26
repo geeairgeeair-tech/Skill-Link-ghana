@@ -274,7 +274,11 @@ function JobsPage() {
                     <MessageCircle className="size-3.5"/> Chat
                   </Link>
                 )}
+                <Link to="/bookings/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2 rounded-lg text-xs font-semibold bg-primary/10 text-primary ml-auto">
+                  View details →
+                </Link>
               </div>
+
             </div>
           );
         })}

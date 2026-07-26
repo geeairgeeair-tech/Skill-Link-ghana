@@ -89,6 +89,18 @@ function BookingDetail() {
   const canComplete = isWorker && ["in_progress", "worker_on_the_way", "work_started"].includes(status);
   const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed"].includes(status);
 
+  // GPS navigation for the worker once the job is confirmed
+  const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
+  const destination =
+    b.latitude != null && b.longitude != null
+      ? `${b.latitude},${b.longitude}`
+      : [b.address, b.service_area].filter(Boolean).join(", ");
+  const navUrl = navAllowed && destination
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`
+    : null;
+
+
+
   const call = async (rpc: string) => {
     setBusy(rpc);
     const { error } = await supabase.rpc(rpc as any, { _booking_id: b.id });

@@ -43,10 +43,22 @@ function WorkerDetail() {
     },
   });
 
+  const professionsQ = useQuery({
+    queryKey: ["worker-professions", id],
+    queryFn: async () =>
+      (await supabase
+        .from("worker_professions")
+        .select("id, years_experience, categories(name)")
+        .eq("user_id", id)
+        .eq("verification_status", "approved")
+      ).data ?? [],
+  });
+
   const portfolioQ = useQuery({
     queryKey: ["worker-portfolio", id],
     queryFn: async () => (await supabase.from("worker_portfolio").select("*").eq("worker_id", id).order("sort_order").order("created_at", { ascending: false })).data ?? [],
   });
+
 
   const reviewsQ = useQuery({
     queryKey: ["reviews", id],

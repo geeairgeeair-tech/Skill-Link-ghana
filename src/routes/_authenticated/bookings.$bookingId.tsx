@@ -219,11 +219,18 @@ function BookingDetail() {
 
         {/* Action bar */}
         <section className="flex flex-wrap gap-2 pt-1">
+          {navUrl && (
+            <a href={navUrl} target="_blank" rel="noopener noreferrer"
+              className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">
+              <Navigation className="size-4"/> Navigate
+            </a>
+          )}
           {canChat && (
             <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
               <MessageCircle className="size-4"/> Open chat
             </Link>
           )}
+
           {canOnTheWay && (
             <button disabled={busy !== null} onClick={() => call("worker_mark_on_the_way")} className="px-3 py-2.5 rounded-xl bg-gold text-gold-foreground text-sm font-semibold disabled:opacity-50">
               I'm on the way

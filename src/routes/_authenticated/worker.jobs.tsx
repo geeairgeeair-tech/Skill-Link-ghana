@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageCircle, MapPin, Calendar, Wallet, AlertTriangle, XCircle, CheckCircle2, Clock } from "lucide-react";
+import { MessageCircle, MapPin, Calendar, Wallet, AlertTriangle, XCircle, CheckCircle2, Clock, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/worker/jobs")({
   component: JobsPage,

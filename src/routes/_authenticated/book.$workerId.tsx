@@ -81,6 +81,9 @@ function BookPage() {
 
   const goReview = (e: React.FormEvent) => {
     e.preventDefault();
+    if (availability && availability !== "available") {
+      return toast.error(blockedMessage);
+    }
     if (!description.trim() || !address.trim() || !area.trim() || !date) {
       return toast.error("Please fill service description, address, area and preferred date");
     }
@@ -90,6 +93,9 @@ function BookPage() {
   const confirmSubmit = async () => {
     if (!user || !w) return;
     if (submittedOnce.current || submitting) return;
+    if (availability && availability !== "available") {
+      return toast.error(blockedMessage);
+    }
     submittedOnce.current = true;
     setSubmitting(true);
     try {
@@ -129,7 +135,7 @@ function BookPage() {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading worker…</div>;
+  if (isLoading || statusLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading worker…</div>;
   if (!w) {
     return (
       <div className="p-8 text-center space-y-3">
@@ -138,6 +144,24 @@ function BookPage() {
       </div>
     );
   }
+
+  if (availability && availability !== "available") {
+    return (
+      <div className="min-h-screen bg-background px-5 pt-6">
+        <BackButton fallback={`/workers/${workerId}`} />
+        <div className="mx-auto max-w-md text-center space-y-3 pt-16">
+          <p className="font-display text-xl font-bold">
+            {availability === "busy" ? "Currently busy" : "Currently unavailable"}
+          </p>
+          <p className="text-sm text-muted-foreground">{blockedMessage}</p>
+          <Link to="/workers" className="inline-block rounded-xl bg-primary text-primary-foreground px-5 py-3 font-semibold">
+            Browse other pros
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
 
   const p = w.profiles ?? {};
 

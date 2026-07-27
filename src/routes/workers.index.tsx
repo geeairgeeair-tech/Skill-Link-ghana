@@ -50,6 +50,15 @@ function WorkersPage() {
     queryFn: async () => (await supabase.from("categories").select("*").eq("active", true).order("sort_order")).data ?? [],
   });
 
+  const { data: busyIds } = useQuery({
+    queryKey: ["busy-workers"],
+    refetchInterval: 30000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("list_busy_workers");
+      return new Set<string>(((data ?? []) as any[]).map((r) => r.worker_id));
+    },
+  });
+
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],
     queryFn: async (): Promise<WorkerCardData[]> => {
@@ -116,17 +125,31 @@ function WorkersPage() {
   });
 
 
-  const filtered = useMemo(() => {
+  const withStatus = useMemo(() => {
     if (!workers) return [];
+    return workers.map((w) => ({
+      ...w,
+      availability_state: (w.is_available ?? true)
+        ? busyIds?.has(w.user_id)
+          ? ("busy" as const)
+          : ("available" as const)
+        : ("unavailable" as const),
+    }));
+  }, [workers, busyIds]);
+
+  const filtered = useMemo(() => {
+    const base = search.availableOnly
+      ? withStatus.filter((w) => w.availability_state === "available")
+      : withStatus;
     const needle = q.trim().toLowerCase();
-    if (!needle) return workers;
-    return workers.filter(w =>
+    if (!needle) return base;
+    return base.filter(w =>
       (w.full_name ?? "").toLowerCase().includes(needle) ||
       (w.category_name ?? "").toLowerCase().includes(needle) ||
       (w.service_area ?? "").toLowerCase().includes(needle) ||
       (w.city ?? "").toLowerCase().includes(needle)
     );
-  }, [workers, q]);
+  }, [withStatus, q, search.availableOnly]);
 
   const activeFilterCount =
     (category ? 1 : 0) +

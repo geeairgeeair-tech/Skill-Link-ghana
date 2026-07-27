@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -118,8 +118,19 @@ function AdminWorkersPage() {
                       {w.email ?? "—"} · {w.phone ?? "no phone"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      Joined {new Date(w.created_at).toLocaleDateString()} · {w.is_available ? "Available" : "Unavailable"} · Sub: {subActive ? "Active" : "Inactive"}
+                      Joined {new Date(w.created_at).toLocaleDateString()} · Sub: {subActive ? "Active" : "Inactive"}
                     </p>
+                    <p className="text-[10px] mt-0.5">
+                      <span className={`uppercase font-bold px-1.5 py-0.5 rounded ${(w as any).availability_state === "available" ? "bg-success/15 text-success" : (w as any).availability_state === "busy" ? "bg-gold/20 text-gold-foreground" : "bg-muted text-muted-foreground"}`}>
+                        {(w as any).availability_state === "busy" ? "Busy" : (w as any).availability_state === "unavailable" ? "Unavailable" : "Available"}
+                      </span>
+                      {(w as any).active_booking_id && (
+                        <Link to="/bookings/$bookingId" params={{ bookingId: (w as any).active_booking_id }} className="ml-2 text-primary font-semibold">
+                          View active booking
+                        </Link>
+                      )}
+                    </p>
+
                   </div>
                   <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected", "suspended"].includes(w.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
                 </div>

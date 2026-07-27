@@ -991,7 +991,9 @@ export type Database = {
       admin_list_workers: {
         Args: { _status?: string }
         Returns: {
+          active_booking_id: string
           age: number
+          availability_state: string
           avatar_url: string
           category_name: string
           city: string
@@ -1082,6 +1084,14 @@ export type Database = {
         }[]
       }
       get_user_email: { Args: { _user_id: string }; Returns: string }
+      get_worker_active_booking: {
+        Args: { _worker_id: string }
+        Returns: {
+          booking_id: string
+          created_at: string
+          status: string
+        }[]
+      }
       get_worker_identity: {
         Args: { _user_id: string }
         Returns: {
@@ -1101,6 +1111,12 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_busy_workers: {
+        Args: never
+        Returns: {
+          worker_id: string
+        }[]
       }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       submit_support_ticket: {

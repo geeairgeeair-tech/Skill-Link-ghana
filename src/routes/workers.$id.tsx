@@ -98,6 +98,16 @@ function WorkerDetail() {
     queryFn: async () => (await supabase.rpc("get_profile_contact", { _id: id })).data as any,
   });
 
+  const statusQ = useQuery({
+    queryKey: ["worker-status", id],
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_worker_public_status", { _worker_id: id });
+      return (data as string | null) ?? "available";
+    },
+  });
+
+
   if (workerQ.isLoading) return <ProfileSkeleton />;
   if (workerQ.isError) {
     return (

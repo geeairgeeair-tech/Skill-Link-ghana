@@ -318,21 +318,29 @@ function WorkerDetail() {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
-        <div className="mx-auto max-w-md flex gap-2">
-          {phone && (
-            <a href={`tel:${phone}`} aria-label="Call" className="size-12 grid place-items-center rounded-xl border border-input"><Phone className="size-4" /></a>
+        <div className="mx-auto max-w-md space-y-2">
+          {!available && (
+            <p className="text-xs text-center text-muted-foreground">{blockedMessage}</p>
           )}
-          <button aria-label="Message" className="size-12 grid place-items-center rounded-xl border border-input" onClick={() => toast.info("Messaging becomes available after you book this professional.")}>
-            <MessageCircle className="size-4" />
-          </button>
-          <button
-            onClick={onBook}
-            className="flex-1 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 h-12"
-          >
-            <Calendar className="size-4" /> Book This Professional
-          </button>
+          <div className="flex gap-2">
+            {phone && (
+              <a href={`tel:${phone}`} aria-label="Call" className="size-12 grid place-items-center rounded-xl border border-input"><Phone className="size-4" /></a>
+            )}
+            <button aria-label="Message" className="size-12 grid place-items-center rounded-xl border border-input" onClick={() => toast.info("Messaging becomes available after you book this professional.")}>
+              <MessageCircle className="size-4" />
+            </button>
+            <button
+              onClick={onBook}
+              disabled={!available}
+              className="flex-1 rounded-xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2 h-12 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Calendar className="size-4" />
+              {state === "busy" ? "Currently busy" : state === "unavailable" ? "Unavailable" : "Book This Professional"}
+            </button>
+          </div>
         </div>
       </div>
+
     </div>
   );
 }

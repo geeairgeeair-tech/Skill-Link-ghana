@@ -49,6 +49,21 @@ function BookPage() {
     },
   });
 
+  const { data: availability, isLoading: statusLoading } = useQuery({
+    queryKey: ["worker-status", workerId],
+    refetchInterval: 20000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_worker_public_status", { _worker_id: workerId });
+      return ((data as string | null) ?? "available") as "available" | "busy" | "unavailable";
+    },
+  });
+
+  const blockedMessage =
+    availability === "busy"
+      ? "This worker is currently working on another booking."
+      : "This worker is currently unavailable. Please choose another professional or check again later.";
+
+
   const requestGps = () => {
     if (!navigator.geolocation) return toast.error("Location not supported on this device");
     navigator.geolocation.getCurrentPosition(

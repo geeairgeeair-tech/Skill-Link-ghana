@@ -130,7 +130,16 @@ function WorkerDetail() {
 
   const p: any = w.profiles ?? {};
   const phone: string | undefined = (contactQ.data as any)?.[0]?.phone;
-  const available = w.is_available ?? true;
+  const state = (statusQ.data ?? ((w.is_available ?? true) ? "available" : "unavailable")) as
+    | "available"
+    | "busy"
+    | "unavailable";
+  const available = state === "available";
+  const statusLabel = state === "available" ? "Available now" : state === "busy" ? "Currently busy" : "Unavailable";
+  const blockedMessage =
+    state === "busy"
+      ? "This worker is currently working on another booking."
+      : "This worker is currently unavailable. Please choose another professional or check again later.";
   const memberSince = p.created_at ? new Date(p.created_at) : null;
   const isVerified = w.verification_status === "approved";
 
@@ -139,8 +148,13 @@ function WorkerDetail() {
       navigate({ to: "/auth" });
       return;
     }
+    if (!available) {
+      toast.error(blockedMessage);
+      return;
+    }
     navigate({ to: "/book/$workerId", params: { workerId: id } });
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-32">

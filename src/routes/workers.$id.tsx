@@ -182,10 +182,11 @@ function WorkerDetail() {
               </div>
               <p className="text-sm text-muted-foreground">{w.categories?.name ?? "Pro"}</p>
               <div className="mt-1 flex items-center gap-2 flex-wrap">
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${available ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-                  <span className={`size-1.5 rounded-full ${available ? "bg-success" : "bg-muted-foreground"}`} />
-                  {available ? "Available now" : "Unavailable"}
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${state === "available" ? "bg-success/15 text-success" : state === "busy" ? "bg-gold/20 text-gold-foreground" : "bg-muted text-muted-foreground"}`}>
+                  <span className={`size-1.5 rounded-full ${state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground"}`} />
+                  {statusLabel}
                 </span>
+
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded-full">
                     <ShieldCheck className="size-3" /> Verified

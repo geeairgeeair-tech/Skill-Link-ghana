@@ -2,6 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { BadgeCheck, MapPin } from "lucide-react";
 import { StarRating } from "./star-rating";
 
+export type AvailabilityState = "available" | "busy" | "unavailable";
+
 export interface WorkerCardData {
   user_id: string;
   full_name: string;
@@ -16,10 +18,27 @@ export interface WorkerCardData {
   jobs_completed?: number | null;
   is_available?: boolean | null;
   years_experience?: number | null;
+  availability_state?: AvailabilityState | null;
 }
 
+const STATE_LABEL: Record<AvailabilityState, string> = {
+  available: "Active",
+  busy: "Busy",
+  unavailable: "Unavailable",
+};
+
 export function WorkerCard({ w }: { w: WorkerCardData }) {
-  const available = w.is_available ?? true;
+  const state: AvailabilityState =
+    w.availability_state ?? ((w.is_available ?? true) ? "available" : "unavailable");
+  const available = state === "available";
+  const dotClass =
+    state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground/60";
+  const badgeClass =
+    state === "available"
+      ? "bg-success/15 text-success"
+      : state === "busy"
+        ? "bg-gold/20 text-gold-foreground"
+        : "bg-muted text-muted-foreground";
   return (
     <Link
       to="/workers/$id"
@@ -34,8 +53,8 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
             w.full_name?.[0]?.toUpperCase() ?? "?"
           )}
           <span
-            className={`absolute -bottom-0.5 -right-0.5 size-4 rounded-full ring-2 ring-card ${available ? "bg-success" : "bg-muted-foreground/60"}`}
-            title={available ? "Available" : "Unavailable"}
+            className={`absolute -bottom-0.5 -right-0.5 size-4 rounded-full ring-2 ring-card ${dotClass}`}
+            title={STATE_LABEL[state]}
           />
         </div>
         <div className="flex-1 min-w-0">
@@ -47,10 +66,11 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
                 Featured
               </span>
             )}
-            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${available ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-              {available ? "Active" : "Unavailable"}
+            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badgeClass}`}>
+              {STATE_LABEL[state]}
             </span>
           </div>
+
           <p className="text-sm text-muted-foreground truncate">{w.category_name ?? "Pro"}</p>
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <StarRating value={Number(w.rating ?? 0)} count={w.reviews_count ?? 0} />

@@ -1112,6 +1112,12 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_busy_workers: {
+        Args: never
+        Returns: {
+          worker_id: string
+        }[]
+      }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       submit_support_ticket: {
         Args: {

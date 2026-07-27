@@ -149,7 +149,7 @@ function WorkersPage() {
       (w.service_area ?? "").toLowerCase().includes(needle) ||
       (w.city ?? "").toLowerCase().includes(needle)
     );
-  }, [workers, q]);
+  }, [withStatus, q, search.availableOnly]);
 
   const activeFilterCount =
     (category ? 1 : 0) +

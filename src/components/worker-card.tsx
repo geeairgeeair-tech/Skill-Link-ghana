@@ -30,7 +30,7 @@ const STATE_LABEL: Record<AvailabilityState, string> = {
 export function WorkerCard({ w }: { w: WorkerCardData }) {
   const state: AvailabilityState =
     w.availability_state ?? ((w.is_available ?? true) ? "available" : "unavailable");
-  const available = state === "available";
+  
   const dotClass =
     state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground/60";
   const badgeClass =

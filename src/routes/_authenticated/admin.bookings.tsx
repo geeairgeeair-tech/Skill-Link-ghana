@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -125,9 +125,14 @@ function AdminBookingsPage() {
                   <span>{b.estimated_cost ? `GH₵${b.estimated_cost}` : "No amount"}</span>
                   <span>Created {new Date(b.created_at).toLocaleString()}</span>
                 </div>
-                <button onClick={() => setOpenId(isOpen ? null : b.id)} className="mt-2 text-[11px] font-semibold text-primary">
-                  {isOpen ? "Hide details" : "View details"} →
-                </button>
+                <div className="mt-2 flex items-center gap-3">
+                  <button onClick={() => setOpenId(isOpen ? null : b.id)} className="text-[11px] font-semibold text-primary">
+                    {isOpen ? "Hide details" : "View details"} →
+                  </button>
+                  <Link to="/bookings/$bookingId" params={{ bookingId: b.id }} className="text-[11px] font-semibold text-primary">
+                    Open booking page →
+                  </Link>
+                </div>
                 {isOpen && (
                   <div className="mt-2 rounded-xl bg-muted/40 p-3 space-y-2">
                     <Info label="Customer" value={b.customer?.full_name ?? "—"} />

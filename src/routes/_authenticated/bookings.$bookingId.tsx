@@ -485,8 +485,8 @@ function BookingDetail() {
             </button>
           )}
           {canComplete && (
-            <button onClick={() => navigate({ to: "/worker/jobs" })} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
-              Mark completed <ArrowRight className="size-3.5"/>
+            <button onClick={() => setShowComplete(true)} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
+              Complete job <ArrowRight className="size-3.5"/>
             </button>
           )}
           {isCustomer && ["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (

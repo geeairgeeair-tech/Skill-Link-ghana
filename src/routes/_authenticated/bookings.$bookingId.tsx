@@ -500,6 +500,18 @@ function BookingDetail() {
         </section>
       </main>
 
+      {showComplete && (
+        <CompleteJobModal
+          bookingId={b.id}
+          onClose={() => setShowComplete(false)}
+          onDone={() => {
+            setShowComplete(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+          }}
+        />
+      )}
+
       {showDispute && (
         <DisputeModal
           bookingId={b.id}

@@ -11,6 +11,8 @@ import {
 
 import { BackButton } from "@/components/back-button";
 import { LocationMap } from "@/components/location-map";
+import { EstimateSection } from "@/components/booking-estimate";
+import { CompleteJobModal } from "@/components/complete-job-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import {
 
 import { BackButton } from "@/components/back-button";
 import { LocationMap } from "@/components/location-map";
+import { EstimateSection } from "@/components/booking-estimate";
+import { CompleteJobModal } from "@/components/complete-job-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -93,9 +95,9 @@ function BookingDetail() {
   const { bookingId } = Route.useParams();
   const { user, role } = useAuth();
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);
+  const [showComplete, setShowComplete] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],
@@ -311,6 +313,19 @@ function BookingDetail() {
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
         </section>
 
+        {/* Estimate */}
+        <EstimateSection
+          bookingId={b.id}
+          isWorker={isWorker}
+          isCustomer={isCustomer}
+          canSubmit={isWorker && ["accepted", "on_the_way", "arrived"].includes(status)}
+          finalAmount={b.final_amount}
+          varianceReason={b.final_amount_reason}
+          varianceNote={b.final_amount_note}
+        />
+
+
+
         {/* Job info */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
           <h3 className="font-display font-bold text-sm">Job details</h3>
@@ -469,8 +484,8 @@ function BookingDetail() {
             </button>
           )}
           {canComplete && (
-            <button onClick={() => navigate({ to: "/worker/jobs" })} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
-              Mark completed <ArrowRight className="size-3.5"/>
+            <button onClick={() => setShowComplete(true)} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
+              Complete job <ArrowRight className="size-3.5"/>
             </button>
           )}
           {isCustomer && ["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
@@ -483,6 +498,18 @@ function BookingDetail() {
           )}
         </section>
       </main>
+
+      {showComplete && (
+        <CompleteJobModal
+          bookingId={b.id}
+          onClose={() => setShowComplete(false)}
+          onDone={() => {
+            setShowComplete(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+          }}
+        />
+      )}
 
       {showDispute && (
         <DisputeModal

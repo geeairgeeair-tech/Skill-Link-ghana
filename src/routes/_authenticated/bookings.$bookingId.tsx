@@ -314,6 +314,19 @@ function BookingDetail() {
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
         </section>
 
+        {/* Estimate */}
+        <EstimateSection
+          bookingId={b.id}
+          isWorker={isWorker}
+          isCustomer={isCustomer}
+          canSubmit={isWorker && ["accepted", "on_the_way", "arrived"].includes(status)}
+          finalAmount={b.final_amount}
+          varianceReason={b.final_amount_reason}
+          varianceNote={b.final_amount_note}
+        />
+
+
+
         {/* Job info */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
           <h3 className="font-display font-bold text-sm">Job details</h3>

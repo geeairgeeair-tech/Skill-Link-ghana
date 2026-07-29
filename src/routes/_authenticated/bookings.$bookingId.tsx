@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -95,7 +95,6 @@ function BookingDetail() {
   const { bookingId } = Route.useParams();
   const { user, role } = useAuth();
   const qc = useQueryClient();
-  const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);
   const [showComplete, setShowComplete] = useState(false);

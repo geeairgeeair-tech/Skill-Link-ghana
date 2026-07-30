@@ -51,13 +51,19 @@ function MyApplicationsPage() {
   });
 
   const withdraw = async (id: string) => {
-    if (!confirm("Withdraw this application?")) return;
-    const { error } = await supabase.from("job_applications").update({ status: "withdrawn" as any }).eq("id", id);
+    const reason = prompt("Withdraw this application? Add an optional reason for the customer:");
+    if (reason === null) return;
+    const { error } = await supabase.rpc("worker_withdraw_application", {
+      _application_id: id,
+      _reason: reason.trim() || null,
+    } as any);
     if (error) return toast.error(error.message);
     toast.success("Application withdrawn");
     qc.invalidateQueries({ queryKey: ["my-applications"] });
     qc.invalidateQueries({ queryKey: ["my-application-for-job"] });
+    qc.invalidateQueries({ queryKey: ["worker-app-count"] });
   };
+
 
   return (
     <AppShell>

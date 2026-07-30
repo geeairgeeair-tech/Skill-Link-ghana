@@ -8,6 +8,7 @@ import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ImageUpload } from "@/components/image-upload";
 import { supabase } from "@/integrations/supabase/client";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/worker/profile")({
@@ -35,14 +36,13 @@ function WorkerProfilePage() {
     },
   });
 
-  const { data: identity } = useQuery({
-    queryKey: ["my-identity", user?.id],
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("get_worker_identity", { _user_id: user!.id });
-      return (data as any)?.[0] ?? null;
-    },
+    queryFn: async () =>
+      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
   });
+
 
   useEffect(() => {
     if (!user) return;
@@ -110,9 +110,13 @@ function WorkerProfilePage() {
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-4 pb-8 rounded-b-3xl">
         <div className="mx-auto max-w-md">
           <BackButton fallback="/worker/dashboard" className="text-primary-foreground/90 hover:text-primary-foreground mb-2" />
-          <h1 className="font-display text-2xl font-bold">Worker profile</h1>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker profile"}</h1>
+            <VerificationBadge status={status} />
+          </div>
           <p className="text-sm opacity-80">Everything customers see about you</p>
         </div>
+
       </header>
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
@@ -196,14 +200,53 @@ function WorkerProfilePage() {
           )}
         </Section>
 
-        <Section title="Documents">
-          <div className="grid grid-cols-2 gap-2">
-            <DocTile label="Ghana Card" url={identity?.ghana_card_url} />
-            <DocTile label="Selfie" url={identity?.selfie_url} />
-          </div>
-          <p className="text-[11px] text-muted-foreground">Only you and Skill Link admins can see these.</p>
-          <Link to="/worker/onboarding" className="inline-block text-xs font-semibold text-primary">Replace documents</Link>
+        <Section title="Verification documents">
+          {(() => {
+            const expireAt = (wp as any).documents_expire_at as string | null;
+            const daysLeft = expireAt
+              ? Math.ceil((new Date(expireAt).getTime() - Date.now()) / 86_400_000)
+              : null;
+            const resubmitRequested = !!(wp as any).documents_resubmission_requested_at;
+            const expiringSoon = daysLeft != null && daysLeft <= 30;
+            const canReplace = status === "rejected" || resubmitRequested || expiringSoon;
+            const summary =
+              status === "approved" ? "Verification approved"
+              : status === "rejected" ? "Resubmission required"
+              : status === "suspended" ? "Account suspended"
+              : "Documents submitted — under review";
+            return (
+              <>
+                <div className="rounded-xl border border-border bg-muted/40 p-3 space-y-1">
+                  <p className="text-sm font-semibold">{summary}</p>
+                  {(wp as any).documents_submitted_at && (
+                    <p className="text-[11px] text-muted-foreground">
+                      Submitted {new Date((wp as any).documents_submitted_at).toLocaleDateString()}
+                    </p>
+                  )}
+                  {expireAt && (
+                    <p className={`text-[11px] ${expiringSoon ? "text-warning-foreground font-semibold" : "text-muted-foreground"}`}>
+                      {daysLeft != null && daysLeft <= 0
+                        ? `Expired on ${new Date(expireAt).toLocaleDateString()}`
+                        : `Expires ${new Date(expireAt).toLocaleDateString()}${expiringSoon ? " — document expiring soon" : ""}`}
+                    </p>
+                  )}
+                  {resubmitRequested && (
+                    <p className="text-[11px] text-warning-foreground font-semibold">
+                      {(wp as any).documents_resubmission_reason || "An admin requested updated documents."}
+                    </p>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  For your security, your Ghana Card, selfie and document files are never shown here. Only Skill Link admins can review them.
+                </p>
+                {canReplace && (
+                  <Link to="/worker/onboarding" className="inline-block text-xs font-semibold text-primary">Upload updated documents</Link>
+                )}
+              </>
+            );
+          })()}
         </Section>
+
 
         <div className="grid grid-cols-2 gap-2">
           <Tile to="/worker/professions" icon={Layers} label="My professions" />
@@ -216,16 +259,6 @@ function WorkerProfilePage() {
   );
 }
 
-function DocTile({ label, url }: { label: string; url?: string | null }) {
-  return (
-    <div className="rounded-xl border border-border overflow-hidden">
-      <div className="h-24 bg-muted grid place-items-center text-xs text-muted-foreground">
-        {url ? <img src={url} alt={label} className="size-full object-cover" /> : "Not uploaded"}
-      </div>
-      <p className="text-[11px] font-semibold p-2">{label}</p>
-    </div>
-  );
-}
 function Tile({ to, icon: Icon, label }: any) {
   return (
     <Link to={to} className="rounded-2xl bg-card border border-border p-4 flex items-center gap-2">

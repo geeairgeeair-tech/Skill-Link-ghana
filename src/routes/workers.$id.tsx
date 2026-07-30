@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/star-rating";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
 
@@ -175,7 +176,8 @@ function WorkerDetail() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 flex-wrap">
                 <h1 className="font-display text-xl font-bold truncate">{p.full_name ?? "Pro"}</h1>
-                {isVerified && <BadgeCheck className="size-5 text-primary fill-primary-soft" />}
+                <VerificationBadge status={w.verification_status} />
+
                 {w.is_featured && (
                   <span className="text-[10px] font-bold uppercase tracking-wide bg-gold/20 text-gold-foreground px-1.5 py-0.5 rounded">Featured</span>
                 )}

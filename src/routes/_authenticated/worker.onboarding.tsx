@@ -27,7 +27,9 @@ function Onboarding() {
   const [selfie, setSelfie] = useState<string[]>([]);
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [commit, setCommit] = useState(false);
+  const [docsOnFile, setDocsOnFile] = useState({ card: false, selfie: false, number: false });
   const [status, setStatus] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(false);
 
   const { data: cats } = useQuery({
@@ -50,7 +52,7 @@ function Onboarding() {
         setForm({
           category_id: data.category_id ?? "", bio: data.bio ?? "",
           years_experience: data.years_experience ?? 0,
-          ghana_card_number: idRow.ghana_card_number ?? "",
+          ghana_card_number: "",
           service_area: data.service_area ?? "Accra",
           city: (data as any).city ?? "Accra",
           hourly_rate: data.hourly_rate ?? 50,
@@ -60,9 +62,12 @@ function Onboarding() {
         });
         setPortfolio(Array.isArray(data.portfolio_images) ? (data.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
         setCommit(true);
+        setDocsOnFile({
+          card: !!idRow.ghana_card_url,
+          selfie: !!idRow.selfie_url,
+          number: !!idRow.ghana_card_number,
+        });
       }
-      if (idRow.ghana_card_url) setGhanaCard([idRow.ghana_card_url]);
-      if (idRow.selfie_url) setSelfie([idRow.selfie_url]);
     })();
   }, [user?.id]);
 
@@ -78,23 +83,33 @@ function Onboarding() {
     const dob = new Date(form.date_of_birth);
     if (Number.isNaN(dob.getTime())) return toast.error("Invalid date of birth");
     if (dob > maxDob) return toast.error("You must be at least 18 years old to register as a worker");
-    if (!ghanaCard[0]) return toast.error("Upload a photo of your Ghana Card");
-    if (!selfie[0]) return toast.error("Upload a selfie holding your Ghana Card");
+    if (!ghanaCard[0] && !docsOnFile.card) return toast.error("Upload a photo of your Ghana Card");
+    if (!selfie[0] && !docsOnFile.selfie) return toast.error("Upload a selfie holding your Ghana Card");
+    if (!form.ghana_card_number.trim() && !docsOnFile.number) return toast.error("Enter your Ghana Card number");
     if (!commit) return toast.error("Please accept the professional commitment");
 
     setLoading(true);
-    const { error } = await supabase.from("worker_profiles").upsert({
+    const { ghana_card_number, ...rest } = form;
+    const payload: any = {
       user_id: user.id,
-      ...form,
-      ghana_card_url: ghanaCard[0],
-      selfie_url: selfie[0],
+      ...rest,
       portfolio_images: portfolio,
-    } as any, { onConflict: "user_id" });
+      documents_submitted_at: new Date().toISOString(),
+      documents_resubmission_requested_at: null,
+      documents_resubmission_reason: null,
+      documents_last_reminder_days: null,
+    };
+    if (ghana_card_number.trim()) payload.ghana_card_number = ghana_card_number.trim();
+    if (ghanaCard[0]) payload.ghana_card_url = ghanaCard[0];
+    if (selfie[0]) payload.selfie_url = selfie[0];
+
+    const { error } = await supabase.from("worker_profiles").upsert(payload, { onConflict: "user_id" });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Profile submitted — pending admin verification.");
+    toast.success("Documents submitted — pending admin verification.");
     navigate({ to: "/worker/dashboard" });
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -155,7 +170,13 @@ function Onboarding() {
 
         <Section title="Identity verification">
           <Field label="Ghana Card number">
-            <input required value={form.ghana_card_number} onChange={e => setForm({...form, ghana_card_number: e.target.value})} placeholder="GHA-XXXXXXXXX-X" className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            <input required={!docsOnFile.number} value={form.ghana_card_number}
+              onChange={e => setForm({...form, ghana_card_number: e.target.value})}
+              placeholder={docsOnFile.number ? "•••• kept securely on file" : "GHA-XXXXXXXXX-X"}
+              className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            {docsOnFile.number && (
+              <p className="text-[11px] text-muted-foreground mt-1">Hidden for your security. Leave blank to keep the number on file.</p>
+            )}
           </Field>
           <Field label="Date of birth">
             <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
@@ -163,17 +184,29 @@ function Onboarding() {
               className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+.</p>
           </Field>
+          {(docsOnFile.card || docsOnFile.selfie) && (
+            <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs space-y-1">
+              <p className="font-semibold">Documents on file</p>
+              <p className="text-muted-foreground">
+                {docsOnFile.card ? "Ghana Card submitted" : "Ghana Card missing"} · {docsOnFile.selfie ? "Selfie submitted" : "Selfie missing"}
+              </p>
+              <p className="text-muted-foreground">Your uploaded files are never displayed back to you. Only Skill Link admins can review them. Upload again below only if you need to replace them.</p>
+            </div>
+          )}
           {user && (
             <>
               <ImageUpload bucket="worker-docs" userId={user.id} prefix="ghana-card"
-                label="Ghana Card photo" hint="Clear photo of the front of your card. Only you and Skill Link admins can see this."
+                label={docsOnFile.card ? "Replace Ghana Card photo" : "Ghana Card photo"}
+                hint="Clear photo of the front of your card. Only Skill Link admins can view it."
                 value={ghanaCard} onChange={setGhanaCard} />
               <ImageUpload bucket="worker-docs" userId={user.id} prefix="selfie"
-                label="Selfie holding your card" hint="Face clearly visible next to your Ghana Card."
+                label={docsOnFile.selfie ? "Replace selfie" : "Selfie holding your card"}
+                hint="Face clearly visible next to your Ghana Card."
                 value={selfie} onChange={setSelfie} />
             </>
           )}
         </Section>
+
 
         <Section title="Portfolio">
           {user && (

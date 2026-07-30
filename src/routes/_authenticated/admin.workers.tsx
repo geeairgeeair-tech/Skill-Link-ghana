@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/workers")({
@@ -132,7 +133,7 @@ function AdminWorkersPage() {
                     </p>
 
                   </div>
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected", "suspended"].includes(w.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
+                  <VerificationBadge status={w.verification_status} className="shrink-0" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {w.verification_status !== "approved" && (
@@ -152,13 +153,61 @@ function AdminWorkersPage() {
           })}
         </section>
 
+        <ExpiringDocumentsPanel />
+
         <ProfessionsReviewPanel />
+
       </main>
     </AppShell>
   );
 }
 
+function ExpiringDocumentsPanel() {
+  const qc = useQueryClient();
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-expiring-docs"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.rpc as any)("admin_list_expiring_documents", { _within_days: 30 });
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const request = async (userId: string) => {
+    const reason = window.prompt("What should the worker update? (shown to them)") ?? "";
+    const { error } = await (supabase.rpc as any)("admin_request_document_resubmission", { _user_id: userId, _reason: reason });
+    if (error) return toast.error(error.message);
+    toast.success("Worker notified");
+    qc.invalidateQueries({ queryKey: ["admin-expiring-docs"] });
+  };
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
+      <h2 className="font-display font-bold">Documents expiring or expired</h2>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : (data ?? []).length === 0 ? (
+        <p className="text-sm text-muted-foreground">No documents expiring in the next 30 days.</p>
+      ) : (data ?? []).map((r: any) => (
+        <div key={r.user_id} className="py-2 border-t border-border first:border-0 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">{r.full_name ?? "—"}</p>
+            <p className="text-[11px] text-muted-foreground">
+              {r.days_left <= 0 ? "Expired" : `${r.days_left} day(s) left`} · {new Date(r.documents_expire_at).toLocaleDateString()}
+              {r.resubmission_requested_at ? " · resubmission requested" : ""}
+            </p>
+          </div>
+          <button onClick={() => request(r.user_id)} className="shrink-0 text-[10px] px-2 py-1 rounded bg-primary text-primary-foreground font-bold">
+            Request update
+          </button>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function ProfessionsReviewPanel() {
+
   const qc = useQueryClient();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ["admin-professions-pending"],

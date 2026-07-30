@@ -4,11 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  MessageCircle, Wallet, Star, Layers, RotateCcw, UserCog,
+  Wallet, Star, Layers, RotateCcw, UserCog,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
   head: () => ({ meta: [{ title: "Worker dashboard — Skill Link" }] }),
@@ -59,14 +61,14 @@ function WorkerDashboard() {
     queryFn: async () => (await supabase.from("job_applications").select("id, status").eq("worker_id", user!.id)).data ?? [],
   });
 
-  const { data: unreadMsgs } = useQuery({
-    queryKey: ["worker-unread-msgs", user?.id],
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("unread_message_count", { _user_id: user!.id } as any);
-      return (data as number) ?? 0;
-    },
+    queryFn: async () =>
+      (await supabase.from("profiles").select("full_name, avatar_url").eq("id", user!.id).maybeSingle()).data,
   });
+
+
 
   const { data: returns } = useQuery({
     queryKey: ["worker-returns", user?.id],
@@ -137,11 +139,22 @@ function WorkerDashboard() {
   return (
     <AppShell>
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
-        <div className="mx-auto max-w-md">
-          <h1 className="font-display text-2xl font-bold">Worker dashboard</h1>
-          <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
+        <div className="mx-auto max-w-md flex items-center gap-3">
+          <div className="size-12 shrink-0 rounded-2xl bg-primary-foreground/15 overflow-hidden grid place-items-center font-bold text-lg">
+            {myProfile?.avatar_url
+              ? <img src={myProfile.avatar_url} alt={myProfile?.full_name ?? "Worker"} className="size-full object-cover" />
+              : (myProfile?.full_name?.[0]?.toUpperCase() ?? "?")}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
+              {wp && <VerificationBadge status={status} />}
+            </div>
+            <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
+          </div>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
         {!wp && (
@@ -254,7 +267,7 @@ function WorkerDashboard() {
           <StatTile to="/worker/jobs" icon={CalendarDays} label="Today's jobs" value={todayJobs.length} />
           <StatTile to="/worker/jobs" icon={Briefcase} label="Upcoming" value={upcoming.length} />
           <StatTile to="/worker/applications" icon={FileText} label="Pending applications" value={pendingApps} />
-          <StatTile to="/bookings" icon={MessageCircle} label="Unread messages" value={unreadMsgs ?? 0} />
+          
           <StatTile to="/worker/earnings" icon={Wallet} label="Total earned" value={cedis(earnings?.total_paid)} />
           <StatTile to="/worker/reviews" icon={Star} label="Rating" value={(wp as any)?.rating ? `${(wp as any).rating} ★` : "—"} />
           <StatTile to="/worker/jobs" icon={BadgeCheck} label="Completed jobs" value={completed} />

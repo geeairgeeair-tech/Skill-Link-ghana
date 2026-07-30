@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";
+import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
 import { CompleteJobModal } from "@/components/complete-job-modal";
@@ -276,7 +277,7 @@ function BookingDetail() {
             label="Worker"
             name={workerName}
             avatar={data.worker?.avatar_url}
-            verified={data.workerMeta?.verification_status === "approved"}
+            verificationStatus={data.workerMeta?.verification_status}
             sub={
               <>
                 {data.workerMeta?.rating ? `★ ${data.workerMeta.rating}` : "New pro"}
@@ -548,8 +549,8 @@ function Amount({ label, value, highlight, success }: { label: string; value: st
   );
 }
 
-function PartyCard({ label, name, avatar, verified, sub }: {
-  label: string; name: string; avatar?: string | null; verified?: boolean; sub?: React.ReactNode;
+function PartyCard({ label, name, avatar, verificationStatus, sub }: {
+  label: string; name: string; avatar?: string | null; verificationStatus?: string | null; sub?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3">
@@ -560,7 +561,7 @@ function PartyCard({ label, name, avatar, verified, sub }: {
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">{label}</p>
         <div className="flex items-center gap-1">
           <p className="font-semibold truncate">{name}</p>
-          {verified && <BadgeCheck className="size-4 text-primary" />}
+          <VerificationBadge status={verificationStatus} compact />
         </div>
         {sub && <p className="text-[11px] text-muted-foreground truncate">{sub}</p>}
       </div>

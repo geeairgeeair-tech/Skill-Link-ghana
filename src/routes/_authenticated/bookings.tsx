@@ -217,15 +217,18 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: any; onClose: () 
   const [reviewText, setReviewText] = useState("");
   const [hireAgain, setHireAgain] = useState<boolean | null>(null);
   const [amountNote, setAmountNote] = useState("");
+  const [resolution, setResolution] = useState<string>("");
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
   const paidNum = Number(amountPaid);
   const mismatch = paidNum > 0 && booking.final_amount != null && Math.abs(paidNum - Number(booking.final_amount)) > 0.001;
+  const hadReturn = Number(booking.return_count ?? 0) > 0;
 
   const submit = async () => {
     if (!paidNum || paidNum <= 0) return toast.error("Enter the amount you paid");
     if (rating < 1 || rating > 5) return toast.error("Please rate 1–5 stars");
     if (mismatch && !amountNote.trim()) return toast.error("Please explain the amount difference");
+    if (hadReturn && !resolution) return toast.error("Please tell us whether the issue was resolved");
     if (!confirmed) return toast.error("Please confirm the statement");
     setSaving(true);
     const { error } = await supabase.rpc("customer_confirm_booking_completion", {
@@ -235,12 +238,14 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: any; onClose: () 
       _review_text: reviewText.trim() || undefined,
       _would_hire_again: hireAgain ?? undefined,
       _amount_note: amountNote.trim() || undefined,
+      _resolution: hadReturn ? resolution : undefined,
     });
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Booking completed. Thank you for helping build trust on Skill Link.");
     onDone();
   };
+
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/50 grid place-items-end sm:place-items-center p-0 sm:p-4">
@@ -284,6 +289,25 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: any; onClose: () 
           <button type="button" onClick={() => setHireAgain(true)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${hireAgain === true ? "bg-success text-success-foreground border-success" : "border-border"}`}>Yes</button>
           <button type="button" onClick={() => setHireAgain(false)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${hireAgain === false ? "bg-destructive text-destructive-foreground border-destructive" : "border-border"}`}>No</button>
         </div>
+
+        {hadReturn && (
+          <>
+            <p className="mt-4 text-xs font-semibold">Was the return issue resolved?</p>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {[
+                { v: "completely", l: "Completely" },
+                { v: "partially", l: "Partially" },
+                { v: "not_resolved", l: "Not resolved" },
+              ].map(o => (
+                <button key={o.v} type="button" onClick={() => setResolution(o.v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${resolution === o.v ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}>
+                  {o.l}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
 
         <label className="mt-4 flex items-start gap-2 p-3 rounded-xl border border-border cursor-pointer">
           <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-0.5 accent-primary"/>

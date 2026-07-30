@@ -290,6 +290,25 @@ function ConfirmModal({ booking, onClose, onDone }: { booking: any; onClose: () 
           <button type="button" onClick={() => setHireAgain(false)} className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${hireAgain === false ? "bg-destructive text-destructive-foreground border-destructive" : "border-border"}`}>No</button>
         </div>
 
+        {hadReturn && (
+          <>
+            <p className="mt-4 text-xs font-semibold">Was the return issue resolved?</p>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {[
+                { v: "completely", l: "Completely" },
+                { v: "partially", l: "Partially" },
+                { v: "not_resolved", l: "Not resolved" },
+              ].map(o => (
+                <button key={o.v} type="button" onClick={() => setResolution(o.v)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${resolution === o.v ? "bg-primary text-primary-foreground border-primary" : "border-border"}`}>
+                  {o.l}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+
         <label className="mt-4 flex items-start gap-2 p-3 rounded-xl border border-border cursor-pointer">
           <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="mt-0.5 accent-primary"/>
           <span className="text-sm">I confirm the work was completed and that I paid {fmtGHS(paidNum || 0)}.</span>

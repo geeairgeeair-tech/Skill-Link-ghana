@@ -4,18 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtGHS, useEstimates } from "@/components/booking-estimate";
 
 const HIGHER = [
-  "Additional materials were required",
-  "Material prices changed",
+  "Additional materials required",
   "Customer requested extra work",
-  "Hidden damage was discovered",
-  "Emergency work was added",
+  "Hidden damage or unexpected work",
+  "Material price increased",
+  "Additional transport or delivery",
   "Other",
 ];
 const LOWER = [
-  "Fewer materials were used",
-  "Work took less time",
+  "Fewer materials used",
+  "Less work was required",
   "Discount applied",
-  "Some work was not required",
+  "Customer supplied materials",
   "Other",
 ];
 
@@ -40,8 +40,11 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const submit = async () => {
     if (final <= 0) return toast.error("Enter the final amount");
     if (!confirmed) return toast.error("Please confirm the work is completed");
-    const finalReason = reason === "Other" ? other.trim() : reason;
-    if (needsReason && finalReason.length < 3) return toast.error("Please choose a reason for the difference");
+    if (needsReason && !reason) return toast.error("Please choose a reason for the difference");
+    if (needsReason && reason === "Other" && other.trim().length < 3) {
+      return toast.error("Please add a short note explaining the difference");
+    }
+    const finalReason = reason === "Other" ? `Other: ${other.trim()}` : reason;
     setSaving(true);
     const { error } = await supabase.rpc("worker_mark_booking_completed", {
       _booking_id: bookingId,
@@ -65,10 +68,15 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
           <div className="rounded-xl bg-muted/60 p-3 text-sm space-y-1">
             <div className="flex justify-between"><span>Approved estimate</span><span className="font-semibold">{fmtGHS(approved.total)}</span></div>
             {final > 0 && (
-              <div className="flex justify-between">
-                <span>Difference</span>
-                <span className={diff > 0 ? "text-destructive font-semibold" : diff < 0 ? "text-success font-semibold" : "font-semibold"}>{fmtGHS(diff)}</span>
-              </div>
+              <>
+                <div className="flex justify-between"><span>Final amount</span><span className="font-semibold">{fmtGHS(final)}</span></div>
+                <div className="flex justify-between">
+                  <span>Difference</span>
+                  <span className={diff > 0 ? "text-destructive font-semibold" : diff < 0 ? "text-success font-semibold" : "font-semibold"}>
+                    {diff === 0 ? "No change" : `${diff > 0 ? "Higher" : "Lower"} · ${fmtGHS(Math.abs(diff))}`}
+                  </span>
+                </div>
+              </>
             )}
           </div>
         )}
@@ -82,7 +90,7 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
         {needsReason && (
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Why is the final amount {diff > 0 ? "higher" : "lower"}?
+              Why is the final amount {diff > 0 ? "higher" : "lower"}? (required)
             </p>
             {options.map((r) => (
               <label key={r} className="flex items-center gap-2 text-sm">
@@ -91,7 +99,7 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
               </label>
             ))}
             {reason === "Other" && (
-              <textarea value={other} onChange={(e) => setOther(e.target.value)} rows={2} placeholder="Explain briefly"
+              <textarea value={other} onChange={(e) => setOther(e.target.value)} rows={2} placeholder="Explain briefly (required)"
                 className="w-full rounded-xl border border-input bg-background p-3 text-sm" />
             )}
           </div>

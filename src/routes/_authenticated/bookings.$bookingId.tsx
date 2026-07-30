@@ -548,8 +548,8 @@ function Amount({ label, value, highlight, success }: { label: string; value: st
   );
 }
 
-function PartyCard({ label, name, avatar, verified, sub }: {
-  label: string; name: string; avatar?: string | null; verified?: boolean; sub?: React.ReactNode;
+function PartyCard({ label, name, avatar, verificationStatus, sub }: {
+  label: string; name: string; avatar?: string | null; verificationStatus?: string | null; sub?: React.ReactNode;
 }) {
   return (
     <div className="flex items-center gap-3">

@@ -178,7 +178,7 @@ function ChatPage() {
       {readOnly ? (
         <div className="sticky bottom-0 bg-muted/80 backdrop-blur border-t border-border p-4">
           <p className="mx-auto max-w-2xl text-center text-sm text-muted-foreground inline-flex items-center justify-center gap-2 w-full">
-            <Lock className="size-4" /> This booking has ended. This conversation is now read-only.
+            <Lock className="size-4" /> This booking is completed. Chat is read-only.
           </p>
         </div>
       ) : (

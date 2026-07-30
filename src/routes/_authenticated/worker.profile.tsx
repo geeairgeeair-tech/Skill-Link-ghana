@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet } from "lucide-react";
+import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet, LogOut } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/worker/profile")({
 function WorkerProfilePage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [form, setForm] = useState({
@@ -254,6 +255,13 @@ function WorkerProfilePage() {
           <Tile to="/worker/earnings" icon={Wallet} label="Earnings" />
           <Tile to="/support" icon={LifeBuoy} label="Support" />
         </div>
+
+        <button
+          onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}
+          className="w-full rounded-xl border border-input bg-card py-3 font-semibold inline-flex items-center justify-center gap-2 text-destructive"
+        >
+          <LogOut className="size-4" /> Sign out
+        </button>
       </main>
     </AppShell>
   );

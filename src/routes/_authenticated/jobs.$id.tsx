@@ -351,13 +351,15 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
       const list = rows ?? [];
       if (list.length === 0) return [];
       const ids = Array.from(new Set(list.map((r: any) => r.worker_id)));
-      const [{ data: profs }, { data: wps }] = await Promise.all([
+      const [{ data: profs }, { data: wps }, { data: bks }] = await Promise.all([
         supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids),
         supabase.from("worker_profiles").select("user_id, rating, reviews_count, jobs_completed, service_area, verification_status, categories(name)").in("user_id", ids),
+        supabase.from("bookings").select("id, job_application_id").in("job_application_id", list.map((r: any) => r.id)),
       ]);
       const pMap = new Map((profs ?? []).map((p: any) => [p.id, p]));
       const wMap = new Map((wps ?? []).map((w: any) => [w.user_id, w]));
-      return list.map((a: any) => ({ ...a, profile: pMap.get(a.worker_id) ?? null, worker: wMap.get(a.worker_id) ?? null }));
+      const bMap = new Map((bks ?? []).map((b: any) => [b.job_application_id, b.id]));
+      return list.map((a: any) => ({ ...a, profile: pMap.get(a.worker_id) ?? null, worker: wMap.get(a.worker_id) ?? null, booking_id: bMap.get(a.id) ?? null }));
     },
   });
 
@@ -442,9 +444,15 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
                 </>
               )}
               {a.status === "accepted" && (
-                <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
-                  Open Booking →
-                </Link>
+                a.booking_id ? (
+                  <Link to="/bookings/$bookingId" params={{ bookingId: a.booking_id }} className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                    Open Booking →
+                  </Link>
+                ) : (
+                  <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                    Open Booking →
+                  </Link>
+                )
               )}
             </div>
           </div>

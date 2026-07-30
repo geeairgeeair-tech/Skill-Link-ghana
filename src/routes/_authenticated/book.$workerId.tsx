@@ -175,7 +175,11 @@ function BookPage() {
           <h1 className="font-display text-2xl font-bold">Booking request sent!</h1>
           <p className="text-sm text-muted-foreground">{p.full_name ?? "The pro"} has been notified and will respond shortly.</p>
           <div className="grid gap-2 pt-2">
-            <Link to="/bookings" className="rounded-xl bg-primary text-primary-foreground py-3 font-semibold">View booking</Link>
+            {bookingId ? (
+              <Link to="/bookings/$bookingId" params={{ bookingId }} className="rounded-xl bg-primary text-primary-foreground py-3 font-semibold">View booking</Link>
+            ) : (
+              <Link to="/bookings" className="rounded-xl bg-primary text-primary-foreground py-3 font-semibold">View booking</Link>
+            )}
             <Link to="/workers" className="rounded-xl border border-input py-3 font-semibold">Back to Browse Pros</Link>
             <Link to="/" className="text-sm text-muted-foreground">Back to home</Link>
           </div>

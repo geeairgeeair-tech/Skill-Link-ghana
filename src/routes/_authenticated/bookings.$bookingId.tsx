@@ -16,6 +16,8 @@ import { EstimateSection } from "@/components/booking-estimate";
 import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
+import { DeclineBookingModal } from "@/components/decline-booking-modal";
+import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -101,6 +103,8 @@ function BookingDetail() {
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
+  const [showDecline, setShowDecline] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],
@@ -206,6 +210,8 @@ function BookingDetail() {
 
   const showAddress = isCustomer || isAdmin || ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","completed","disputed","closed"].includes(status);
   const photos: string[] = Array.isArray(b.photos) ? b.photos.filter((p: any) => typeof p === "string") : [];
+  const progressPhotos: string[] = Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : [];
+  const completionPhotos: string[] = Array.isArray(b.completion_photos) ? b.completion_photos.filter((p: any) => typeof p === "string") : [];
 
   const call = async (rpc: string) => {
     setBusy(rpc);
@@ -373,7 +379,37 @@ function BookingDetail() {
               ))}
             </div>
           )}
+          {progressPhotos.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Work in progress</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {progressPhotos.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
+                    <img src={src} alt={`Progress photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+          {completionPhotos.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Completion photos</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {completionPhotos.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
+                    <img src={src} alt={`Completion photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+          {b.completion_note && (
+            <p className="text-xs text-muted-foreground italic pt-1">Completion note: "{b.completion_note}"</p>
+          )}
         </section>
+
+        <BookingReview bookingId={bookingId} />
+
 
         {/* Status callouts */}
         {status === "declined" && (
@@ -472,6 +508,23 @@ function BookingDetail() {
 
         {/* Action bar */}
         <section className="flex flex-wrap gap-2 pt-1">
+          {isWorker && status === "pending" && (
+            <>
+              <button
+                disabled={busy !== null}
+                onClick={() => call("worker_accept_booking")}
+                className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+              >
+                <CheckCircle2 className="size-4" /> Accept request
+              </button>
+              <button
+                onClick={() => setShowDecline(true)}
+                className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1"
+              >
+                <XCircle className="size-4" /> Decline
+              </button>
+            </>
+          )}
           {navUrl && (
             <a href={navUrl} target="_blank" rel="noopener noreferrer"
               className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">
@@ -504,9 +557,9 @@ function BookingDetail() {
             </button>
           )}
           {isCustomer && ["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
-            <Link to="/bookings" className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold">
+            <button onClick={() => setShowConfirm(true)} className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold">
               Confirm & Review
-            </Link>
+            </button>
           )}
           {isAdmin && (
             <Link to="/admin/bookings" className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold">Admin bookings</Link>
@@ -533,6 +586,29 @@ function BookingDetail() {
           onDone={() => {
             setShowDispute(false);
             qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+          }}
+        />
+      )}
+
+      {showConfirm && (
+        <ConfirmCompletionModal
+          booking={b}
+          onClose={() => setShowConfirm(false)}
+          onDone={() => {
+            setShowConfirm(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+          }}
+        />
+      )}
+
+      {showDecline && (
+        <DeclineBookingModal
+          bookingId={b.id}
+          onClose={() => setShowDecline(false)}
+          onDone={() => {
+            setShowDecline(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
           }}
         />
       )}
@@ -608,5 +684,29 @@ function DisputeModal({ bookingId, onClose, onDone }: { bookingId: string; onClo
         </div>
       </div>
     </div>
+  );
+}
+
+function BookingReview({ bookingId }: { bookingId: string }) {
+  const { data: review } = useQuery({
+    queryKey: ["booking-review", bookingId],
+    queryFn: async () =>
+      (await supabase
+        .from("reviews")
+        .select("rating, comment, created_at, would_hire_again, resolution, is_return_review")
+        .eq("booking_id", bookingId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()).data ?? null,
+  });
+  if (!review) return null;
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-1">
+      <h3 className="font-display font-bold text-sm">Customer review</h3>
+      <p className="text-sm font-semibold text-gold">{"★".repeat(review.rating)}<span className="text-muted-foreground font-normal"> {review.rating}/5</span></p>
+      {review.comment && <p className="text-xs text-muted-foreground whitespace-pre-wrap">"{review.comment}"</p>}
+      {review.resolution && <p className="text-[11px] text-muted-foreground">Return outcome: {String(review.resolution).replace(/_/g, " ")}</p>}
+      <p className="text-[10px] text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
+    </section>
   );
 }

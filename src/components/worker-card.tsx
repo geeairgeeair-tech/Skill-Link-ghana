@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { BadgeCheck, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { StarRating } from "./star-rating";
+import { VerificationBadge } from "./verification-badge";
 
 export type AvailabilityState = "available" | "busy" | "unavailable";
 

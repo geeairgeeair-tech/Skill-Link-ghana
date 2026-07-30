@@ -434,6 +434,18 @@ function BookingDetail() {
           </ol>
         </section>
 
+        <WorkProgressPanel booking={b} userId={user!.id} isWorker={isWorker} />
+
+        <ReturnJobPanel
+          bookingId={b.id}
+          userId={user!.id}
+          isWorker={isWorker}
+          isCustomer={isCustomer}
+          bookingStatus={status}
+        />
+
+
+
         {/* Support */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
           <h3 className="font-display font-bold text-sm inline-flex items-center gap-1"><LifeBuoy className="size-4"/> Need help?</h3>

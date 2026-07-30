@@ -15,10 +15,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Jobs" },
-        { to: "/jobs/new", icon: PlusSquare, label: "Post job" },
         { to: "/worker/jobs", icon: Calendar, label: "My work" },
-        { to: "/profile", icon: User, label: "Profile" },
+        { to: "/worker/earnings", icon: Wallet, label: "Earnings" },
+        { to: "/worker/profile", icon: User, label: "Profile" },
       ]
+
     : effectiveRole === "admin"
     ? [
         { to: "/admin", icon: LayoutDashboard, label: "Admin" },

@@ -41,8 +41,10 @@ function Onboarding() {
     if (!user) return;
     (async () => {
       const { data } = await supabase.from("worker_profiles")
-        .select("category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, ghana_card_url, selfie_url, ghana_card_number, date_of_birth")
+        .select("category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status")
         .eq("user_id", user.id).maybeSingle();
+      const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user.id });
+      const idRow: any = (ident as any)?.[0] ?? {};
       const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
       setAvatarUrl(prof?.avatar_url ?? null);
       if (data) {

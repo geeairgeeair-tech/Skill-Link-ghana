@@ -444,9 +444,15 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
                 </>
               )}
               {a.status === "accepted" && (
-                <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
-                  Open Booking →
-                </Link>
+                a.booking_id ? (
+                  <Link to="/bookings/$bookingId" params={{ bookingId: a.booking_id }} className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                    Open Booking →
+                  </Link>
+                ) : (
+                  <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                    Open Booking →
+                  </Link>
+                )
               )}
             </div>
           </div>

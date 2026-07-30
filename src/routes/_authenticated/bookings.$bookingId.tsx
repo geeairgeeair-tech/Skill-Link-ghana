@@ -101,6 +101,7 @@ function BookingDetail() {
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
+  const [showDecline, setShowDecline] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],

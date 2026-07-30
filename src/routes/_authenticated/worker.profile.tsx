@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/worker/profile")({
 function WorkerProfilePage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [portfolio, setPortfolio] = useState<string[]>([]);
   const [form, setForm] = useState({

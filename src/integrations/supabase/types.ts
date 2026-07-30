@@ -918,6 +918,11 @@ export type Database = {
           city: string | null
           created_at: string
           date_of_birth: string | null
+          documents_expire_at: string | null
+          documents_last_reminder_days: number | null
+          documents_resubmission_reason: string | null
+          documents_resubmission_requested_at: string | null
+          documents_submitted_at: string | null
           ghana_card_number: string | null
           ghana_card_url: string | null
           hourly_rate: number | null
@@ -950,6 +955,11 @@ export type Database = {
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          documents_expire_at?: string | null
+          documents_last_reminder_days?: number | null
+          documents_resubmission_reason?: string | null
+          documents_resubmission_requested_at?: string | null
+          documents_submitted_at?: string | null
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
@@ -982,6 +992,11 @@ export type Database = {
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          documents_expire_at?: string | null
+          documents_last_reminder_days?: number | null
+          documents_resubmission_reason?: string | null
+          documents_resubmission_requested_at?: string | null
+          documents_submitted_at?: string | null
           ghana_card_number?: string | null
           ghana_card_url?: string | null
           hourly_rate?: number | null
@@ -1147,6 +1162,18 @@ export type Database = {
           years_experience: number
         }[]
       }
+      admin_list_expiring_documents: {
+        Args: { _within_days?: number }
+        Returns: {
+          days_left: number
+          documents_expire_at: string
+          documents_submitted_at: string
+          full_name: string
+          resubmission_requested_at: string
+          user_id: string
+          verification_status: string
+        }[]
+      }
       admin_list_users: {
         Args: never
         Returns: {
@@ -1197,6 +1224,10 @@ export type Database = {
         Args: { _new_status?: string; _reply: string; _ticket_id: string }
         Returns: undefined
       }
+      admin_request_document_resubmission: {
+        Args: { _reason: string; _user_id: string }
+        Returns: undefined
+      }
       admin_resolve_dispute: {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
@@ -1217,30 +1248,18 @@ export type Database = {
         Args: { _job_id: string; _reason: string }
         Returns: undefined
       }
-      customer_confirm_booking_completion:
-        | {
-            Args: {
-              _amount_note?: string
-              _amount_paid: number
-              _booking_id: string
-              _rating: number
-              _review_text?: string
-              _would_hire_again?: boolean
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              _amount_note?: string
-              _amount_paid: number
-              _booking_id: string
-              _rating: number
-              _resolution?: string
-              _review_text?: string
-              _would_hire_again?: boolean
-            }
-            Returns: undefined
-          }
+      customer_confirm_booking_completion: {
+        Args: {
+          _amount_note?: string
+          _amount_paid: number
+          _booking_id: string
+          _rating: number
+          _resolution?: string
+          _review_text?: string
+          _would_hire_again?: boolean
+        }
+        Returns: undefined
+      }
       customer_decline_job_application: {
         Args: { _application_id: string; _reason: string }
         Returns: undefined
@@ -1325,6 +1344,7 @@ export type Database = {
       }
       mark_messages_read: { Args: { _booking_id: string }; Returns: undefined }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
+      send_document_expiry_reminders: { Args: never; Returns: number }
       submit_support_ticket: {
         Args: {
           _attachment_url?: string

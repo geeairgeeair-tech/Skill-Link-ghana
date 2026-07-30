@@ -16,6 +16,7 @@ import { EstimateSection } from "@/components/booking-estimate";
 import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
+import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 

@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet } from "lucide-react";
+import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet, LogOut } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";

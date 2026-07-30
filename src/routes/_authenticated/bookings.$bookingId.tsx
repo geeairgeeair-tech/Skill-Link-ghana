@@ -13,6 +13,8 @@ import { BackButton } from "@/components/back-button";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
 import { CompleteJobModal } from "@/components/complete-job-modal";
+import { WorkProgressPanel } from "@/components/work-progress-panel";
+import { ReturnJobPanel } from "@/components/return-job-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -433,6 +435,18 @@ function BookingDetail() {
             })}
           </ol>
         </section>
+
+        <WorkProgressPanel booking={b} userId={user!.id} isWorker={isWorker} />
+
+        <ReturnJobPanel
+          bookingId={b.id}
+          userId={user!.id}
+          isWorker={isWorker}
+          isCustomer={isCustomer}
+          bookingStatus={status}
+        />
+
+
 
         {/* Support */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">

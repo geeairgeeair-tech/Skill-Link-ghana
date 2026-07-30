@@ -127,6 +127,7 @@ export type Database = {
           budget: number | null
           category_id: string | null
           completion_note: string | null
+          completion_photos: Json
           created_at: string
           customer_confirmed_at: string | null
           customer_id: string
@@ -143,15 +144,21 @@ export type Database = {
           final_amount_note: string | null
           final_amount_reason: string | null
           id: string
+          is_paused: boolean
           job_application_id: string | null
           last_reminder_at: string | null
           latitude: number | null
           longitude: number | null
           on_the_way_at: string | null
+          pause_reason: string | null
+          paused_at: string | null
           payment_confirmed_at: string | null
           payment_status: string
           photos: Json
+          progress_photos: Json
           reminder_count: number | null
+          reopened_at: string | null
+          return_count: number
           scheduled_at: string | null
           service_area: string | null
           started_at: string | null
@@ -172,6 +179,7 @@ export type Database = {
           budget?: number | null
           category_id?: string | null
           completion_note?: string | null
+          completion_photos?: Json
           created_at?: string
           customer_confirmed_at?: string | null
           customer_id: string
@@ -188,15 +196,21 @@ export type Database = {
           final_amount_note?: string | null
           final_amount_reason?: string | null
           id?: string
+          is_paused?: boolean
           job_application_id?: string | null
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
           on_the_way_at?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          progress_photos?: Json
           reminder_count?: number | null
+          reopened_at?: string | null
+          return_count?: number
           scheduled_at?: string | null
           service_area?: string | null
           started_at?: string | null
@@ -217,6 +231,7 @@ export type Database = {
           budget?: number | null
           category_id?: string | null
           completion_note?: string | null
+          completion_photos?: Json
           created_at?: string
           customer_confirmed_at?: string | null
           customer_id?: string
@@ -233,15 +248,21 @@ export type Database = {
           final_amount_note?: string | null
           final_amount_reason?: string | null
           id?: string
+          is_paused?: boolean
           job_application_id?: string | null
           last_reminder_at?: string | null
           latitude?: number | null
           longitude?: number | null
           on_the_way_at?: string | null
+          pause_reason?: string | null
+          paused_at?: string | null
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          progress_photos?: Json
           reminder_count?: number | null
+          reopened_at?: string | null
+          return_count?: number
           scheduled_at?: string | null
           service_area?: string | null
           started_at?: string | null
@@ -484,24 +505,30 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_url: string | null
           booking_id: string
           content: string
           created_at: string
           id: string
+          read_at: string | null
           sender_id: string
         }
         Insert: {
+          attachment_url?: string | null
           booking_id: string
           content: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id: string
         }
         Update: {
+          attachment_url?: string | null
           booking_id?: string
           content?: string
           created_at?: string
           id?: string
+          read_at?: string | null
           sender_id?: string
         }
         Relationships: [
@@ -601,6 +628,68 @@ export type Database = {
         }
         Relationships: []
       }
+      return_requests: {
+        Row: {
+          booking_id: string
+          created_at: string
+          customer_id: string
+          customer_info_reply: string | null
+          id: string
+          info_request: string | null
+          photos: Json
+          reason: string
+          resolved_at: string | null
+          responded_at: string | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+          worker_id: string
+          worker_response: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          customer_id: string
+          customer_info_reply?: string | null
+          id?: string
+          info_request?: string | null
+          photos?: Json
+          reason: string
+          resolved_at?: string | null
+          responded_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_id: string
+          worker_response?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          customer_id?: string
+          customer_info_reply?: string | null
+          id?: string
+          info_request?: string | null
+          photos?: Json
+          reason?: string
+          resolved_at?: string | null
+          responded_at?: string | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+          worker_id?: string
+          worker_response?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "return_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string | null
@@ -608,7 +697,9 @@ export type Database = {
           created_at: string
           customer_id: string
           id: string
+          is_return_review: boolean
           rating: number
+          resolution: string | null
           worker_id: string
           would_hire_again: boolean | null
         }
@@ -618,7 +709,9 @@ export type Database = {
           created_at?: string
           customer_id: string
           id?: string
+          is_return_review?: boolean
           rating: number
+          resolution?: string | null
           worker_id: string
           would_hire_again?: boolean | null
         }
@@ -628,7 +721,9 @@ export type Database = {
           created_at?: string
           customer_id?: string
           id?: string
+          is_return_review?: boolean
           rating?: number
+          resolution?: string | null
           worker_id?: string
           would_hire_again?: boolean | null
         }
@@ -1106,6 +1201,10 @@ export type Database = {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
       }
+      booking_add_photos: {
+        Args: { _booking_id: string; _kind: string; _urls: Json }
+        Returns: undefined
+      }
       customer_accept_job_application: {
         Args: { _application_id: string }
         Returns: string
@@ -1118,17 +1217,30 @@ export type Database = {
         Args: { _job_id: string; _reason: string }
         Returns: undefined
       }
-      customer_confirm_booking_completion: {
-        Args: {
-          _amount_note?: string
-          _amount_paid: number
-          _booking_id: string
-          _rating: number
-          _review_text?: string
-          _would_hire_again?: boolean
-        }
-        Returns: undefined
-      }
+      customer_confirm_booking_completion:
+        | {
+            Args: {
+              _amount_note?: string
+              _amount_paid: number
+              _booking_id: string
+              _rating: number
+              _review_text?: string
+              _would_hire_again?: boolean
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _amount_note?: string
+              _amount_paid: number
+              _booking_id: string
+              _rating: number
+              _resolution?: string
+              _review_text?: string
+              _would_hire_again?: boolean
+            }
+            Returns: undefined
+          }
       customer_decline_job_application: {
         Args: { _application_id: string; _reason: string }
         Returns: undefined
@@ -1140,6 +1252,14 @@ export type Database = {
       customer_reject_estimate: {
         Args: { _estimate_id: string; _reason: string }
         Returns: undefined
+      }
+      customer_reply_return_info: {
+        Args: { _reply: string; _return_id: string }
+        Returns: undefined
+      }
+      customer_request_return: {
+        Args: { _booking_id: string; _photos?: Json; _reason: string }
+        Returns: string
       }
       customer_update_job_request: {
         Args: {
@@ -1203,6 +1323,7 @@ export type Database = {
           worker_id: string
         }[]
       }
+      mark_messages_read: { Args: { _booking_id: string }; Returns: undefined }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       submit_support_ticket: {
         Args: {
@@ -1214,6 +1335,7 @@ export type Database = {
         }
         Returns: string
       }
+      unread_message_count: { Args: { _user_id: string }; Returns: number }
       worker_accept_booking: {
         Args: { _booking_id: string }
         Returns: undefined
@@ -1246,6 +1368,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      worker_earnings_summary: {
+        Args: { _worker_id: string }
+        Returns: {
+          awaiting_payment: number
+          completed_jobs: number
+          this_month: number
+          total_paid: number
+        }[]
+      }
       worker_mark_arrived: { Args: { _booking_id: string }; Returns: undefined }
       worker_mark_booking_completed: {
         Args: {
@@ -1261,11 +1392,25 @@ export type Database = {
         Args: { _booking_id: string }
         Returns: undefined
       }
+      worker_pause_work: {
+        Args: { _booking_id: string; _reason: string }
+        Returns: undefined
+      }
       worker_request_admin_review: {
         Args: { _booking_id: string }
         Returns: undefined
       }
+      worker_respond_return: {
+        Args: {
+          _action: string
+          _note?: string
+          _return_id: string
+          _scheduled_at?: string
+        }
+        Returns: undefined
+      }
       worker_resubmit_verification: { Args: never; Returns: undefined }
+      worker_resume_work: { Args: { _booking_id: string }; Returns: undefined }
       worker_start_booking: {
         Args: { _booking_id: string }
         Returns: undefined
@@ -1291,6 +1436,10 @@ export type Database = {
           _note?: string
           _proposed_amount: number
         }
+        Returns: undefined
+      }
+      worker_withdraw_application: {
+        Args: { _application_id: string; _reason?: string }
         Returns: undefined
       }
       workers_in_category: {

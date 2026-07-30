@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/star-rating";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
 

@@ -504,6 +504,23 @@ function BookingDetail() {
 
         {/* Action bar */}
         <section className="flex flex-wrap gap-2 pt-1">
+          {isWorker && status === "pending" && (
+            <>
+              <button
+                disabled={busy !== null}
+                onClick={() => call("worker_accept_booking")}
+                className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+              >
+                <CheckCircle2 className="size-4" /> Accept request
+              </button>
+              <button
+                onClick={() => setShowDecline(true)}
+                className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1"
+              >
+                <XCircle className="size-4" /> Decline
+              </button>
+            </>
+          )}
           {navUrl && (
             <a href={navUrl} target="_blank" rel="noopener noreferrer"
               className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">

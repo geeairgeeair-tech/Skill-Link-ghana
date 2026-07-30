@@ -17,6 +17,7 @@ import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
+import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -103,6 +104,7 @@ function BookingDetail() {
   const [showDispute, setShowDispute] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
   const [showDecline, setShowDecline] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],
@@ -555,9 +557,9 @@ function BookingDetail() {
             </button>
           )}
           {isCustomer && ["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
-            <Link to="/bookings" className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold">
+            <button onClick={() => setShowConfirm(true)} className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold">
               Confirm & Review
-            </Link>
+            </button>
           )}
           {isAdmin && (
             <Link to="/admin/bookings" className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold">Admin bookings</Link>
@@ -583,6 +585,17 @@ function BookingDetail() {
           onClose={() => setShowDispute(false)}
           onDone={() => {
             setShowDispute(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+          }}
+        />
+      )}
+
+      {showConfirm && (
+        <ConfirmCompletionModal
+          booking={b}
+          onClose={() => setShowConfirm(false)}
+          onDone={() => {
+            setShowConfirm(false);
             qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
           }}
         />

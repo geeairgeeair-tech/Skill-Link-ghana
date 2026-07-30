@@ -586,6 +586,18 @@ function BookingDetail() {
           }}
         />
       )}
+
+      {showDecline && (
+        <DeclineBookingModal
+          bookingId={b.id}
+          onClose={() => setShowDecline(false)}
+          onDone={() => {
+            setShowDecline(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+          }}
+        />
+      )}
     </div>
   );
 }

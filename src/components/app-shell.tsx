@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell } from "lucide-react";
+import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
 import { cn } from "@/lib/utils";

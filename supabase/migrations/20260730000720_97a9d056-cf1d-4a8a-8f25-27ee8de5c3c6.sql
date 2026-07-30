@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.worker_mark_booking_completed(uuid, numeric, text);

@@ -143,6 +143,15 @@ function AdminBookingsPage() {
                     <Info label="Location / service area" value={b.address ?? "—"} />
                     <Info label="Estimated amount" value={b.estimated_amount ? `GH₵${b.estimated_amount}` : b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
                     <Info label="Worker final amount" value={b.final_amount ? `GH₵${b.final_amount}` : "—"} />
+                    {b.final_amount != null && b.estimated_amount != null && Number(b.final_amount) !== Number(b.estimated_amount) && (
+                      <Info
+                        label="Amount difference"
+                        value={`${Number(b.final_amount) > Number(b.estimated_amount) ? "Higher" : "Lower"} by GH₵${Math.abs(Number(b.final_amount) - Number(b.estimated_amount))}`}
+                      />
+                    )}
+                    {b.final_amount_reason && <Info label="Variance reason" value={b.final_amount_reason} />}
+                    {b.final_amount_note && <Info label="Variance note" value={b.final_amount_note} />}
+                    {b.worker_completed_at && <Info label="Completed at" value={new Date(b.worker_completed_at).toLocaleString()} />}
                     <Info label="Customer amount paid" value={b.amount_paid ? `GH₵${b.amount_paid}` : "—"} />
                     <Info label="Description" value={b.description ?? "—"} />
                     {b.completion_note && <Info label="Completion note" value={b.completion_note} />}

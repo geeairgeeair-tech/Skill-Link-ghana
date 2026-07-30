@@ -53,28 +53,48 @@ function ChatPage() {
     queryFn: async () => (await supabase.from("messages").select("*").eq("booking_id", bookingId).order("created_at",{ascending:true})).data ?? [],
   });
 
+  // An open return request reopens the conversation even after completion.
+  const { data: openReturn } = useQuery({
+    queryKey: ["chat-return", bookingId],
+    queryFn: async () => {
+      const { data } = await supabase.from("return_requests").select("id, status")
+        .eq("booking_id", bookingId)
+        .in("status", ["pending", "info_requested", "accepted", "scheduled"])
+        .maybeSingle();
+      return data ?? null;
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel(`chat:${bookingId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
+        () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-booking", bookingId] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `booking_id=eq.${bookingId}` },
+        () => qc.invalidateQueries({ queryKey: ["chat-return", bookingId] }))
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [bookingId, qc]);
 
   useEffect(() => {
     if (!user) return;
+    supabase.rpc("mark_messages_read", { _booking_id: bookingId } as any).then(() => {
+      qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+      qc.invalidateQueries({ queryKey: ["worker-unread-msgs"] });
+    });
     supabase.from("notifications").update({ read_at: new Date().toISOString() })
       .eq("user_id", user.id).eq("type", "chat_message").is("read_at", null)
       .contains("data", { booking_id: bookingId })
       .then(() => qc.invalidateQueries({ queryKey: ["unread-notifications"] }));
-  }, [bookingId, user?.id, qc]);
+  }, [bookingId, user?.id, messages?.length, qc]);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages?.length]);
 
-  const readOnly = !!booking && CLOSED_STATUSES.includes((booking as any).status);
+  const readOnly = !!booking && CLOSED_STATUSES.includes((booking as any).status) && !openReturn;
 
   const send = async () => {
     const content = text.trim();
@@ -83,6 +103,24 @@ function ChatPage() {
     const { error } = await supabase.from("messages").insert({ booking_id: bookingId, sender_id: user.id, content });
     if (error) { toast.error(error.message); setText(content); }
   };
+
+  const sendAttachment = async (file: File) => {
+    if (!user || readOnly) return;
+    setUploading(true);
+    try {
+      const url = await uploadImage("job-media", user.id, file, "chat");
+      const { error } = await supabase.from("messages").insert({
+        booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url,
+      } as any);
+      if (error) throw error;
+    } catch (e: any) {
+      toast.error(e.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  };
+
 
   const other = booking ? (user?.id === (booking as any).customer_id ? (booking as any).worker?.full_name : (booking as any).customer?.full_name) : "Chat";
   const rank = rankLabel((booking as any)?.professionRank ?? null);

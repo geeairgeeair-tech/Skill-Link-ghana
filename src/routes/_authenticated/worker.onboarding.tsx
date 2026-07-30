@@ -170,7 +170,13 @@ function Onboarding() {
 
         <Section title="Identity verification">
           <Field label="Ghana Card number">
-            <input required value={form.ghana_card_number} onChange={e => setForm({...form, ghana_card_number: e.target.value})} placeholder="GHA-XXXXXXXXX-X" className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            <input required={!docsOnFile.number} value={form.ghana_card_number}
+              onChange={e => setForm({...form, ghana_card_number: e.target.value})}
+              placeholder={docsOnFile.number ? "•••• kept securely on file" : "GHA-XXXXXXXXX-X"}
+              className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            {docsOnFile.number && (
+              <p className="text-[11px] text-muted-foreground mt-1">Hidden for your security. Leave blank to keep the number on file.</p>
+            )}
           </Field>
           <Field label="Date of birth">
             <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
@@ -178,17 +184,29 @@ function Onboarding() {
               className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+.</p>
           </Field>
+          {(docsOnFile.card || docsOnFile.selfie) && (
+            <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs space-y-1">
+              <p className="font-semibold">Documents on file</p>
+              <p className="text-muted-foreground">
+                {docsOnFile.card ? "Ghana Card submitted" : "Ghana Card missing"} · {docsOnFile.selfie ? "Selfie submitted" : "Selfie missing"}
+              </p>
+              <p className="text-muted-foreground">Your uploaded files are never displayed back to you. Only Skill Link admins can review them. Upload again below only if you need to replace them.</p>
+            </div>
+          )}
           {user && (
             <>
               <ImageUpload bucket="worker-docs" userId={user.id} prefix="ghana-card"
-                label="Ghana Card photo" hint="Clear photo of the front of your card. Only you and Skill Link admins can see this."
+                label={docsOnFile.card ? "Replace Ghana Card photo" : "Ghana Card photo"}
+                hint="Clear photo of the front of your card. Only Skill Link admins can view it."
                 value={ghanaCard} onChange={setGhanaCard} />
               <ImageUpload bucket="worker-docs" userId={user.id} prefix="selfie"
-                label="Selfie holding your card" hint="Face clearly visible next to your Ghana Card."
+                label={docsOnFile.selfie ? "Replace selfie" : "Selfie holding your card"}
+                hint="Face clearly visible next to your Ghana Card."
                 value={selfie} onChange={setSelfie} />
             </>
           )}
         </Section>
+
 
         <Section title="Portfolio">
           {user && (

@@ -20,6 +20,8 @@ export interface WorkerCardData {
   is_available?: boolean | null;
   years_experience?: number | null;
   availability_state?: AvailabilityState | null;
+  verification_status?: string | null;
+
 }
 
 const STATE_LABEL: Record<AvailabilityState, string> = {
@@ -61,7 +63,7 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1 flex-wrap">
             <p className="font-semibold truncate">{w.full_name || "Unnamed"}</p>
-            <BadgeCheck className="size-4 text-primary fill-primary-soft shrink-0" />
+            <VerificationBadge status={w.verification_status ?? "approved"} compact />
             {w.is_featured && (
               <span className="text-[10px] font-bold uppercase tracking-wide bg-gold/20 text-gold-foreground px-1.5 py-0.5 rounded">
                 Featured

@@ -106,7 +106,7 @@ function AdminUserDetailPage() {
               <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="font-display font-bold">Worker profile</h3>
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${data.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected","suspended"].includes(data.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{data.verification_status}</span>
+                  <VerificationBadge status={data.verification_status} />
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <Field label="Category" value={data.category_name} />

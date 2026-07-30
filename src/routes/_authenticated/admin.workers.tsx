@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/workers")({
@@ -132,7 +133,7 @@ function AdminWorkersPage() {
                     </p>
 
                   </div>
-                  <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded shrink-0 ${w.verification_status === "approved" ? "bg-success/15 text-success" : ["rejected", "suspended"].includes(w.verification_status) ? "bg-destructive/15 text-destructive" : "bg-warning/15 text-warning"}`}>{w.verification_status}</span>
+                  <VerificationBadge status={w.verification_status} className="shrink-0" />
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {w.verification_status !== "approved" && (

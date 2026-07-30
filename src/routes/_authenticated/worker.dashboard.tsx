@@ -139,11 +139,22 @@ function WorkerDashboard() {
   return (
     <AppShell>
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
-        <div className="mx-auto max-w-md">
-          <h1 className="font-display text-2xl font-bold">Worker dashboard</h1>
-          <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
+        <div className="mx-auto max-w-md flex items-center gap-3">
+          <div className="size-12 shrink-0 rounded-2xl bg-primary-foreground/15 overflow-hidden grid place-items-center font-bold text-lg">
+            {myProfile?.avatar_url
+              ? <img src={myProfile.avatar_url} alt={myProfile?.full_name ?? "Worker"} className="size-full object-cover" />
+              : (myProfile?.full_name?.[0]?.toUpperCase() ?? "?")}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
+              {wp && <VerificationBadge status={status} />}
+            </div>
+            <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
+          </div>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
         {!wp && (

@@ -41,10 +41,8 @@ function Onboarding() {
     if (!user) return;
     (async () => {
       const { data } = await supabase.from("worker_profiles")
-        .select("category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status")
+        .select("category_id, bio, years_experience, service_area, city, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, ghana_card_url, selfie_url, ghana_card_number, date_of_birth")
         .eq("user_id", user.id).maybeSingle();
-      const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user.id });
-      const idRow: any = (ident as any)?.[0] ?? {};
       const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
       setAvatarUrl(prof?.avatar_url ?? null);
       if (data) {
@@ -52,19 +50,22 @@ function Onboarding() {
         setForm({
           category_id: data.category_id ?? "", bio: data.bio ?? "",
           years_experience: data.years_experience ?? 0,
-          ghana_card_number: idRow.ghana_card_number ?? "",
+          ghana_card_number: "",
           service_area: data.service_area ?? "Accra",
           city: (data as any).city ?? "Accra",
           hourly_rate: data.hourly_rate ?? 50,
           callout_fee: data.callout_fee ?? 30,
           starting_price: data.starting_price ?? 50,
-          date_of_birth: idRow.date_of_birth ?? "",
+          date_of_birth: (data as any).date_of_birth ?? "",
         });
         setPortfolio(Array.isArray(data.portfolio_images) ? (data.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
         setCommit(true);
+        setDocsOnFile({
+          card: !!(data as any).ghana_card_url,
+          selfie: !!(data as any).selfie_url,
+          number: !!(data as any).ghana_card_number,
+        });
       }
-      if (idRow.ghana_card_url) setGhanaCard([idRow.ghana_card_url]);
-      if (idRow.selfie_url) setSelfie([idRow.selfie_url]);
     })();
   }, [user?.id]);
 
@@ -80,23 +81,33 @@ function Onboarding() {
     const dob = new Date(form.date_of_birth);
     if (Number.isNaN(dob.getTime())) return toast.error("Invalid date of birth");
     if (dob > maxDob) return toast.error("You must be at least 18 years old to register as a worker");
-    if (!ghanaCard[0]) return toast.error("Upload a photo of your Ghana Card");
-    if (!selfie[0]) return toast.error("Upload a selfie holding your Ghana Card");
+    if (!ghanaCard[0] && !docsOnFile.card) return toast.error("Upload a photo of your Ghana Card");
+    if (!selfie[0] && !docsOnFile.selfie) return toast.error("Upload a selfie holding your Ghana Card");
+    if (!form.ghana_card_number.trim() && !docsOnFile.number) return toast.error("Enter your Ghana Card number");
     if (!commit) return toast.error("Please accept the professional commitment");
 
     setLoading(true);
-    const { error } = await supabase.from("worker_profiles").upsert({
+    const { ghana_card_number, ...rest } = form;
+    const payload: any = {
       user_id: user.id,
-      ...form,
-      ghana_card_url: ghanaCard[0],
-      selfie_url: selfie[0],
+      ...rest,
       portfolio_images: portfolio,
-    } as any, { onConflict: "user_id" });
+      documents_submitted_at: new Date().toISOString(),
+      documents_resubmission_requested_at: null,
+      documents_resubmission_reason: null,
+      documents_last_reminder_days: null,
+    };
+    if (ghana_card_number.trim()) payload.ghana_card_number = ghana_card_number.trim();
+    if (ghanaCard[0]) payload.ghana_card_url = ghanaCard[0];
+    if (selfie[0]) payload.selfie_url = selfie[0];
+
+    const { error } = await supabase.from("worker_profiles").upsert(payload, { onConflict: "user_id" });
     setLoading(false);
     if (error) return toast.error(error.message);
-    toast.success("Profile submitted — pending admin verification.");
+    toast.success("Documents submitted — pending admin verification.");
     navigate({ to: "/worker/dashboard" });
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-12">

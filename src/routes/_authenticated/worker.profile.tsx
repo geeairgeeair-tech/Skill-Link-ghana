@@ -254,6 +254,13 @@ function WorkerProfilePage() {
           <Tile to="/worker/earnings" icon={Wallet} label="Earnings" />
           <Tile to="/support" icon={LifeBuoy} label="Support" />
         </div>
+
+        <button
+          onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }}
+          className="w-full rounded-xl border border-input bg-card py-3 font-semibold inline-flex items-center justify-center gap-2 text-destructive"
+        >
+          <LogOut className="size-4" /> Sign out
+        </button>
       </main>
     </AppShell>
   );

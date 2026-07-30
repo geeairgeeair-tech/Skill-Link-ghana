@@ -642,3 +642,27 @@ function DisputeModal({ bookingId, onClose, onDone }: { bookingId: string; onClo
     </div>
   );
 }
+
+function BookingReview({ bookingId }: { bookingId: string }) {
+  const { data: review } = useQuery({
+    queryKey: ["booking-review", bookingId],
+    queryFn: async () =>
+      (await supabase
+        .from("reviews")
+        .select("rating, comment, created_at, would_hire_again, resolution, is_return_review")
+        .eq("booking_id", bookingId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()).data ?? null,
+  });
+  if (!review) return null;
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-1">
+      <h3 className="font-display font-bold text-sm">Customer review</h3>
+      <p className="text-sm font-semibold text-gold">{"★".repeat(review.rating)}<span className="text-muted-foreground font-normal"> {review.rating}/5</span></p>
+      {review.comment && <p className="text-xs text-muted-foreground whitespace-pre-wrap">"{review.comment}"</p>}
+      {review.resolution && <p className="text-[11px] text-muted-foreground">Return outcome: {String(review.resolution).replace(/_/g, " ")}</p>}
+      <p className="text-[10px] text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
+    </section>
+  );
+}

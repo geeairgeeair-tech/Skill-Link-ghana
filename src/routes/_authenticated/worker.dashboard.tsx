@@ -61,14 +61,14 @@ function WorkerDashboard() {
     queryFn: async () => (await supabase.from("job_applications").select("id, status").eq("worker_id", user!.id)).data ?? [],
   });
 
-  const { data: unreadMsgs } = useQuery({
-    queryKey: ["worker-unread-msgs", user?.id],
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("unread_message_count", { _user_id: user!.id } as any);
-      return (data as number) ?? 0;
-    },
+    queryFn: async () =>
+      (await supabase.from("profiles").select("full_name, avatar_url").eq("id", user!.id).maybeSingle()).data,
   });
+
+
 
   const { data: returns } = useQuery({
     queryKey: ["worker-returns", user?.id],
@@ -256,7 +256,7 @@ function WorkerDashboard() {
           <StatTile to="/worker/jobs" icon={CalendarDays} label="Today's jobs" value={todayJobs.length} />
           <StatTile to="/worker/jobs" icon={Briefcase} label="Upcoming" value={upcoming.length} />
           <StatTile to="/worker/applications" icon={FileText} label="Pending applications" value={pendingApps} />
-          <StatTile to="/bookings" icon={MessageCircle} label="Unread messages" value={unreadMsgs ?? 0} />
+          
           <StatTile to="/worker/earnings" icon={Wallet} label="Total earned" value={cedis(earnings?.total_paid)} />
           <StatTile to="/worker/reviews" icon={Star} label="Rating" value={(wp as any)?.rating ? `${(wp as any).rating} ★` : "—"} />
           <StatTile to="/worker/jobs" icon={BadgeCheck} label="Completed jobs" value={completed} />

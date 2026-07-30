@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";
+import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
 import { CompleteJobModal } from "@/components/complete-job-modal";

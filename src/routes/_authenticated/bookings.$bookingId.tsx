@@ -375,7 +375,37 @@ function BookingDetail() {
               ))}
             </div>
           )}
+          {progressPhotos.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Work in progress</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {progressPhotos.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
+                    <img src={src} alt={`Progress photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+          {completionPhotos.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Completion photos</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {completionPhotos.map((src, i) => (
+                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
+                    <img src={src} alt={`Completion photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
+                  </a>
+                ))}
+              </div>
+            </>
+          )}
+          {b.completion_note && (
+            <p className="text-xs text-muted-foreground italic pt-1">Completion note: "{b.completion_note}"</p>
+          )}
         </section>
+
+        <BookingReview bookingId={bookingId} />
+
 
         {/* Status callouts */}
         {status === "declined" && (

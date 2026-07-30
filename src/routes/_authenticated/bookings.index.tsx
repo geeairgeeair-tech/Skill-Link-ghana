@@ -29,7 +29,7 @@ const DISPUTE_REASONS = [
   { code: "other", label: "Other" },
 ];
 
-export const Route = createFileRoute("/_authenticated/bookings")({
+export const Route = createFileRoute("/_authenticated/bookings/")({
   component: BookingsPage,
 });
 

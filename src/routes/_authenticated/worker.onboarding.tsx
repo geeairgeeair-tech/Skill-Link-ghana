@@ -58,14 +58,14 @@ function Onboarding() {
           hourly_rate: data.hourly_rate ?? 50,
           callout_fee: data.callout_fee ?? 30,
           starting_price: data.starting_price ?? 50,
-          date_of_birth: (data as any).date_of_birth ?? "",
+          date_of_birth: idRow.date_of_birth ?? "",
         });
         setPortfolio(Array.isArray(data.portfolio_images) ? (data.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
         setCommit(true);
         setDocsOnFile({
-          card: !!(data as any).ghana_card_url,
-          selfie: !!(data as any).selfie_url,
-          number: !!(data as any).ghana_card_number,
+          card: !!idRow.ghana_card_url,
+          selfie: !!idRow.selfie_url,
+          number: !!idRow.ghana_card_number,
         });
       }
     })();

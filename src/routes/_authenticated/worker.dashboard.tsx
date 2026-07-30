@@ -4,11 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
+import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  MessageCircle, Wallet, Star, Layers, RotateCcw, UserCog,
+  Wallet, Star, Layers, RotateCcw, UserCog,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
   head: () => ({ meta: [{ title: "Worker dashboard — Skill Link" }] }),

@@ -206,6 +206,8 @@ function BookingDetail() {
 
   const showAddress = isCustomer || isAdmin || ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","completed","disputed","closed"].includes(status);
   const photos: string[] = Array.isArray(b.photos) ? b.photos.filter((p: any) => typeof p === "string") : [];
+  const progressPhotos: string[] = Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : [];
+  const completionPhotos: string[] = Array.isArray(b.completion_photos) ? b.completion_photos.filter((p: any) => typeof p === "string") : [];
 
   const call = async (rpc: string) => {
     setBusy(rpc);

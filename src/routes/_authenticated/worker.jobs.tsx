@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
+import { CompleteJobModal } from "@/components/complete-job-modal";
 import { MessageCircle, MapPin, Calendar, Wallet, AlertTriangle, XCircle, CheckCircle2, Clock, ClipboardList } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/worker/jobs")({
@@ -289,7 +290,7 @@ function JobsPage() {
           onDone={() => { setDeclineFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); }} />
       )}
       {completeFor && (
-        <CompleteModal booking={completeFor} onClose={() => setCompleteFor(null)}
+        <CompleteJobModal bookingId={completeFor.id} onClose={() => setCompleteFor(null)}
           onDone={() => { setCompleteFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); }} />
       )}
     </AppShell>
@@ -339,41 +340,3 @@ function DeclineModal({ bookingId, onClose, onDone }: { bookingId: string; onClo
   );
 }
 
-function CompleteModal({ booking, onClose, onDone }: { booking: any; onClose: () => void; onDone: () => void }) {
-  const [amount, setAmount] = useState<string>(String(booking.estimated_amount ?? booking.budget ?? booking.estimated_cost ?? ""));
-  const [note, setNote] = useState("");
-  const [saving, setSaving] = useState(false);
-  const submit = async () => {
-    const num = Number(amount);
-    if (!num || num <= 0) return toast.error("Enter a valid final amount");
-    setSaving(true);
-    const { error } = await supabase.rpc("worker_mark_booking_completed", {
-      _booking_id: booking.id, _final_amount: num, _completion_note: note.trim() || undefined,
-    });
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Marked completed — awaiting customer confirmation");
-    onDone();
-  };
-  return (
-    <div className="fixed inset-0 z-[60] bg-black/50 grid place-items-end sm:place-items-center p-0 sm:p-4">
-      <div className="bg-card w-full max-w-md rounded-t-2xl sm:rounded-2xl border border-border p-5">
-        <h3 className="font-display font-bold text-lg">Mark job completed</h3>
-        <p className="text-xs text-muted-foreground mt-1">Enter the final amount. The customer will confirm payment.</p>
-        <label className="block mt-4 text-xs font-semibold">Final amount (GH₵)</label>
-        <input type="number" min={1} step="0.01" value={amount} onChange={e => setAmount(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-input bg-background p-3 text-sm" placeholder="e.g. 150.00"/>
-        <label className="block mt-3 text-xs font-semibold">Completion note (optional)</label>
-        <textarea value={note} onChange={e => setNote(e.target.value)}
-          placeholder="Brief note about the work done…"
-          className="mt-1 w-full rounded-xl border border-input bg-background p-3 text-sm min-h-[80px]"/>
-        <div className="mt-4 flex gap-2 justify-end">
-          <button type="button" onClick={onClose} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-muted">Cancel</button>
-          <button type="button" onClick={submit} disabled={saving} className="px-4 py-2 rounded-lg text-sm font-semibold bg-primary text-primary-foreground disabled:opacity-60">
-            {saving ? "Submitting…" : "Mark completed"}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}

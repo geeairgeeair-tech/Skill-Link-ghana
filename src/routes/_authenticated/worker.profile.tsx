@@ -35,14 +35,13 @@ function WorkerProfilePage() {
     },
   });
 
-  const { data: identity } = useQuery({
-    queryKey: ["my-identity", user?.id],
+  const { data: myProfile } = useQuery({
+    queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("get_worker_identity", { _user_id: user!.id });
-      return (data as any)?.[0] ?? null;
-    },
+    queryFn: async () =>
+      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
   });
+
 
   useEffect(() => {
     if (!user) return;

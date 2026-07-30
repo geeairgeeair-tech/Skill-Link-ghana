@@ -276,7 +276,7 @@ function BookingDetail() {
             label="Worker"
             name={workerName}
             avatar={data.worker?.avatar_url}
-            verified={data.workerMeta?.verification_status === "approved"}
+            verificationStatus={data.workerMeta?.verification_status}
             sub={
               <>
                 {data.workerMeta?.rating ? `★ ${data.workerMeta.rating}` : "New pro"}
@@ -560,7 +560,7 @@ function PartyCard({ label, name, avatar, verificationStatus, sub }: {
         <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">{label}</p>
         <div className="flex items-center gap-1">
           <p className="font-semibold truncate">{name}</p>
-          {verified && <BadgeCheck className="size-4 text-primary" />}
+          <VerificationBadge status={verificationStatus} compact />
         </div>
         {sub && <p className="text-[11px] text-muted-foreground truncate">{sub}</p>}
       </div>

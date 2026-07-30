@@ -1247,25 +1247,16 @@ export type Database = {
         Returns: undefined
       }
       worker_mark_arrived: { Args: { _booking_id: string }; Returns: undefined }
-      worker_mark_booking_completed:
-        | {
-            Args: {
-              _booking_id: string
-              _completion_note?: string
-              _final_amount: number
-            }
-            Returns: undefined
-          }
-        | {
-            Args: {
-              _booking_id: string
-              _completion_note?: string
-              _final_amount: number
-              _variance_note?: string
-              _variance_reason?: string
-            }
-            Returns: undefined
-          }
+      worker_mark_booking_completed: {
+        Args: {
+          _booking_id: string
+          _completion_note?: string
+          _final_amount: number
+          _variance_note?: string
+          _variance_reason?: string
+        }
+        Returns: undefined
+      }
       worker_mark_on_the_way: {
         Args: { _booking_id: string }
         Returns: undefined

@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, BadgeCheck, Wrench, ClipboardList } from "lucide-react";
+import { useAppRole } from "@/hooks/use-app-role";
+import { LogOut, BadgeCheck, Wrench, ClipboardList, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,

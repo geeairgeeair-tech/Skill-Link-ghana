@@ -21,8 +21,10 @@ export interface WorkerCardData {
   years_experience?: number | null;
   availability_state?: AvailabilityState | null;
   verification_status?: string | null;
-
+  /** Approved additional professions (max 2 shown), excluding the primary. */
+  professions?: string[];
 }
+
 
 const STATE_LABEL: Record<AvailabilityState, string> = {
   available: "Active",

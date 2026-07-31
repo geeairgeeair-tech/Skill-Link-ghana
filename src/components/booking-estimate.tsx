@@ -57,6 +57,7 @@ export function EstimateSection({
   finalAmount,
   varianceReason,
   varianceNote,
+  customerBudget,
 }: {
   bookingId: string;
   isWorker: boolean;
@@ -65,7 +66,9 @@ export function EstimateSection({
   finalAmount?: number | null;
   varianceReason?: string | null;
   varianceNote?: string | null;
+  customerBudget?: number | null;
 }) {
+
   const qc = useQueryClient();
   const { data: estimates = [], isLoading } = useEstimates(bookingId);
   const [showForm, setShowForm] = useState(false);

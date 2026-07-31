@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { VerificationBadge } from "@/components/verification-badge";
+import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
+
 import { useAuth } from "@/hooks/use-auth";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,

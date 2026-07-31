@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
+import { usePendingBookings } from "@/hooks/use-pending-bookings";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -10,15 +11,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const effectiveRole = pathname.startsWith("/admin") ? "admin" : role;
   const unread = useUnreadNotifications();
+  const pendingBookings = usePendingBookings();
 
   const nav = effectiveRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Jobs" },
-        { to: "/worker/jobs", icon: Calendar, label: "My work" },
+        { to: "/worker/jobs", icon: Calendar, label: "My work", badge: pendingBookings },
         { to: "/worker/earnings", icon: Wallet, label: "Earnings" },
         { to: "/worker/profile", icon: User, label: "Profile" },
       ]
+
 
     : effectiveRole === "admin"
     ? [

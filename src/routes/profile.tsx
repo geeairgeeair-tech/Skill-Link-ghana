@@ -5,14 +5,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { useAuth } from "@/hooks/use-auth";
-import { LogOut, BadgeCheck, Wrench, ClipboardList } from "lucide-react";
+import { useAppRole } from "@/hooks/use-app-role";
+import { LogOut, BadgeCheck, Wrench, ClipboardList, Clock } from "lucide-react";
+
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
 function ProfilePage() {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
+  const { proStatus, isPro, rejectionReason, primaryProfessionName, effectiveRole } = useAppRole();
+
+
   const navigate = useNavigate();
   const [full_name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -56,7 +61,7 @@ function ProfilePage() {
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-10 rounded-b-3xl">
         <div className="mx-auto max-w-md">
           <h1 className="font-display text-2xl font-bold">Profile</h1>
-          <p className="text-sm opacity-80 capitalize">{role}</p>
+          <p className="text-sm opacity-80">{effectiveRole === "admin" ? "Admin" : isPro ? "Professional" : "Customer"}</p>
         </div>
       </header>
       <main className="mx-auto max-w-md px-5 -mt-6 space-y-3">
@@ -77,31 +82,70 @@ function ProfilePage() {
           <button onClick={save} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold">Save changes</button>
         </div>
 
-        {role === "customer" && (
-          <Link to="/jobs/mine" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+        <Link to="/jobs/mine" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+          <div className="flex items-center gap-3">
+            <ClipboardList className="size-5 text-primary"/>
+            <div><p className="font-semibold">My Job Posts</p><p className="text-xs text-muted-foreground">Track jobs you've posted.</p></div>
+          </div>
+        </Link>
+
+        {proStatus === "none" && (
+          <Link to="/worker/onboarding" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
             <div className="flex items-center gap-3">
-              <ClipboardList className="size-5 text-primary"/>
-              <div><p className="font-semibold">My Job Posts</p><p className="text-xs text-muted-foreground">Track jobs you've posted.</p></div>
+              <Wrench className="size-5 text-primary"/>
+              <div><p className="font-semibold">Become a Professional</p><p className="text-xs text-muted-foreground">List your skills and earn.</p></div>
             </div>
           </Link>
         )}
 
-        {role === "customer" && (
-          <Link to="/worker/onboarding" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <Wrench className="size-5 text-primary"/>
-              <div><p className="font-semibold">Become a worker</p><p className="text-xs text-muted-foreground">List your skills and earn.</p></div>
-            </div>
-          </Link>
+        {proStatus === "pending" && (
+          <div className="rounded-2xl bg-warning/15 border border-warning/30 p-4">
+            <p className="font-semibold inline-flex items-center gap-2"><Clock className="size-4"/> Professional Application — Pending Review</p>
+            <p className="text-xs text-muted-foreground mt-1">You keep full customer access while an admin reviews your documents.</p>
+          </div>
         )}
-        {role === "worker" && (
-          <Link to="/worker/dashboard" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
-            <div className="flex items-center gap-3">
-              <BadgeCheck className="size-5 text-primary"/>
-              <div><p className="font-semibold">Worker dashboard</p></div>
-            </div>
-          </Link>
+
+        {proStatus === "rejected" && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+            <p className="font-semibold text-destructive">Professional application not approved</p>
+            {rejectionReason && <p className="text-xs bg-card border border-border rounded-lg p-2">{rejectionReason}</p>}
+            <Link to="/worker/onboarding" className="inline-block text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold">Update & resubmit</Link>
+          </div>
         )}
+
+        {proStatus === "suspended" && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+            <p className="font-semibold text-destructive">Professional account suspended</p>
+            <Link to="/support" className="inline-block text-xs px-3 py-1.5 rounded-lg bg-muted font-semibold">Contact support</Link>
+          </div>
+        )}
+
+        {isPro && (
+          <>
+            <Link to="/worker/profile" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+              <div className="flex items-center gap-3">
+                <BadgeCheck className="size-5 text-success"/>
+                <div>
+                  <p className="font-semibold">Professional Profile</p>
+                  <p className="text-xs text-muted-foreground">{primaryProfessionName ?? "Approved professional"}</p>
+                </div>
+              </div>
+            </Link>
+            <Link to="/worker/dashboard" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+              <div className="flex items-center gap-3">
+                <Wrench className="size-5 text-primary"/>
+                <div><p className="font-semibold">Professional Dashboard</p></div>
+              </div>
+            </Link>
+            <Link to="/worker/professions" className="block rounded-2xl bg-card border border-border p-4 shadow-card">
+              <div className="flex items-center gap-3">
+                <ClipboardList className="size-5 text-primary"/>
+                <div><p className="font-semibold">Manage Professions</p><p className="text-xs text-muted-foreground">Up to 3 professions.</p></div>
+              </div>
+            </Link>
+          </>
+        )}
+
 
         <button onClick={signOut} className="w-full rounded-xl border border-input bg-card py-3 font-semibold inline-flex items-center justify-center gap-2 text-destructive">
           <LogOut className="size-4"/> Sign out

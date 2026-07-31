@@ -6,7 +6,7 @@ import {
   MapPin, Calendar, Wallet, MessageCircle, User, BadgeCheck, Phone,
   CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
   Navigation, LifeBuoy, Gavel, Image as ImageIcon, Truck, Flag, PlayCircle,
-  UserCheck, Scale,
+  UserCheck, Scale, Home as HomeIcon,
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";
@@ -20,6 +20,8 @@ import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
+
 
 export const Route = createFileRoute("/_authenticated/bookings/$bookingId")({
   component: BookingDetail,
@@ -99,6 +101,8 @@ function disputeStage(b: any): { key: string; label: string }[] {
 function BookingDetail() {
   const { bookingId } = Route.useParams();
   const { user, role } = useAuth();
+  const { homeTo, isPro } = useAppRole();
+
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);
@@ -156,17 +160,40 @@ function BookingDetail() {
     },
   });
 
-  // Live updates: booking row + messages counter
+  // Live updates for the whole booking lifecycle: status, estimates,
+  // return jobs, reviews and messages. One channel, cleaned up on unmount.
   useEffect(() => {
+    const refreshBooking = () => {
+      qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+      qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+      qc.invalidateQueries({ queryKey: ["my-bookings"] });
+    };
     const ch = supabase
       .channel(`booking-detail:${bookingId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] }))
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
+        refreshBooking)
+      .on("postgres_changes", { event: "*", schema: "public", table: "booking_estimates", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["booking-estimates", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["return-requests", bookingId] });
+          qc.invalidateQueries({ queryKey: ["booking-returns", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["booking-reviews", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["booking-messages-count", bookingId] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [bookingId, qc]);
+
 
   if (isLoading) return <BookingSkeleton />;
   if (error) {
@@ -259,7 +286,17 @@ function BookingDetail() {
     <div className="min-h-screen bg-background pb-32">
       <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6 rounded-b-3xl">
         <div className="mx-auto max-w-2xl">
-          <BackButton fallback={isWorker ? "/worker/jobs" : "/bookings"} className="text-primary-foreground/90 hover:text-primary-foreground" />
+          <div className="flex items-center justify-between gap-2">
+            <BackButton fallback={isWorker ? "/worker/jobs" : "/bookings"} className="text-primary-foreground/90 hover:text-primary-foreground" />
+            <Link
+              to={homeTo as any}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-white/30"
+            >
+              <HomeIcon className="size-3.5" />
+              {isAdmin ? "Admin dashboard" : isPro ? "Professional dashboard" : "Home"}
+            </Link>
+          </div>
+
           <div className="mt-3">
             <span className="inline-block text-[10px] uppercase tracking-wide font-bold bg-white/20 px-2 py-0.5 rounded-full">{statusLabel(status)}</span>
             <h1 className="font-display text-xl sm:text-2xl font-bold mt-2">{b.categories?.name ?? "Booking"}</h1>
@@ -314,11 +351,16 @@ function BookingDetail() {
         {/* Amounts */}
         <section className="rounded-2xl bg-card border border-border p-4">
           <h3 className="font-display font-bold text-sm mb-3 inline-flex items-center gap-1"><Wallet className="size-4"/> Amounts</h3>
-          <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+            <Amount label="Customer budget" value={fmtGHS(b.budget ?? b.estimated_cost)} />
             <Amount label="Customer estimate" value={fmtGHS(b.estimated_amount ?? b.estimated_cost ?? b.budget)} />
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>
+          <p className="text-[11px] text-muted-foreground mt-2">
+            The customer's original budget is kept separate from the professional's estimate.
+          </p>
+
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
         </section>
 
@@ -331,7 +373,9 @@ function BookingDetail() {
           finalAmount={b.final_amount}
           varianceReason={b.final_amount_reason}
           varianceNote={b.final_amount_note}
+          customerBudget={b.budget ?? b.estimated_cost ?? null}
         />
+
 
 
 

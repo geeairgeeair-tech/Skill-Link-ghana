@@ -32,7 +32,7 @@ function ChatPage() {
     queryKey: ["chat-booking", bookingId],
     queryFn: async () => {
       const { data: b } = await supabase.from("bookings")
-        .select("id, customer_id, worker_id, description, status, category_id, categories(name)")
+        .select("id, customer_id, worker_id, description, status, category_id, budget, estimated_cost, categories(name)")
         .eq("id", bookingId).maybeSingle();
       if (!b) return null;
       const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", [b.customer_id, b.worker_id]);
@@ -214,6 +214,11 @@ function ChatPage() {
               {rank ? ` · ${rank}` : ""}
               {(booking as any)?.status ? ` · ${String((booking as any).status).replace(/_/g, " ")}` : ""}
             </p>
+            {((booking as any)?.budget ?? (booking as any)?.estimated_cost) != null && (
+              <p className="text-[11px] font-semibold text-primary truncate">
+                Customer Budget: GH₵{Number((booking as any).budget ?? (booking as any).estimated_cost).toLocaleString("en-GH")}
+              </p>
+            )}
 
           </div>
           <Link to="/bookings/$bookingId" params={{ bookingId }} className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-primary">

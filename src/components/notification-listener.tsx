@@ -52,6 +52,7 @@ export function NotificationListener() {
             if (bookingId && pathRef.current === `/chat/${bookingId}`) return;
             qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
             toast(n.title ?? "New message", {
+              duration: 10000,
               description: [profession ? `Profession: ${profession}` : null, n.body]
                 .filter(Boolean)
                 .join(" · "),
@@ -67,6 +68,7 @@ export function NotificationListener() {
 
           const target = notificationTarget(n);
           toast(n.title ?? "New notification", {
+            duration: 10000,
             description: [profession ? `Profession: ${profession}` : null, n.body]
               .filter(Boolean)
               .join(" · ") || undefined,
@@ -74,6 +76,7 @@ export function NotificationListener() {
               ? { label: "View", onClick: () => router.navigate(target as any) }
               : undefined,
           });
+
         },
       )
       .subscribe();

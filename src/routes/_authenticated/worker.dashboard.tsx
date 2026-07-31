@@ -313,6 +313,11 @@ function BookingRow({ b }: { b: any }) {
         <div className="min-w-0">
           <p className="font-semibold truncate">{b.categories?.name ?? "Service"}</p>
           <p className="text-xs text-muted-foreground line-clamp-2">{b.description}</p>
+          {(b.budget ?? b.estimated_cost) != null && (
+            <p className="text-[11px] font-semibold text-primary mt-1">
+              Customer Budget: GH₵{Number(b.budget ?? b.estimated_cost).toLocaleString("en-GH")}
+            </p>
+          )}
           <p className="text-[11px] text-muted-foreground mt-1">
             {b.profiles?.full_name ?? "Customer"}
             {b.scheduled_at ? ` · ${new Date(b.scheduled_at).toLocaleString()}` : ""}
@@ -322,6 +327,7 @@ function BookingRow({ b }: { b: any }) {
           {String(b.status).replace(/_/g, " ")}
         </span>
       </div>
+
     </Link>
   );
 }

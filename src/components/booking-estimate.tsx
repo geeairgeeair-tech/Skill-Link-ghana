@@ -57,6 +57,7 @@ export function EstimateSection({
   finalAmount,
   varianceReason,
   varianceNote,
+  customerBudget,
 }: {
   bookingId: string;
   isWorker: boolean;
@@ -65,7 +66,9 @@ export function EstimateSection({
   finalAmount?: number | null;
   varianceReason?: string | null;
   varianceNote?: string | null;
+  customerBudget?: number | null;
 }) {
+
   const qc = useQueryClient();
   const { data: estimates = [], isLoading } = useEstimates(bookingId);
   const [showForm, setShowForm] = useState(false);
@@ -102,6 +105,17 @@ export function EstimateSection({
           </button>
         )}
       </div>
+
+      {customerBudget != null && (
+        <div className="rounded-xl bg-primary-soft/60 border border-primary/20 px-3 py-2">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-primary">Customer Budget</p>
+          <p className="font-display font-bold">{fmtGHS(customerBudget)}</p>
+          <p className="text-[11px] text-muted-foreground">
+            The estimate is separate and may be higher, lower or equal.
+          </p>
+        </div>
+      )}
+
 
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading estimate…</p>

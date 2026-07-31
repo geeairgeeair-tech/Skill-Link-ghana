@@ -13,10 +13,10 @@ export const Route = createFileRoute("/_authenticated/worker/jobs")({
 });
 
 const TABS = [
-  { key: "pending", label: "Pending" },
+  { key: "pending", label: "New Requests" },
   { key: "recent", label: "Recent" },
-  { key: "active", label: "Active" },
-  { key: "completed", label: "Completed" },
+  { key: "active", label: "Active Jobs" },
+  { key: "completed", label: "Completed Work" },
   { key: "cancelled", label: "Cancelled" },
 ] as const;
 type TabKey = typeof TABS[number]["key"];
@@ -232,7 +232,9 @@ function JobsPage() {
               <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
                 {b.scheduled_at && <p className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date(b.scheduled_at).toLocaleString()}</p>}
                 {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>{b.service_area}</p>}
+                {(b.budget ?? b.estimated_cost) != null && <p className="inline-flex items-center gap-1 font-semibold text-primary"><Wallet className="size-3"/>Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
                 {(b.estimated_amount ?? b.budget) != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Estimate {fmtGHS(b.estimated_amount ?? b.budget)}</p>}
+
                 {b.final_amount != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>You reported {fmtGHS(b.final_amount)}</p>}
                 {b.amount_paid != null && <p className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="size-3"/>Paid {fmtGHS(b.amount_paid)}</p>}
                 {b.status !== "pending" && !declined && b.address && <p className="text-foreground/80">📍 {b.address}</p>}

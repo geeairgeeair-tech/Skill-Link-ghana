@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
-import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
 import { BrandLogo } from "@/components/brand-logo";
 
 
@@ -69,12 +69,15 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
-  const { user, role } = useAuth();
+  const { user, effectiveRole, isPro } = useAppRole();
+  const role = effectiveRole;
   const navigate = useNavigate();
 
+  // An approved Professional's home is the Professional Dashboard.
   useEffect(() => {
-    if (role === "worker") navigate({ to: "/worker/dashboard" });
-  }, [role, navigate]);
+    if (isPro) navigate({ to: "/worker/dashboard" });
+  }, [isPro, navigate]);
+
 
   return (
     <AppShell>

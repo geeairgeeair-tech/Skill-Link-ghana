@@ -18,7 +18,10 @@ export const FEATURED_CATEGORY_SLUGS = [
   "dispatch-rider",
   "nanny",
   "ac-tech",
+  "private-teacher",
+  "private-nurse",
 ];
+
 
 export function FeaturedCategoryGrid({ categories }: { categories: any[] }) {
   const order = new Map(FEATURED_CATEGORY_SLUGS.map((s, i) => [s, i]));
@@ -145,7 +148,7 @@ export function CustomerMarketplaceSection() {
             to="/bookings"
             className="rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm inline-flex items-center gap-2"
           >
-            <Calendar className="size-4 text-primary" /> My bookings
+            <Calendar className="size-4 text-primary" /> My Hires
           </Link>
         </div>
       </section>
@@ -180,7 +183,7 @@ export function CustomerMarketplaceSection() {
 
       <section>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-display text-lg font-bold">My customer bookings</h2>
+          <h2 className="font-display text-lg font-bold">My Hires — bookings I created</h2>
           <Link to="/bookings" className="text-sm font-semibold text-primary">
             See all
           </Link>

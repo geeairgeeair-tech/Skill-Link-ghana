@@ -121,7 +121,17 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <NotificationListener />
       <Outlet />
-      <Toaster position="top-center" richColors />
+      <Toaster
+        position="top-center"
+        richColors
+        closeButton
+        duration={10000}
+        toastOptions={{
+          className:
+            "rounded-2xl border border-border bg-card text-foreground shadow-elevated font-sans",
+        }}
+      />
+
     </QueryClientProvider>
   );
 }

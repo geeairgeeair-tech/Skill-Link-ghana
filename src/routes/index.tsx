@@ -69,12 +69,15 @@ export const Route = createFileRoute("/")({
 function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
-  const { user, role } = useAuth();
+  const { user, effectiveRole, isPro } = useAppRole();
+  const role = effectiveRole;
   const navigate = useNavigate();
 
+  // An approved Professional's home is the Professional Dashboard.
   useEffect(() => {
-    if (role === "worker") navigate({ to: "/worker/dashboard" });
-  }, [role, navigate]);
+    if (isPro) navigate({ to: "/worker/dashboard" });
+  }, [isPro, navigate]);
+
 
   return (
     <AppShell>

@@ -220,12 +220,35 @@ function WorkersPage() {
             </button>
           </div>
 
-          <div className="mt-3 flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
+          <div className="mt-3 flex gap-2">
+            <select
+              aria-label="Select a category"
+              value={category ?? ""}
+              onChange={(e) => setSearch({ category: e.target.value })}
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              <option value="">All categories</option>
+              {(cats ?? []).map((c: any) => (
+                <option key={c.id} value={c.slug}>{c.name}</option>
+              ))}
+            </select>
+            {category && (
+              <button
+                onClick={() => setSearch({ category: "" })}
+                className="shrink-0 px-3 rounded-xl border border-input bg-card text-xs font-semibold inline-flex items-center gap-1"
+              >
+                <X className="size-3.5" /> Clear
+              </button>
+            )}
+          </div>
+
+          <div className="mt-2 flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
             <Chip active={!category} onClick={() => setSearch({ category: "" })} label="All" />
             {(cats ?? []).map(c => (
               <Chip key={c.id} active={category === c.slug} onClick={() => setSearch({ category: c.slug })} label={c.name} />
             ))}
           </div>
+
 
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-success" />

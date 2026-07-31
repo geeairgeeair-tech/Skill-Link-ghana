@@ -67,6 +67,7 @@ function JobsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [tab, setTab] = useState<TabKey>("pending");
+  const [tabTouched, setTabTouched] = useState(false);
   const [declineFor, setDeclineFor] = useState<string | null>(null);
   const [completeFor, setCompleteFor] = useState<any | null>(null);
 
@@ -108,6 +109,11 @@ function JobsPage() {
     (data ?? []).forEach((b: any) => { TABS.forEach(t => { if (matchesTab(b.status, t.key)) c[t.key]++; }); });
     return c;
   }, [data]);
+
+  // Pending requests come first; fall back to Recent when nothing is pending.
+  useEffect(() => {
+    if (!tabTouched && data && counts.pending === 0 && tab === "pending") setTab("recent");
+  }, [data, counts.pending, tab, tabTouched]);
 
   const visible = (data ?? []).filter((b: any) => matchesTab(b.status, tab));
 
@@ -162,7 +168,7 @@ function JobsPage() {
         <div className="mt-3 flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 snap-x scrollbar-none">
 
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => { setTabTouched(true); setTab(t.key); }}
               className={`shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${tab === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
               {t.label} <span className="opacity-70">({counts[t.key]})</span>
             </button>
@@ -293,7 +299,7 @@ function JobsPage() {
 
       {declineFor && (
         <DeclineModal bookingId={declineFor} onClose={() => setDeclineFor(null)}
-          onDone={() => { setDeclineFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); }} />
+          onDone={() => { setDeclineFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); qc.invalidateQueries({ queryKey: ["worker-pending-count"] }); }} />
       )}
       {completeFor && (
         <CompleteJobModal bookingId={completeFor.id} onClose={() => setCompleteFor(null)}

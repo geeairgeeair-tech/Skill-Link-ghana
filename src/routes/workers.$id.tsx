@@ -23,6 +23,8 @@ function WorkerDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [activeProfId, setActiveProfId] = useState<string | null>(null);
+
 
   const workerQ = useQuery({
     queryKey: ["worker", id],

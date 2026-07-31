@@ -230,24 +230,50 @@ function WorkerDetail() {
         </Section>
 
         <Section title="Services">
-          <div className="flex flex-wrap gap-2">
+          {professions.length > 0 ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+                {professions.map((pr: any) => {
+                  const active = pr.id === activeProf?.id;
+                  return (
+                    <button
+                      key={pr.id}
+                      onClick={() => setActiveProfId(pr.id)}
+                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}
+                    >
+                      <BadgeCheck className="size-3" />
+                      {pr.categories?.name ?? "Service"}
+                      {pr.is_primary && <span className="text-[10px] opacity-70">Primary</span>}
+                    </button>
+                  );
+                })}
+              </div>
+              {activeProf && (
+                <div className="mt-3 space-y-2">
+                  {activeProf.bio && <p className="text-sm leading-relaxed whitespace-pre-line">{activeProf.bio}</p>}
+                  {activeProf.service_description && (
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">{activeProf.service_description}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <PriceRow label="Experience" value={`${activeProf.years_experience ?? w.years_experience ?? 0}y`} />
+                    <PriceRow label="From" value={`GH₵${activeProf.starting_price ?? w.starting_price ?? 0}`} />
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
             <span className="inline-flex items-center gap-1 text-xs font-semibold bg-primary-soft text-primary px-2.5 py-1.5 rounded-lg">
               {w.categories?.name ?? "General services"}
               <span className="text-[10px] opacity-70">Primary</span>
             </span>
-            {(professionsQ.data ?? []).map((pr: any) => (
-              <span key={pr.id} className="inline-flex items-center gap-1 text-xs font-semibold bg-muted px-2.5 py-1.5 rounded-lg">
-                <BadgeCheck className="size-3 text-primary" />
-                {pr.categories?.name ?? "Service"}
-              </span>
-            ))}
-          </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
             <PriceRow label="Call-out fee" value={`GH₵${w.callout_fee ?? 0}`} />
             <PriceRow label="Hourly rate" value={`GH₵${w.hourly_rate ?? 0}/hr`} />
           </div>
         </Section>
+
 
         <Section title="Service area">
           <LocationMap area={w.service_area ?? p.city} height={180} />

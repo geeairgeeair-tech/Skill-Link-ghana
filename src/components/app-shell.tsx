@@ -16,11 +16,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav = effectiveRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { to: "/jobs", icon: Briefcase, label: "Jobs" },
-        { to: "/worker/jobs", icon: Calendar, label: "My work", badge: pendingBookings },
+        { to: "/worker/jobs", icon: Calendar, label: "Jobs", badge: pendingBookings },
+        { to: "/hire", icon: Search, label: "Hire" },
         { to: "/worker/earnings", icon: Wallet, label: "Earnings" },
         { to: "/worker/profile", icon: User, label: "Profile" },
       ]
+
 
 
     : effectiveRole === "admin"

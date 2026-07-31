@@ -163,6 +163,23 @@ function BookPage() {
     }
   };
 
+  if (user && user.id === workerId) {
+    return (
+      <div className="min-h-screen bg-background px-5 pt-6">
+        <BackButton fallback={`/workers/${workerId}`} />
+        <div className="mx-auto max-w-md text-center space-y-3 pt-16">
+          <p className="font-display text-xl font-bold">You can't book yourself</p>
+          <p className="text-sm text-muted-foreground">
+            This is your own professional profile. Browse other pros to hire someone else.
+          </p>
+          <Link to="/workers" className="inline-block rounded-xl bg-primary text-primary-foreground px-5 py-3 font-semibold">
+            Browse other pros
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading || statusLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading worker…</div>;
   if (!w) {
     return (
@@ -172,6 +189,7 @@ function BookPage() {
       </div>
     );
   }
+
 
   if (availability && availability !== "available") {
     return (

@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { VerificationBadge } from "@/components/verification-badge";
+import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
+
 import { useAuth } from "@/hooks/use-auth";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
@@ -294,7 +296,12 @@ function WorkerDashboard() {
           <Tile to="/jobs" icon={Briefcase} title="Browse jobs" subtitle="Find new work" />
           <Tile to="/support" icon={LifeBuoy} title="Support" subtitle="Get help fast" />
         </div>
+
+        <div className="pt-2 border-t border-border pb-4">
+          <CustomerMarketplaceSection />
+        </div>
       </main>
+
     </AppShell>
   );
 }

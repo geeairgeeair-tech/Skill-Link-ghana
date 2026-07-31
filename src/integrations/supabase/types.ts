@@ -167,6 +167,7 @@ export type Database = {
           urgency: string
           worker_completed_at: string | null
           worker_id: string
+          worker_profession_id: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -219,6 +220,7 @@ export type Database = {
           urgency?: string
           worker_completed_at?: string | null
           worker_id: string
+          worker_profession_id?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -271,6 +273,7 @@ export type Database = {
           urgency?: string
           worker_completed_at?: string | null
           worker_id?: string
+          worker_profession_id?: string | null
         }
         Relationships: [
           {
@@ -299,6 +302,13 @@ export type Database = {
             columns: ["worker_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_worker_profession_id_fkey"
+            columns: ["worker_profession_id"]
+            isOneToOne: false
+            referencedRelation: "worker_professions"
             referencedColumns: ["id"]
           },
         ]
@@ -871,6 +881,8 @@ export type Database = {
           portfolio_images: Json
           rejection_reason: string | null
           reviewed_at: string | null
+          service_description: string | null
+          starting_price: number | null
           submitted_at: string
           updated_at: string
           user_id: string
@@ -887,6 +899,8 @@ export type Database = {
           portfolio_images?: Json
           rejection_reason?: string | null
           reviewed_at?: string | null
+          service_description?: string | null
+          starting_price?: number | null
           submitted_at?: string
           updated_at?: string
           user_id: string
@@ -903,6 +917,8 @@ export type Database = {
           portfolio_images?: Json
           rejection_reason?: string | null
           reviewed_at?: string | null
+          service_description?: string | null
+          starting_price?: number | null
           submitted_at?: string
           updated_at?: string
           user_id?: string
@@ -1379,6 +1395,8 @@ export type Database = {
           _category_id: string
           _certificates?: Json
           _portfolio?: Json
+          _service_description?: string
+          _starting_price?: number
           _years: number
         }
         Returns: string

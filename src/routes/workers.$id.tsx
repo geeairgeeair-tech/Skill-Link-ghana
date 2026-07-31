@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, MapPin, Phone, MessageCircle, Calendar, ShieldCheck, Briefcase, Clock } from "lucide-react";
 import { toast } from "sonner";

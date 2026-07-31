@@ -50,7 +50,7 @@ export function useAppRole() {
       qc.invalidateQueries({ queryKey: ["worker-professions"] });
     };
     const ch = supabase
-      .channel(`pro-status:${user.id}`)
+      .channel(`pro-status:${user.id}:${Math.random().toString(36).slice(2)}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "worker_profiles", filter: `user_id=eq.${user.id}` },

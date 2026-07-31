@@ -157,9 +157,15 @@ function WorkerDetail() {
   const memberSince = p.created_at ? new Date(p.created_at) : null;
   const isVerified = w.verification_status === "approved";
 
+  const isSelf = !!user && user.id === id;
+
   const onBook = () => {
     if (!user) {
       navigate({ to: "/auth" });
+      return;
+    }
+    if (isSelf) {
+      toast.error("You can't book yourself.");
       return;
     }
     if (!available) {
@@ -168,6 +174,7 @@ function WorkerDetail() {
     }
     navigate({ to: "/book/$workerId", params: { workerId: id } });
   };
+
 
 
   return (

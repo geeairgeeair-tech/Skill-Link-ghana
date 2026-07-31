@@ -208,7 +208,7 @@ function JobsPage() {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="font-semibold truncate">{customerName}</p>
-                      <p className="text-xs text-muted-foreground">{b.categories?.name ?? "Service"}</p>
+                      <p className="text-xs text-muted-foreground">Profession: {b.categories?.name ?? "Service"}</p>
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <span className={`text-[10px] uppercase tracking-wide font-bold px-2 py-0.5 rounded-full ${

@@ -6,7 +6,7 @@ import {
   MapPin, Calendar, Wallet, MessageCircle, User, BadgeCheck, Phone,
   CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
   Navigation, LifeBuoy, Gavel, Image as ImageIcon, Truck, Flag, PlayCircle,
-  UserCheck, Scale,
+  UserCheck, Scale, Home as HomeIcon,
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";

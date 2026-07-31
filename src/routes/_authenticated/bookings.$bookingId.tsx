@@ -101,6 +101,8 @@ function disputeStage(b: any): { key: string; label: string }[] {
 function BookingDetail() {
   const { bookingId } = Route.useParams();
   const { user, role } = useAuth();
+  const { homeTo, isPro } = useAppRole();
+
   const qc = useQueryClient();
   const [busy, setBusy] = useState<string | null>(null);
   const [showDispute, setShowDispute] = useState(false);

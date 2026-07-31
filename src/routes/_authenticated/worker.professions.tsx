@@ -19,7 +19,7 @@ function ProfessionsPage() {
 
   const { data: cats } = useQuery({
     queryKey: ["categories"],
-    queryFn: async () => (await supabase.from("categories").select("id, name, slug").eq("active", true).order("sort_order")).data ?? [],
+    queryFn: async () => (await supabase.from("categories").select("id, name, slug, group_name, requires_admin_approval").eq("active", true).order("sort_order")).data ?? [],
   });
 
   const { data: profs, isLoading } = useQuery({
@@ -162,6 +162,12 @@ function AddForm({ cats, existing, onDone, onCancel }: any) {
           {availableCats.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </label>
+      {availableCats.find((c: any) => c.id === categoryId)?.requires_admin_approval && (
+        <p className="text-[11px] rounded-xl bg-warning/15 text-warning-foreground p-2.5">
+          This is a high-trust profession. Upload your professional licence or certificate — an administrator must review
+          your documents before your profile becomes public. Documents are never shown publicly.
+        </p>
+      )}
       <label className="block text-xs font-semibold">Years of experience
         <input type="number" min={0} max={60} value={years} onChange={e => setYears(e.target.value)} className="input mt-1 w-full"/>
       </label>

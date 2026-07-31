@@ -363,7 +363,9 @@ function BookingDetail() {
           finalAmount={b.final_amount}
           varianceReason={b.final_amount_reason}
           varianceNote={b.final_amount_note}
+          customerBudget={b.budget ?? b.estimated_cost ?? null}
         />
+
 
 
 

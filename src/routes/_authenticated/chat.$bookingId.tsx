@@ -96,12 +96,25 @@ function ChatPage() {
 
   const readOnly = !!booking && CLOSED_STATUSES.includes((booking as any).status) && !openReturn;
 
+  /** Optimistically append so the sender sees the message instantly; realtime refetch reconciles. */
+  const appendOptimistic = (msg: any) => {
+    qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => [...(old ?? []), msg]);
+  };
+
   const send = async () => {
     const content = text.trim();
     if (!content || !user || readOnly) return;
     setText("");
+    const tempId = `temp-${Date.now()}`;
+    appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content, created_at: new Date().toISOString(), read_at: null, attachment_url: null });
     const { error } = await supabase.from("messages").insert({ booking_id: bookingId, sender_id: user.id, content });
-    if (error) { toast.error(error.message); setText(content); }
+    if (error) {
+      qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => (old ?? []).filter((m) => m.id !== tempId));
+      toast.error(error.message);
+      setText(content);
+      return;
+    }
+    qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
   };
 
   const sendAttachment = async (file: File) => {
@@ -113,6 +126,7 @@ function ChatPage() {
         booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url,
       } as any);
       if (error) throw error;
+      qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
     } catch (e: any) {
       toast.error(e.message ?? "Upload failed");
     } finally {

@@ -49,11 +49,14 @@ function WorkerDetail() {
     queryFn: async () =>
       (await supabase
         .from("worker_professions")
-        .select("id, years_experience, categories(name)")
+        .select("id, bio, years_experience, service_description, starting_price, is_primary, category_id, categories(name)")
         .eq("user_id", id)
         .eq("verification_status", "approved")
+        .order("is_primary", { ascending: false })
+        .order("created_at", { ascending: true })
       ).data ?? [],
   });
+
 
   const portfolioQ = useQuery({
     queryKey: ["worker-portfolio", id],

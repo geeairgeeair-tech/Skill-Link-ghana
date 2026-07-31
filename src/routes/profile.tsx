@@ -61,7 +61,7 @@ function ProfilePage() {
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-10 rounded-b-3xl">
         <div className="mx-auto max-w-md">
           <h1 className="font-display text-2xl font-bold">Profile</h1>
-          <p className="text-sm opacity-80 capitalize">{role}</p>
+          <p className="text-sm opacity-80">{effectiveRole === "admin" ? "Admin" : isPro ? "Professional" : "Customer"}</p>
         </div>
       </header>
       <main className="mx-auto max-w-md px-5 -mt-6 space-y-3">

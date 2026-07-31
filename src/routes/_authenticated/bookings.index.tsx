@@ -145,7 +145,9 @@ function BookingsPage() {
               <p className="text-xs text-muted-foreground mt-0.5">{b.categories?.name}</p>
               <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
               {b.scheduled_at && <p className="text-xs text-muted-foreground mt-2">📅 {new Date(b.scheduled_at).toLocaleString()}</p>}
+              {(b.budget ?? b.estimated_cost) != null && <p className="text-sm font-semibold text-primary mt-1">Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
               {(b.estimated_amount ?? b.estimated_cost) != null && <p className="text-sm text-muted-foreground mt-1">Estimate: {fmtGHS(b.estimated_amount ?? b.estimated_cost)}</p>}
+
               {b.final_amount != null && <p className="text-sm font-semibold text-primary mt-1">Final: {fmtGHS(b.final_amount)}</p>}
               {b.amount_paid != null && <p className="text-sm text-success mt-1 inline-flex items-center gap-1"><CheckCircle2 className="size-3.5"/>Paid: {fmtGHS(b.amount_paid)}</p>}
 

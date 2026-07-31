@@ -210,10 +210,11 @@ function ChatPage() {
           <div className="min-w-0 flex-1">
             <p className="font-semibold truncate">{other ?? "Chat"}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {(booking as any)?.categories?.name ?? "Service"}
+              Profession: {(booking as any)?.categories?.name ?? "Service"}
               {rank ? ` · ${rank}` : ""}
               {(booking as any)?.status ? ` · ${String((booking as any).status).replace(/_/g, " ")}` : ""}
             </p>
+
           </div>
           <Link to="/bookings/$bookingId" params={{ bookingId }} className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-primary">
             <ClipboardList className="size-4" /> Booking

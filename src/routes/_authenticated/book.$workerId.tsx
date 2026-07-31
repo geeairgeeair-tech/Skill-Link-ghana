@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2 } from "lucide-react";
 import { BackButton } from "@/components/back-button";
@@ -32,6 +32,7 @@ function BookPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
+  const [profId, setProfId] = useState<string>("");
   const submittedOnce = useRef(false);
 
   const { data: w, isLoading } = useQuery({
@@ -57,6 +58,26 @@ function BookPage() {
       return ((data as string | null) ?? "available") as "available" | "busy" | "unavailable";
     },
   });
+
+  const { data: professions } = useQuery({
+    queryKey: ["book-worker-professions", workerId],
+    queryFn: async () =>
+      (await supabase
+        .from("worker_professions")
+        .select("id, category_id, service_description, starting_price, is_primary, categories(name)")
+        .eq("user_id", workerId)
+        .eq("verification_status", "approved")
+        .order("is_primary", { ascending: false })
+        .order("created_at", { ascending: true })
+      ).data ?? [],
+  });
+
+  const profList: any[] = professions ?? [];
+  // One approved profession → preselect automatically.
+  useEffect(() => {
+    if (!profId && profList.length === 1) setProfId(profList[0].id);
+  }, [profId, profList]);
+  const selectedProf: any = profList.find((p: any) => p.id === profId) ?? null;
 
   const blockedMessage =
     availability === "busy"
@@ -84,6 +105,9 @@ function BookPage() {
     if (availability && availability !== "available") {
       return toast.error(blockedMessage);
     }
+    if (profList.length > 0 && !selectedProf) {
+      return toast.error("Please choose which service you need from this worker");
+    }
     if (!description.trim() || !address.trim() || !area.trim() || !date) {
       return toast.error("Please fill service description, address, area and preferred date");
     }
@@ -96,6 +120,9 @@ function BookPage() {
     if (availability && availability !== "available") {
       return toast.error(blockedMessage);
     }
+    if (profList.length > 0 && !selectedProf) {
+      return toast.error("Please choose which service you need from this worker");
+    }
     submittedOnce.current = true;
     setSubmitting(true);
     try {
@@ -104,7 +131,8 @@ function BookPage() {
       const { data: inserted, error } = await supabase.from("bookings").insert({
         customer_id: user.id,
         worker_id: workerId,
-        category_id: w.category_id,
+        category_id: selectedProf?.category_id ?? w.category_id,
+        worker_profession_id: selectedProf?.id ?? null,
         description: description.trim(),
         address: address.trim(),
         service_area: area.trim(),
@@ -225,7 +253,9 @@ function BookPage() {
             <Row label="Description">{description}</Row>
             <Row label="Address">{address}</Row>
             <Row label="Area">{area}</Row>
+            <Row label="Profession">{selectedProf?.categories?.name ?? w.categories?.name ?? "Service"}</Row>
             <Row label="Date & time">{date} {time || "09:00"}</Row>
+
             <Row label="Urgency"><span className="capitalize">{urgency}</span></Row>
             {budget && <Row label="Budget">GH₵{budget}</Row>}
             {lat && lng && <Row label="GPS">{lat.toFixed(4)}, {lng.toFixed(4)}</Row>}
@@ -254,8 +284,46 @@ function BookPage() {
       <form onSubmit={goReview} className="mx-auto max-w-md px-5 space-y-3">
         {summary}
 
-        <Field label="Service required">
-          <input value={w.categories?.name ?? ""} readOnly className="w-full rounded-xl border border-input bg-muted p-3 text-sm" />
+        <Field label="Which service do you need from this worker?">
+          {profList.length > 1 ? (
+            <div className="space-y-2">
+              {profList.map((pr: any) => (
+                <label
+                  key={pr.id}
+                  className={`flex items-start gap-2 rounded-xl border p-3 text-sm cursor-pointer ${profId === pr.id ? "border-primary bg-primary-soft" : "border-input bg-card"}`}
+                >
+                  <input
+                    type="radio"
+                    name="profession"
+                    className="mt-1"
+                    checked={profId === pr.id}
+                    onChange={() => setProfId(pr.id)}
+                  />
+                  <span className="min-w-0">
+                    <span className="font-semibold block">
+                      {pr.categories?.name ?? "Service"}
+                      {pr.is_primary ? " · Primary" : ""}
+                    </span>
+                    {pr.service_description && (
+                      <span className="text-xs text-muted-foreground block">{pr.service_description}</span>
+                    )}
+                    {pr.starting_price != null && (
+                      <span className="text-xs text-primary font-semibold">From GH₵{pr.starting_price}</span>
+                    )}
+                  </span>
+                </label>
+              ))}
+              {!selectedProf && (
+                <p className="text-xs text-destructive">Select a profession to continue.</p>
+              )}
+            </div>
+          ) : (
+            <input
+              value={selectedProf?.categories?.name ?? w.categories?.name ?? ""}
+              readOnly
+              className="w-full rounded-xl border border-input bg-muted p-3 text-sm"
+            />
+          )}
         </Field>
 
         <Field label="Job description">

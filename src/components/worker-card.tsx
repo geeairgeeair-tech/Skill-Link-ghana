@@ -21,8 +21,10 @@ export interface WorkerCardData {
   years_experience?: number | null;
   availability_state?: AvailabilityState | null;
   verification_status?: string | null;
-
+  /** Approved additional professions (max 2 shown), excluding the primary. */
+  professions?: string[];
 }
+
 
 const STATE_LABEL: Record<AvailabilityState, string> = {
   available: "Active",
@@ -75,6 +77,16 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
           </div>
 
           <p className="text-sm text-muted-foreground truncate">{w.category_name ?? "Pro"}</p>
+          {(w.professions ?? []).length > 0 && (
+            <div className="mt-0.5 flex flex-wrap gap-1">
+              {(w.professions ?? []).slice(0, 2).map((name) => (
+                <span key={name} className="text-[10px] font-semibold bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                  {name}
+                </span>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
             <StarRating value={Number(w.rating ?? 0)} count={w.reviews_count ?? 0} />
             <span className="inline-flex items-center gap-1">

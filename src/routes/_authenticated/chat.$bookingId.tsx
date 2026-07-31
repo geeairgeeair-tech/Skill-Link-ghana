@@ -65,20 +65,70 @@ function ChatPage() {
     },
   });
 
+  /** Merge a row into the cache, replacing any optimistic twin and never duplicating. */
+  const mergeMessage = (row: any) => {
+    qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => {
+      const list = old ?? [];
+      if (list.some((m) => m.id === row.id)) {
+        return list.map((m) => (m.id === row.id ? { ...m, ...row } : m));
+      }
+      // drop the optimistic placeholder this row confirms
+      const withoutTemp = list.filter(
+        (m) =>
+          !(
+            String(m.id).startsWith("temp-") &&
+            m.sender_id === row.sender_id &&
+            m.content === row.content
+          ),
+      );
+      return [...withoutTemp, row].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    });
+  };
+  const mergeRef = useRef(mergeMessage);
+  mergeRef.current = mergeMessage;
+
   useEffect(() => {
+    let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+
     const channel = supabase
       .channel(`chat:${bookingId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
+        (payload) => mergeRef.current(payload.new))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
+        (payload) => mergeRef.current(payload.new))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-booking", bookingId] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `booking_id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-return", bookingId] }))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        if (cancelled) return;
+        if (status === "SUBSCRIBED") {
+          // resync anything missed while disconnected
+          qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          retry = setTimeout(() => {
+            if (!cancelled) supabase.realtime.connect();
+          }, 2000);
+        }
+      });
+
+    // Recover instantly when the tab/network comes back.
+    const onFocus = () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+
+    return () => {
+      cancelled = true;
+      if (retry) clearTimeout(retry);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      supabase.removeChannel(channel);
+    };
   }, [bookingId, qc]);
+
 
   useEffect(() => {
     if (!user) return;
@@ -96,10 +146,13 @@ function ChatPage() {
 
   const readOnly = !!booking && CLOSED_STATUSES.includes((booking as any).status) && !openReturn;
 
-  /** Optimistically append so the sender sees the message instantly; realtime refetch reconciles. */
+  /** Optimistically append so the sender sees the message instantly; the inserted row replaces it. */
   const appendOptimistic = (msg: any) => {
     qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => [...(old ?? []), msg]);
   };
+  const dropTemp = (tempId: string) =>
+    qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) =>
+      (old ?? []).filter((m) => m.id !== tempId));
 
   const send = async () => {
     const content = text.trim();
@@ -107,33 +160,43 @@ function ChatPage() {
     setText("");
     const tempId = `temp-${Date.now()}`;
     appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content, created_at: new Date().toISOString(), read_at: null, attachment_url: null });
-    const { error } = await supabase.from("messages").insert({ booking_id: bookingId, sender_id: user.id, content });
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ booking_id: bookingId, sender_id: user.id, content })
+      .select("*")
+      .single();
     if (error) {
-      qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => (old ?? []).filter((m) => m.id !== tempId));
+      dropTemp(tempId);
       toast.error(error.message);
       setText(content);
       return;
     }
-    qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+    dropTemp(tempId);
+    mergeMessage(data);
   };
 
   const sendAttachment = async (file: File) => {
     if (!user || readOnly) return;
     setUploading(true);
+    const tempId = `temp-${Date.now()}`;
     try {
       const url = await uploadImage("job-media", user.id, file, "chat");
-      const { error } = await supabase.from("messages").insert({
+      appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url, created_at: new Date().toISOString(), read_at: null });
+      const { data, error } = await supabase.from("messages").insert({
         booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url,
-      } as any);
+      } as any).select("*").single();
       if (error) throw error;
-      qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+      dropTemp(tempId);
+      mergeMessage(data);
     } catch (e: any) {
+      dropTemp(tempId);
       toast.error(e.message ?? "Upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   };
+
 
 
   const other = booking ? (user?.id === (booking as any).customer_id ? (booking as any).worker?.full_name : (booking as any).customer?.full_name) : "Chat";
@@ -147,10 +210,11 @@ function ChatPage() {
           <div className="min-w-0 flex-1">
             <p className="font-semibold truncate">{other ?? "Chat"}</p>
             <p className="text-xs text-muted-foreground truncate">
-              {(booking as any)?.categories?.name ?? "Service"}
+              Profession: {(booking as any)?.categories?.name ?? "Service"}
               {rank ? ` · ${rank}` : ""}
               {(booking as any)?.status ? ` · ${String((booking as any).status).replace(/_/g, " ")}` : ""}
             </p>
+
           </div>
           <Link to="/bookings/$bookingId" params={{ bookingId }} className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-primary">
             <ClipboardList className="size-4" /> Booking

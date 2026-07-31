@@ -102,25 +102,47 @@ function WorkersPage() {
       const rows = data ?? [];
       const ids = rows.map((w: any) => w.user_id);
       const profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+      const professionsMap = new Map<string, string[]>();
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        const [{ data: profs }, { data: wprofs }] = await Promise.all([
+          supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids),
+          supabase
+            .from("worker_professions")
+            .select("user_id, is_primary, categories(name)")
+            .in("user_id", ids)
+            .eq("verification_status", "approved")
+            .order("is_primary", { ascending: false }),
+        ]);
         (profs ?? []).forEach((p: any) => profilesMap.set(p.id, { full_name: p.full_name, avatar_url: p.avatar_url }));
+        (wprofs ?? []).forEach((p: any) => {
+          const name = p.categories?.name;
+          if (!name) return;
+          const list = professionsMap.get(p.user_id) ?? [];
+          list.push(name);
+          professionsMap.set(p.user_id, list);
+        });
       }
-      return rows.map((w: any) => ({
-        user_id: w.user_id,
-        full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
-        avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
-        category_name: w.categories?.name ?? null,
-        city: w.city,
-        service_area: w.service_area,
-        rating: w.rating,
-        reviews_count: w.reviews_count,
-        starting_price: w.starting_price,
-        is_featured: w.is_featured,
-        jobs_completed: w.jobs_completed,
-        is_available: w.is_available,
-        years_experience: w.years_experience,
-      }));
+      return rows.map((w: any) => {
+        const primary = w.categories?.name ?? null;
+        const all = professionsMap.get(w.user_id) ?? [];
+        return {
+          user_id: w.user_id,
+          full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
+          avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
+          category_name: primary,
+          professions: all.filter((n) => n !== primary).slice(0, 2),
+          all_professions: primary ? Array.from(new Set([primary, ...all])) : all,
+          city: w.city,
+          service_area: w.service_area,
+          rating: w.rating,
+          reviews_count: w.reviews_count,
+          starting_price: w.starting_price,
+          is_featured: w.is_featured,
+          jobs_completed: w.jobs_completed,
+          is_available: w.is_available,
+          years_experience: w.years_experience,
+        };
+      });
     },
   });
 
@@ -146,10 +168,12 @@ function WorkersPage() {
     return base.filter(w =>
       (w.full_name ?? "").toLowerCase().includes(needle) ||
       (w.category_name ?? "").toLowerCase().includes(needle) ||
+      ((w as any).all_professions ?? []).some((n: string) => n.toLowerCase().includes(needle)) ||
       (w.service_area ?? "").toLowerCase().includes(needle) ||
       (w.city ?? "").toLowerCase().includes(needle)
     );
   }, [withStatus, q, search.availableOnly]);
+
 
   const activeFilterCount =
     (category ? 1 : 0) +
@@ -196,12 +220,35 @@ function WorkersPage() {
             </button>
           </div>
 
-          <div className="mt-3 flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
+          <div className="mt-3 flex gap-2">
+            <select
+              aria-label="Select a category"
+              value={category ?? ""}
+              onChange={(e) => setSearch({ category: e.target.value })}
+              className="flex-1 min-w-0 px-3 py-2.5 rounded-xl border border-input bg-card text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+            >
+              <option value="">All categories</option>
+              {(cats ?? []).map((c: any) => (
+                <option key={c.id} value={c.slug}>{c.name}</option>
+              ))}
+            </select>
+            {category && (
+              <button
+                onClick={() => setSearch({ category: "" })}
+                className="shrink-0 px-3 rounded-xl border border-input bg-card text-xs font-semibold inline-flex items-center gap-1"
+              >
+                <X className="size-3.5" /> Clear
+              </button>
+            )}
+          </div>
+
+          <div className="mt-2 flex gap-2 overflow-x-auto -mx-5 px-5 pb-1">
             <Chip active={!category} onClick={() => setSearch({ category: "" })} label="All" />
             {(cats ?? []).map(c => (
               <Chip key={c.id} active={category === c.slug} onClick={() => setSearch({ category: c.slug })} label={c.name} />
             ))}
           </div>
+
 
           <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <ShieldCheck className="size-3.5 text-success" />

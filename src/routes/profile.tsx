@@ -14,8 +14,9 @@ export const Route = createFileRoute("/profile")({
 });
 
 function ProfilePage() {
-  const { user, role, loading } = useAuth();
+  const { user, loading } = useAuth();
   const { proStatus, isPro, rejectionReason, primaryProfessionName, effectiveRole } = useAppRole();
+
 
   const navigate = useNavigate();
   const [full_name, setName] = useState("");

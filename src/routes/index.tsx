@@ -4,7 +4,7 @@ import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { Search, ShieldCheck, Sparkles, ArrowRight, Camera } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { CategoryIcon } from "@/components/category-icon";
+import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAuth } from "@/hooks/use-auth";
 import { BrandLogo } from "@/components/brand-logo";

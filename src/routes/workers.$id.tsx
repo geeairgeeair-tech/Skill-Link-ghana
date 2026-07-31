@@ -365,6 +365,13 @@ function WorkerDetail() {
         </Section>
       </div>
 
+      {isSelf ? (
+        <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
+          <div className="mx-auto max-w-md text-center text-xs text-muted-foreground">
+            This is your public profile — customers see it exactly like this.
+          </div>
+        </div>
+      ) : (
       <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
         <div className="mx-auto max-w-md space-y-2">
           {!available && (
@@ -388,6 +395,8 @@ function WorkerDetail() {
           </div>
         </div>
       </div>
+      )}
+
 
     </div>
   );

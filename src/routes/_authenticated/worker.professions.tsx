@@ -108,6 +108,8 @@ function AddForm({ cats, existing, onDone, onCancel }: any) {
   const [categoryId, setCategoryId] = useState("");
   const [bio, setBio] = useState("");
   const [years, setYears] = useState("1");
+  const [serviceDescription, setServiceDescription] = useState("");
+  const [startingPrice, setStartingPrice] = useState("");
   const [portfolio, setPortfolio] = useState<{ path: string; url: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -143,7 +145,9 @@ function AddForm({ cats, existing, onDone, onCancel }: any) {
       _years: parseInt(years || "0", 10),
       _portfolio: portfolio.map(p => ({ path: p.path })) as any,
       _certificates: [] as any,
-    });
+      _service_description: serviceDescription || null,
+      _starting_price: startingPrice ? parseInt(startingPrice, 10) : null,
+    } as any);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Submitted for admin verification");
@@ -173,6 +177,12 @@ function AddForm({ cats, existing, onDone, onCancel }: any) {
       </label>
       <label className="block text-xs font-semibold">About your skills
         <textarea value={bio} onChange={e => setBio(e.target.value)} rows={4} maxLength={500} className="input mt-1 w-full resize-none" placeholder="What you specialise in for this profession"/>
+      </label>
+      <label className="block text-xs font-semibold">Service description
+        <textarea value={serviceDescription} onChange={e => setServiceDescription(e.target.value)} rows={2} maxLength={300} className="input mt-1 w-full resize-none" placeholder="What exactly you offer under this profession"/>
+      </label>
+      <label className="block text-xs font-semibold">Starting price (GH₵)
+        <input type="number" min={0} value={startingPrice} onChange={e => setStartingPrice(e.target.value)} className="input mt-1 w-full" placeholder="e.g. 150"/>
       </label>
       <div>
         <p className="text-xs font-semibold mb-1">Portfolio images ({portfolio.length}/6)</p>

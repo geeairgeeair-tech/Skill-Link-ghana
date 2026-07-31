@@ -306,7 +306,7 @@ function BookPage() {
                       <span className="text-xs text-muted-foreground block">{pr.service_description}</span>
                     )}
                     {pr.starting_price != null && (
-                      <span className="text-xs text-primary font-semibold">From GH\u20b5{pr.starting_price}</span>
+                      <span className="text-xs text-primary font-semibold">From GH₵{pr.starting_price}</span>
                     )}
                   </span>
                 </label>

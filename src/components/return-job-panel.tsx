@@ -19,9 +19,12 @@ const STATUS_LABEL: Record<string, string> = {
  * workers can accept, schedule, ask for more info, or decline.
  */
 export function ReturnJobPanel({
-  bookingId, userId, isWorker, isCustomer, bookingStatus,
+  bookingId, userId, isWorker, isCustomer, bookingStatus, returnEligible = false, completedAt = null,
 }: {
   bookingId: string; userId: string; isWorker: boolean; isCustomer: boolean; bookingStatus: string;
+  /** Only repair-based categories allow return visits (categories.return_eligible). */
+  returnEligible?: boolean;
+  completedAt?: string | null;
 }) {
   const qc = useQueryClient();
   const [reason, setReason] = useState("");
@@ -87,7 +90,11 @@ export function ReturnJobPanel({
     setReply(""); refresh();
   };
 
-  const canRequest = isCustomer && bookingStatus === "completed" && !open;
+  const RETURN_WINDOW_DAYS = 5;
+  const withinWindow = completedAt
+    ? Date.now() - new Date(completedAt).getTime() <= RETURN_WINDOW_DAYS * 24 * 3600 * 1000
+    : true;
+  const canRequest = isCustomer && returnEligible && withinWindow && bookingStatus === "completed" && !open;
   if (!open && !canRequest && (requests ?? []).length === 0) return null;
 
   return (

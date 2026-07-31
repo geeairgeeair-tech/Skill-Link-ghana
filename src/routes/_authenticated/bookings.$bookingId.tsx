@@ -20,6 +20,8 @@ import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
+
 
 export const Route = createFileRoute("/_authenticated/bookings/$bookingId")({
   component: BookingDetail,

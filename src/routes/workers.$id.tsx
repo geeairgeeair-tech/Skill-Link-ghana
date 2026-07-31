@@ -136,6 +136,13 @@ function WorkerDetail() {
   }
 
   const p: any = w.profiles ?? {};
+  const professions: any[] = professionsQ.data ?? [];
+  const activeProf: any =
+    professions.find((pr: any) => pr.id === activeProfId) ??
+    professions.find((pr: any) => pr.is_primary) ??
+    professions[0] ??
+    null;
+
   const phone: string | undefined = (contactQ.data as any)?.[0]?.phone;
   const state = (statusQ.data ?? ((w.is_available ?? true) ? "available" : "unavailable")) as
     | "available"

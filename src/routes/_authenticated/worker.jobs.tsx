@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/worker/jobs")({
 });
 
 const TABS = [
+  { key: "pending", label: "Pending" },
   { key: "recent", label: "Recent" },
   { key: "active", label: "Active" },
   { key: "completed", label: "Completed" },
@@ -37,6 +38,7 @@ const fmtGHS = (n: number | null | undefined) =>
 
 const ACTIVE_STATUSES = ["pending","accepted","in_progress","on_the_way","arrived","worker_on_the_way","work_started","awaiting_customer_confirmation","worker_marked_complete","disputed"];
 function matchesTab(status: string, tab: TabKey) {
+  if (tab === "pending") return status === "pending";
   if (tab === "recent") return true;
   if (tab === "active") return ACTIVE_STATUSES.includes(status);
   if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
@@ -64,7 +66,7 @@ function statusLabel(s: string): string {
 function JobsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("recent");
+  const [tab, setTab] = useState<TabKey>("pending");
   const [declineFor, setDeclineFor] = useState<string | null>(null);
   const [completeFor, setCompleteFor] = useState<any | null>(null);
 
@@ -93,13 +95,16 @@ function JobsPage() {
     const channel = supabase
       .channel(`worker-jobs:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
-        () => qc.invalidateQueries({ queryKey: ["worker-jobs", user.id] }))
+        () => {
+          qc.invalidateQueries({ queryKey: ["worker-jobs", user.id] });
+          qc.invalidateQueries({ queryKey: ["worker-pending-count"] });
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, qc]);
 
   const counts = useMemo(() => {
-    const c: Record<TabKey, number> = { recent: 0, active: 0, completed: 0, cancelled: 0 };
+    const c: Record<TabKey, number> = { pending: 0, recent: 0, active: 0, completed: 0, cancelled: 0 };
     (data ?? []).forEach((b: any) => { TABS.forEach(t => { if (matchesTab(b.status, t.key)) c[t.key]++; }); });
     return c;
   }, [data]);
@@ -111,6 +116,7 @@ function JobsPage() {
     if (uErr) return toast.error(uErr.message);
     toast.success("Accepted");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+    qc.invalidateQueries({ queryKey: ["worker-pending-count"] });
   };
 
   const markOnTheWay = async (id: string) => {

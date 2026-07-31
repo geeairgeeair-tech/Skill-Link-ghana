@@ -121,21 +121,8 @@ function Home() {
             <h3 className="font-display text-lg font-bold">Browse services</h3>
             <Link to="/workers" className="text-sm font-semibold text-primary">See all <ArrowRight className="inline size-3.5" /></Link>
           </div>
-          <div className="grid grid-cols-4 gap-3">
-            {categories.map((c) => (
-              <Link
-                key={c.id}
-                to="/workers"
-                search={{ category: c.slug }}
-                className="flex flex-col items-center gap-1.5 group"
-              >
-                <div className="size-14 rounded-2xl bg-primary-soft grid place-items-center text-primary group-hover:scale-105 transition-transform shadow-card">
-                  <CategoryIcon name={c.icon} className="size-6" />
-                </div>
-                <span className="text-[11px] font-medium text-center leading-tight">{c.name}</span>
-              </Link>
-            ))}
-          </div>
+          <FeaturedCategoryGrid categories={categories} />
+
         </section>
 
         <section>

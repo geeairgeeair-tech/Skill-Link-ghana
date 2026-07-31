@@ -13,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/worker/jobs")({
 });
 
 const TABS = [
+  { key: "pending", label: "Pending" },
   { key: "recent", label: "Recent" },
   { key: "active", label: "Active" },
   { key: "completed", label: "Completed" },
@@ -37,6 +38,7 @@ const fmtGHS = (n: number | null | undefined) =>
 
 const ACTIVE_STATUSES = ["pending","accepted","in_progress","on_the_way","arrived","worker_on_the_way","work_started","awaiting_customer_confirmation","worker_marked_complete","disputed"];
 function matchesTab(status: string, tab: TabKey) {
+  if (tab === "pending") return status === "pending";
   if (tab === "recent") return true;
   if (tab === "active") return ACTIVE_STATUSES.includes(status);
   if (tab === "completed") return status === "completed" || status === "closed" || status === "customer_confirmed_complete";
@@ -64,7 +66,8 @@ function statusLabel(s: string): string {
 function JobsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [tab, setTab] = useState<TabKey>("recent");
+  const [tab, setTab] = useState<TabKey>("pending");
+  const [tabTouched, setTabTouched] = useState(false);
   const [declineFor, setDeclineFor] = useState<string | null>(null);
   const [completeFor, setCompleteFor] = useState<any | null>(null);
 
@@ -93,16 +96,24 @@ function JobsPage() {
     const channel = supabase
       .channel(`worker-jobs:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
-        () => qc.invalidateQueries({ queryKey: ["worker-jobs", user.id] }))
+        () => {
+          qc.invalidateQueries({ queryKey: ["worker-jobs", user.id] });
+          qc.invalidateQueries({ queryKey: ["worker-pending-count"] });
+        })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, qc]);
 
   const counts = useMemo(() => {
-    const c: Record<TabKey, number> = { recent: 0, active: 0, completed: 0, cancelled: 0 };
+    const c: Record<TabKey, number> = { pending: 0, recent: 0, active: 0, completed: 0, cancelled: 0 };
     (data ?? []).forEach((b: any) => { TABS.forEach(t => { if (matchesTab(b.status, t.key)) c[t.key]++; }); });
     return c;
   }, [data]);
+
+  // Pending requests come first; fall back to Recent when nothing is pending.
+  useEffect(() => {
+    if (!tabTouched && data && counts.pending === 0 && tab === "pending") setTab("recent");
+  }, [data, counts.pending, tab, tabTouched]);
 
   const visible = (data ?? []).filter((b: any) => matchesTab(b.status, tab));
 
@@ -111,6 +122,7 @@ function JobsPage() {
     if (uErr) return toast.error(uErr.message);
     toast.success("Accepted");
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+    qc.invalidateQueries({ queryKey: ["worker-pending-count"] });
   };
 
   const markOnTheWay = async (id: string) => {
@@ -156,7 +168,7 @@ function JobsPage() {
         <div className="mt-3 flex gap-2 overflow-x-auto pb-2 -mx-5 px-5 snap-x scrollbar-none">
 
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => { setTabTouched(true); setTab(t.key); }}
               className={`shrink-0 snap-start px-3 py-1.5 rounded-full text-xs font-semibold border whitespace-nowrap ${tab === t.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
               {t.label} <span className="opacity-70">({counts[t.key]})</span>
             </button>
@@ -287,7 +299,7 @@ function JobsPage() {
 
       {declineFor && (
         <DeclineModal bookingId={declineFor} onClose={() => setDeclineFor(null)}
-          onDone={() => { setDeclineFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); }} />
+          onDone={() => { setDeclineFor(null); qc.invalidateQueries({ queryKey: ["worker-jobs"] }); qc.invalidateQueries({ queryKey: ["worker-pending-count"] }); }} />
       )}
       {completeFor && (
         <CompleteJobModal bookingId={completeFor.id} onClose={() => setCompleteFor(null)}

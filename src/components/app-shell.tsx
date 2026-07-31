@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell, Wallet } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
+import { usePendingBookings } from "@/hooks/use-pending-bookings";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
@@ -10,15 +11,17 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const effectiveRole = pathname.startsWith("/admin") ? "admin" : role;
   const unread = useUnreadNotifications();
+  const pendingBookings = usePendingBookings();
 
   const nav = effectiveRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
         { to: "/jobs", icon: Briefcase, label: "Jobs" },
-        { to: "/worker/jobs", icon: Calendar, label: "My work" },
+        { to: "/worker/jobs", icon: Calendar, label: "My work", badge: pendingBookings },
         { to: "/worker/earnings", icon: Wallet, label: "Earnings" },
         { to: "/worker/profile", icon: User, label: "Profile" },
       ]
+
 
     : effectiveRole === "admin"
     ? [
@@ -63,19 +66,28 @@ export function AppShell({ children }: { children: ReactNode }) {
               ? pathname === "/admin"
               : pathname === n.to || pathname.startsWith(`${n.to}/`);
             const Icon = n.icon;
+            const badge = (n as any).badge as number | undefined;
             return (
               <Link
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors pointer-events-auto",
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors pointer-events-auto",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                <span className="relative">
+                  <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                  {!!badge && badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold grid place-items-center">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
                 {n.label}
               </Link>
             );
+
           })}
         </div>
       </nav>

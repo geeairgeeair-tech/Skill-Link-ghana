@@ -13,10 +13,10 @@ export const Route = createFileRoute("/_authenticated/worker/jobs")({
 });
 
 const TABS = [
-  { key: "pending", label: "Pending" },
+  { key: "pending", label: "New Requests" },
   { key: "recent", label: "Recent" },
-  { key: "active", label: "Active" },
-  { key: "completed", label: "Completed" },
+  { key: "active", label: "Active Jobs" },
+  { key: "completed", label: "Completed Work" },
   { key: "cancelled", label: "Cancelled" },
 ] as const;
 type TabKey = typeof TABS[number]["key"];

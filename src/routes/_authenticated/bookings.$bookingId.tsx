@@ -160,17 +160,40 @@ function BookingDetail() {
     },
   });
 
-  // Live updates: booking row + messages counter
+  // Live updates for the whole booking lifecycle: status, estimates,
+  // return jobs, reviews and messages. One channel, cleaned up on unmount.
   useEffect(() => {
+    const refreshBooking = () => {
+      qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+      qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+      qc.invalidateQueries({ queryKey: ["my-bookings"] });
+    };
     const ch = supabase
       .channel(`booking-detail:${bookingId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] }))
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
+        refreshBooking)
+      .on("postgres_changes", { event: "*", schema: "public", table: "booking_estimates", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["booking-estimates", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["return-requests", bookingId] });
+          qc.invalidateQueries({ queryKey: ["booking-returns", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "reviews", filter: `booking_id=eq.${bookingId}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["booking-reviews", bookingId] });
+          refreshBooking();
+        })
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["booking-messages-count", bookingId] }))
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [bookingId, qc]);
+
 
   if (isLoading) return <BookingSkeleton />;
   if (error) {

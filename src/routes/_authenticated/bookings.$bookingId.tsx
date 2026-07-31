@@ -286,7 +286,17 @@ function BookingDetail() {
     <div className="min-h-screen bg-background pb-32">
       <div className="fg-gradient-hero text-primary-foreground px-5 pt-5 pb-6 rounded-b-3xl">
         <div className="mx-auto max-w-2xl">
-          <BackButton fallback={isWorker ? "/worker/jobs" : "/bookings"} className="text-primary-foreground/90 hover:text-primary-foreground" />
+          <div className="flex items-center justify-between gap-2">
+            <BackButton fallback={isWorker ? "/worker/jobs" : "/bookings"} className="text-primary-foreground/90 hover:text-primary-foreground" />
+            <Link
+              to={homeTo as any}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-white/30"
+            >
+              <HomeIcon className="size-3.5" />
+              {isAdmin ? "Admin dashboard" : isPro ? "Professional dashboard" : "Home"}
+            </Link>
+          </div>
+
           <div className="mt-3">
             <span className="inline-block text-[10px] uppercase tracking-wide font-bold bg-white/20 px-2 py-0.5 rounded-full">{statusLabel(status)}</span>
             <h1 className="font-display text-xl sm:text-2xl font-bold mt-2">{b.categories?.name ?? "Booking"}</h1>

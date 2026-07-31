@@ -1,22 +1,23 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Home, Search, Calendar, User, LayoutDashboard, Briefcase, PlusSquare, Users, Bell, Wallet } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
 import { useUnreadNotifications } from "@/hooks/use-unread-notifications";
-import { usePendingBookings } from "@/hooks/use-pending-bookings";
+import { useProfessionalActionCount, useCustomerActionCount } from "@/hooks/use-action-badges";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { role, user } = useAuth();
+  const { effectiveRole, user } = useAppRole();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const effectiveRole = pathname.startsWith("/admin") ? "admin" : role;
+  const navRole = pathname.startsWith("/admin") ? "admin" : effectiveRole;
   const unread = useUnreadNotifications();
-  const pendingBookings = usePendingBookings();
+  const proActions = useProfessionalActionCount();
+  const customerActions = useCustomerActionCount();
 
-  const nav = effectiveRole === "worker"
+  const nav = navRole === "worker"
     ? [
         { to: "/worker/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-        { to: "/worker/jobs", icon: Calendar, label: "Jobs", badge: pendingBookings },
+        { to: "/worker/jobs", icon: Calendar, label: "Jobs", badge: proActions },
         { to: "/hire", icon: Search, label: "Hire" },
         { to: "/worker/earnings", icon: Wallet, label: "Earnings" },
         { to: "/worker/profile", icon: User, label: "Profile" },
@@ -24,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 
 
-    : effectiveRole === "admin"
+    : navRole === "admin"
     ? [
         { to: "/admin", icon: LayoutDashboard, label: "Admin" },
         { to: "/admin/workers", icon: Search, label: "Workers" },
@@ -37,9 +38,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         { to: "/", icon: Home, label: "Home" },
         { to: "/workers", icon: Search, label: "Browse" },
         { to: "/jobs/new", icon: PlusSquare, label: "Post job" },
-        { to: "/bookings", icon: Calendar, label: "Bookings" },
+        { to: "/bookings", icon: Calendar, label: "Bookings", badge: customerActions },
         { to: "/profile", icon: User, label: "Profile" },
       ];
+
 
   return (
     <div className="min-h-screen pb-20 bg-background">

@@ -146,10 +146,13 @@ function ChatPage() {
 
   const readOnly = !!booking && CLOSED_STATUSES.includes((booking as any).status) && !openReturn;
 
-  /** Optimistically append so the sender sees the message instantly; realtime refetch reconciles. */
+  /** Optimistically append so the sender sees the message instantly; the inserted row replaces it. */
   const appendOptimistic = (msg: any) => {
     qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => [...(old ?? []), msg]);
   };
+  const dropTemp = (tempId: string) =>
+    qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) =>
+      (old ?? []).filter((m) => m.id !== tempId));
 
   const send = async () => {
     const content = text.trim();
@@ -157,33 +160,43 @@ function ChatPage() {
     setText("");
     const tempId = `temp-${Date.now()}`;
     appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content, created_at: new Date().toISOString(), read_at: null, attachment_url: null });
-    const { error } = await supabase.from("messages").insert({ booking_id: bookingId, sender_id: user.id, content });
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({ booking_id: bookingId, sender_id: user.id, content })
+      .select("*")
+      .single();
     if (error) {
-      qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => (old ?? []).filter((m) => m.id !== tempId));
+      dropTemp(tempId);
       toast.error(error.message);
       setText(content);
       return;
     }
-    qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+    dropTemp(tempId);
+    mergeMessage(data);
   };
 
   const sendAttachment = async (file: File) => {
     if (!user || readOnly) return;
     setUploading(true);
+    const tempId = `temp-${Date.now()}`;
     try {
       const url = await uploadImage("job-media", user.id, file, "chat");
-      const { error } = await supabase.from("messages").insert({
+      appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url, created_at: new Date().toISOString(), read_at: null });
+      const { data, error } = await supabase.from("messages").insert({
         booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url,
-      } as any);
+      } as any).select("*").single();
       if (error) throw error;
-      qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+      dropTemp(tempId);
+      mergeMessage(data);
     } catch (e: any) {
+      dropTemp(tempId);
       toast.error(e.message ?? "Upload failed");
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
   };
+
 
 
   const other = booking ? (user?.id === (booking as any).customer_id ? (booking as any).worker?.full_name : (booking as any).customer?.full_name) : "Chat";

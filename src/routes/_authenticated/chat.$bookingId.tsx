@@ -65,20 +65,70 @@ function ChatPage() {
     },
   });
 
+  /** Merge a row into the cache, replacing any optimistic twin and never duplicating. */
+  const mergeMessage = (row: any) => {
+    qc.setQueryData(["chat-messages", bookingId], (old: any[] | undefined) => {
+      const list = old ?? [];
+      if (list.some((m) => m.id === row.id)) {
+        return list.map((m) => (m.id === row.id ? { ...m, ...row } : m));
+      }
+      // drop the optimistic placeholder this row confirms
+      const withoutTemp = list.filter(
+        (m) =>
+          !(
+            String(m.id).startsWith("temp-") &&
+            m.sender_id === row.sender_id &&
+            m.content === row.content
+          ),
+      );
+      return [...withoutTemp, row].sort(
+        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+      );
+    });
+  };
+  const mergeRef = useRef(mergeMessage);
+  mergeRef.current = mergeMessage;
+
   useEffect(() => {
+    let cancelled = false;
+    let retry: ReturnType<typeof setTimeout> | undefined;
+
     const channel = supabase
       .channel(`chat:${bookingId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
+        (payload) => mergeRef.current(payload.new))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
-        () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] }))
+        (payload) => mergeRef.current(payload.new))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-booking", bookingId] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `booking_id=eq.${bookingId}` },
         () => qc.invalidateQueries({ queryKey: ["chat-return", bookingId] }))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      .subscribe((status) => {
+        if (cancelled) return;
+        if (status === "SUBSCRIBED") {
+          // resync anything missed while disconnected
+          qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          retry = setTimeout(() => {
+            if (!cancelled) supabase.realtime.connect();
+          }, 2000);
+        }
+      });
+
+    // Recover instantly when the tab/network comes back.
+    const onFocus = () => qc.invalidateQueries({ queryKey: ["chat-messages", bookingId] });
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onFocus);
+
+    return () => {
+      cancelled = true;
+      if (retry) clearTimeout(retry);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onFocus);
+      supabase.removeChannel(channel);
+    };
   }, [bookingId, qc]);
+
 
   useEffect(() => {
     if (!user) return;

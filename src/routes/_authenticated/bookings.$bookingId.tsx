@@ -112,7 +112,7 @@ function BookingDetail() {
     queryFn: async () => {
       const { data: b, error } = await supabase
         .from("bookings")
-        .select("*, categories(id, name)")
+        .select("*, categories(id, name, return_eligible)")
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;
@@ -476,6 +476,8 @@ function BookingDetail() {
         <WorkProgressPanel booking={b} userId={user!.id} isWorker={isWorker} />
 
         <ReturnJobPanel
+          returnEligible={b.categories?.return_eligible ?? false}
+          completedAt={b.payment_confirmed_at ?? b.customer_confirmed_at ?? b.updated_at}
           bookingId={b.id}
           userId={user!.id}
           isWorker={isWorker}
@@ -524,6 +526,24 @@ function BookingDetail() {
                 <XCircle className="size-4" /> Decline
               </button>
             </>
+          )}
+          {isCustomer && status === "pending" && (
+            <button
+              disabled={busy !== null}
+              onClick={async () => {
+                if (!window.confirm("Cancel this booking request?")) return;
+                setBusy("cancel");
+                const { error } = await supabase.rpc("customer_cancel_booking", { _booking_id: b.id } as any);
+                setBusy(null);
+                if (error) return toast.error(error.message);
+                toast.success("Request cancelled");
+                qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+                qc.invalidateQueries({ queryKey: ["my-bookings"] });
+              }}
+              className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+            >
+              <XCircle className="size-4" /> Cancel request
+            </button>
           )}
           {navUrl && (
             <a href={navUrl} target="_blank" rel="noopener noreferrer"

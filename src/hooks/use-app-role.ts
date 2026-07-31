@@ -27,11 +27,10 @@ export function useAppRole() {
     enabled: !!user,
     staleTime: 30_000,
     queryFn: async () => {
-      const { data: wp } = await supabase
-        .from("worker_profiles")
-        .select("verification_status, rejection_reason, category_id, is_available")
-        .eq("user_id", user!.id)
-        .maybeSingle();
+      // Verification status + internal notes come from a security-definer RPC:
+      // those columns are not readable directly from the table.
+      const { data: verif } = await (supabase.rpc as any)("get_my_worker_verification");
+      const wp = (verif as any[])?.[0] ?? null;
       const { data: profs } = await supabase
         .from("worker_professions")
         .select("verification_status, is_primary, created_at, categories(name)")

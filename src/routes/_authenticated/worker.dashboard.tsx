@@ -31,7 +31,12 @@ function WorkerDashboard() {
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase.from("worker_profiles").select("*").eq("user_id", user!.id).maybeSingle();
+      const { data } = await supabase
+        .from("worker_profiles")
+        .select(
+          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, created_at, updated_at",
+        )
+        .eq("user_id", user!.id).maybeSingle();
       if (!data) return null;
       const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user!.id });
       const row: any = (ident as any)?.[0] ?? {};

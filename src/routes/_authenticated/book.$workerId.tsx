@@ -253,7 +253,9 @@ function BookPage() {
             <Row label="Description">{description}</Row>
             <Row label="Address">{address}</Row>
             <Row label="Area">{area}</Row>
+            <Row label="Profession">{selectedProf?.categories?.name ?? w.categories?.name ?? "Service"}</Row>
             <Row label="Date & time">{date} {time || "09:00"}</Row>
+
             <Row label="Urgency"><span className="capitalize">{urgency}</span></Row>
             {budget && <Row label="Budget">GH₵{budget}</Row>}
             {lat && lng && <Row label="GPS">{lat.toFixed(4)}, {lng.toFixed(4)}</Row>}

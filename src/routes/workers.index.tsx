@@ -102,25 +102,47 @@ function WorkersPage() {
       const rows = data ?? [];
       const ids = rows.map((w: any) => w.user_id);
       const profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
+      const professionsMap = new Map<string, string[]>();
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        const [{ data: profs }, { data: wprofs }] = await Promise.all([
+          supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids),
+          supabase
+            .from("worker_professions")
+            .select("user_id, is_primary, categories(name)")
+            .in("user_id", ids)
+            .eq("verification_status", "approved")
+            .order("is_primary", { ascending: false }),
+        ]);
         (profs ?? []).forEach((p: any) => profilesMap.set(p.id, { full_name: p.full_name, avatar_url: p.avatar_url }));
+        (wprofs ?? []).forEach((p: any) => {
+          const name = p.categories?.name;
+          if (!name) return;
+          const list = professionsMap.get(p.user_id) ?? [];
+          list.push(name);
+          professionsMap.set(p.user_id, list);
+        });
       }
-      return rows.map((w: any) => ({
-        user_id: w.user_id,
-        full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
-        avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
-        category_name: w.categories?.name ?? null,
-        city: w.city,
-        service_area: w.service_area,
-        rating: w.rating,
-        reviews_count: w.reviews_count,
-        starting_price: w.starting_price,
-        is_featured: w.is_featured,
-        jobs_completed: w.jobs_completed,
-        is_available: w.is_available,
-        years_experience: w.years_experience,
-      }));
+      return rows.map((w: any) => {
+        const primary = w.categories?.name ?? null;
+        const all = professionsMap.get(w.user_id) ?? [];
+        return {
+          user_id: w.user_id,
+          full_name: profilesMap.get(w.user_id)?.full_name ?? "Pro",
+          avatar_url: profilesMap.get(w.user_id)?.avatar_url ?? null,
+          category_name: primary,
+          professions: all.filter((n) => n !== primary).slice(0, 2),
+          all_professions: primary ? Array.from(new Set([primary, ...all])) : all,
+          city: w.city,
+          service_area: w.service_area,
+          rating: w.rating,
+          reviews_count: w.reviews_count,
+          starting_price: w.starting_price,
+          is_featured: w.is_featured,
+          jobs_completed: w.jobs_completed,
+          is_available: w.is_available,
+          years_experience: w.years_experience,
+        };
+      });
     },
   });
 
@@ -146,10 +168,12 @@ function WorkersPage() {
     return base.filter(w =>
       (w.full_name ?? "").toLowerCase().includes(needle) ||
       (w.category_name ?? "").toLowerCase().includes(needle) ||
+      ((w as any).all_professions ?? []).some((n: string) => n.toLowerCase().includes(needle)) ||
       (w.service_area ?? "").toLowerCase().includes(needle) ||
       (w.city ?? "").toLowerCase().includes(needle)
     );
   }, [withStatus, q, search.availableOnly]);
+
 
   const activeFilterCount =
     (category ? 1 : 0) +

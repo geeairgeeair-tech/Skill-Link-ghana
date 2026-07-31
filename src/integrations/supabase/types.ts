@@ -306,25 +306,34 @@ export type Database = {
       categories: {
         Row: {
           active: boolean
+          group_name: string
           icon: string
           id: string
           name: string
+          requires_admin_approval: boolean
+          return_eligible: boolean
           slug: string
           sort_order: number
         }
         Insert: {
           active?: boolean
+          group_name?: string
           icon: string
           id?: string
           name: string
+          requires_admin_approval?: boolean
+          return_eligible?: boolean
           slug: string
           sort_order?: number
         }
         Update: {
           active?: boolean
+          group_name?: string
           icon?: string
           id?: string
           name?: string
+          requires_admin_approval?: boolean
+          return_eligible?: boolean
           slug?: string
           sort_order?: number
         }
@@ -1242,6 +1251,10 @@ export type Database = {
       }
       customer_approve_estimate: {
         Args: { _estimate_id: string }
+        Returns: undefined
+      }
+      customer_cancel_booking: {
+        Args: { _booking_id: string; _reason?: string }
         Returns: undefined
       }
       customer_cancel_job_request: {

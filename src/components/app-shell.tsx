@@ -66,19 +66,28 @@ export function AppShell({ children }: { children: ReactNode }) {
               ? pathname === "/admin"
               : pathname === n.to || pathname.startsWith(`${n.to}/`);
             const Icon = n.icon;
+            const badge = (n as any).badge as number | undefined;
             return (
               <Link
                 key={n.to}
                 to={n.to}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors pointer-events-auto",
+                  "relative flex flex-col items-center justify-center gap-1 py-2.5 text-[10px] font-medium transition-colors pointer-events-auto",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                <span className="relative">
+                  <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                  {!!badge && badge > 0 && (
+                    <span className="absolute -top-1.5 -right-2.5 min-w-[16px] h-[16px] px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold grid place-items-center">
+                      {badge > 9 ? "9+" : badge}
+                    </span>
+                  )}
+                </span>
                 {n.label}
               </Link>
             );
+
           })}
         </div>
       </nav>

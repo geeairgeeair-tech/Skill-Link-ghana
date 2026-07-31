@@ -18,7 +18,10 @@ export const FEATURED_CATEGORY_SLUGS = [
   "dispatch-rider",
   "nanny",
   "ac-tech",
+  "private-teacher",
+  "private-nurse",
 ];
+
 
 export function FeaturedCategoryGrid({ categories }: { categories: any[] }) {
   const order = new Map(FEATURED_CATEGORY_SLUGS.map((s, i) => [s, i]));

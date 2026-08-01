@@ -9,6 +9,8 @@ import { StarRating } from "@/components/star-rating";
 import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
+import { GuestGate } from "@/components/guest-gate";
+
 
 export const Route = createFileRoute("/workers/$id")({
   head: () => ({
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/workers/$id")({
 function WorkerDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeProfId, setActiveProfId] = useState<string | null>(null);
 
 

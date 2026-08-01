@@ -31,14 +31,23 @@ function JobDetail() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, budget, city, status, urgency, preferred_at, media, created_at, customer_id, category_id, lat, lng, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
+      .select("id, title, description, budget, city, status, urgency, preferred_at, media, created_at, customer_id, category_id, booking_id, lat, lng, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
+  });
+  const jobBookingId = (job as any)?.booking_id as string | null | undefined;
+  const { data: jobBookingStatus } = useQuery({
+    queryKey: ["job-booking-status", jobBookingId],
+    enabled: !!jobBookingId,
+    queryFn: async () =>
+      ((await supabase.from("bookings").select("status").eq("id", jobBookingId!).maybeSingle()).data as any)
+        ?.status as string | null,
   });
   const { data: jobAddress } = useQuery({
     queryKey: ["job-request-address", id, user?.id],
     enabled: !!user && !!job && (job as any).customer_id === user.id,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
+
   // Worker verification status + category (gates Apply)
   const { data: workerProfile } = useQuery({
     queryKey: ["worker-profile-self", user?.id],

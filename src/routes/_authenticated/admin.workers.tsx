@@ -157,6 +157,10 @@ function AdminWorkersPage() {
 
         <ProfessionsReviewPanel />
 
+        <EquipmentReviewPanel />
+
+
+
       </main>
     </AppShell>
   );

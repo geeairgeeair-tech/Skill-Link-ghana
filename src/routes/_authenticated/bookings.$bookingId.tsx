@@ -345,7 +345,13 @@ function BookingDetail() {
                 <Phone className="size-3.5" /> Call
               </a>
             )}
+            {!data.phone && (isCustomer || isWorker) && (
+              <span className="mt-2 ml-auto text-[11px] text-muted-foreground">
+                Contact details are hidden — they are only shared while a booking is active.
+              </span>
+            )}
           </div>
+
         </section>
 
         {/* Amounts */}

@@ -4,20 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtGHS, useEstimates } from "@/components/booking-estimate";
 
 const HIGHER = [
+  "Customer requested additional work",
+  "Job took longer",
   "Additional materials required",
-  "Customer requested extra work",
-  "Hidden damage or unexpected work",
-  "Material price increased",
-  "Additional transport or delivery",
+  "Additional services completed",
+  "Tip included",
   "Other",
 ];
 const LOWER = [
-  "Fewer materials used",
-  "Less work was required",
-  "Discount applied",
-  "Customer supplied materials",
+  "Less work required",
+  "Finished earlier",
+  "Materials not needed",
+  "Discount given",
   "Other",
 ];
+
 
 export function CompleteJobModal({ bookingId, onClose, onDone }: {
   bookingId: string; onClose: () => void; onDone: () => void;

@@ -38,8 +38,10 @@ export const Route = createFileRoute("/workers/")({
 function WorkersPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/workers" });
+  const { user, loading: authLoading } = useAuth();
   const [q, setQ] = useState(search.q);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
 
   const category = search.category || undefined;
   const sort = (SORTS.includes(search.sort as SortKey) ? search.sort : "rating") as SortKey;

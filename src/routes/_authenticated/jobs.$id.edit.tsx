@@ -84,8 +84,13 @@ function EditJobPage() {
 
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (user && (job as any).customer_id !== user.id) return <div className="p-8 text-center">You can't edit this job.</div>;
-  if ((job as any).status !== "open") return <div className="p-8 text-center">This job can no longer be edited.</div>;
-  if ((job as any).assigned_worker_id) return <div className="p-8 text-center">A worker has already been selected — edits are locked.</div>;
+  if (!isJobEditable((job as any).status, bookingStatus))
+    return (
+      <div className="p-8 text-center">
+        This job can no longer be edited — the professional is already on the way.
+      </div>
+    );
+
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 
   const submit = async (e: React.FormEvent) => {

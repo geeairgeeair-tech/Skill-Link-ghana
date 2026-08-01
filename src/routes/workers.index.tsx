@@ -58,6 +58,7 @@ function WorkersPage() {
   const { data: busyIds } = useQuery({
     queryKey: ["busy-workers"],
     refetchInterval: 30000,
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase.rpc("list_busy_workers");
       return new Set<string>(((data ?? []) as any[]).map((r) => r.worker_id));
@@ -66,6 +67,8 @@ function WorkersPage() {
 
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],
+    enabled: !!user,
+
     queryFn: async (): Promise<WorkerCardData[]> => {
       // Resolve category slug → id, then union primary + additional profession workers
       let categoryId: string | null = null;

@@ -115,7 +115,10 @@ function WorkerDetail() {
   });
 
 
+  if (authLoading) return <ProfileSkeleton />;
+  if (!user) return <GuestGate />;
   if (workerQ.isLoading) return <ProfileSkeleton />;
+
   if (workerQ.isError) {
     return (
       <div className="p-8 text-center space-y-3">

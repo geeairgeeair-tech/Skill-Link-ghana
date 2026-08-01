@@ -7,6 +7,8 @@ import { z } from "zod";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { isJobEditable } from "@/lib/job-editable";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({
   component: EditJobPage,

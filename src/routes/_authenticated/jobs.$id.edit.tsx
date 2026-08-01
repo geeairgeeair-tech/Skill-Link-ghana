@@ -40,14 +40,23 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id")
+      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id, booking_id")
       .eq("id", id).maybeSingle()).data,
+  });
+  const bookingId = (job as any)?.booking_id as string | null | undefined;
+  const { data: bookingStatus } = useQuery({
+    queryKey: ["job-edit-booking-status", bookingId],
+    enabled: !!bookingId,
+    queryFn: async () =>
+      ((await supabase.from("bookings").select("status").eq("id", bookingId!).maybeSingle()).data as any)
+        ?.status as string | null,
   });
   const { data: addr } = useQuery({
     queryKey: ["job-edit-address", id],
     enabled: !!job && !!user,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
+
   const { data: categories } = useQuery({
     queryKey: ["categories-all"],
     queryFn: async () => (await supabase.from("categories").select("id, name").order("name")).data ?? [],

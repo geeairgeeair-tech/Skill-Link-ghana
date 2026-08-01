@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
+import { useAuth } from "@/hooks/use-auth";
+import { GuestGate } from "@/components/guest-gate";
+
 
 const SORTS = ["rating", "experience", "jobs", "newest"] as const;
 type SortKey = typeof SORTS[number];

@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
+import { isJobEditable } from "@/lib/job-editable";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/mine")({
   component: MyJobPosts,
@@ -34,12 +36,23 @@ function MyJobPosts() {
     enabled: !!user,
     queryFn: async () => (await supabase
       .from("job_requests")
-      .select("id, title, description, budget, city, address, status, urgency, preferred_at, media, created_at, categories(name)")
+      .select("id, title, description, budget, city, address, status, urgency, preferred_at, media, created_at, booking_id, categories(name)")
       .eq("customer_id", user!.id)
       .order("created_at", { ascending: false })).data ?? [],
   });
 
   const jobIds = (jobs ?? []).map((j: any) => j.id);
+  const bookingIds = (jobs ?? []).map((j: any) => j.booking_id).filter(Boolean);
+  const { data: bookingStatuses } = useQuery({
+    queryKey: ["my-jobs-booking-statuses", bookingIds.join(",")],
+    enabled: bookingIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase.from("bookings").select("id, status").in("id", bookingIds);
+      const map: Record<string, string> = {};
+      (data ?? []).forEach((b: any) => { map[b.id] = b.status; });
+      return map;
+    },
+  });
   const { data: appCounts } = useQuery({
     queryKey: ["my-jobs-app-counts", user?.id, jobIds.join(",")],
     enabled: !!user && jobIds.length > 0,
@@ -50,6 +63,7 @@ function MyJobPosts() {
       return map;
     },
   });
+
 
   const submitCancel = async () => {
     if (!cancelFor) return;
@@ -93,7 +107,7 @@ function MyJobPosts() {
         ) : (jobs ?? []).map((j: any) => {
           const media: any[] = Array.isArray(j.media) ? j.media : [];
           const firstImg = media.find(m => m.type === "image");
-          const canEdit = j.status === "open";
+          const canEdit = isJobEditable(j.status, j.booking_id ? bookingStatuses?.[j.booking_id] : null);
           const canCancel = j.status === "open" || j.status === "assigned";
           return (
             <div key={j.id} className="rounded-2xl bg-card border border-border p-3 shadow-card">

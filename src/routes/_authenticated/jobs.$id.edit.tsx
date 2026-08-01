@@ -7,6 +7,8 @@ import { z } from "zod";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { isJobEditable } from "@/lib/job-editable";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({
   component: EditJobPage,
@@ -40,14 +42,23 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id")
+      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id, booking_id")
       .eq("id", id).maybeSingle()).data,
+  });
+  const bookingId = (job as any)?.booking_id as string | null | undefined;
+  const { data: bookingStatus } = useQuery({
+    queryKey: ["job-edit-booking-status", bookingId],
+    enabled: !!bookingId,
+    queryFn: async () =>
+      ((await supabase.from("bookings").select("status").eq("id", bookingId!).maybeSingle()).data as any)
+        ?.status as string | null,
   });
   const { data: addr } = useQuery({
     queryKey: ["job-edit-address", id],
     enabled: !!job && !!user,
     queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
   });
+
   const { data: categories } = useQuery({
     queryKey: ["categories-all"],
     queryFn: async () => (await supabase.from("categories").select("id, name").order("name")).data ?? [],
@@ -75,8 +86,13 @@ function EditJobPage() {
 
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (user && (job as any).customer_id !== user.id) return <div className="p-8 text-center">You can't edit this job.</div>;
-  if ((job as any).status !== "open") return <div className="p-8 text-center">This job can no longer be edited.</div>;
-  if ((job as any).assigned_worker_id) return <div className="p-8 text-center">A worker has already been selected — edits are locked.</div>;
+  if (!isJobEditable((job as any).status, bookingStatus))
+    return (
+      <div className="p-8 text-center">
+        This job can no longer be edited — the professional is already on the way.
+      </div>
+    );
+
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 
   const submit = async (e: React.FormEvent) => {

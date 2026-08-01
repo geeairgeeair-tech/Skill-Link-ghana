@@ -8,6 +8,8 @@ import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAppRole } from "@/hooks/use-app-role";
 import { BrandLogo } from "@/components/brand-logo";
+import { GuestGateCard } from "@/components/guest-gate";
+
 
 
 const categoriesQuery = queryOptions({
@@ -95,14 +97,18 @@ function Home() {
           <h2 className="text-3xl font-extrabold leading-tight">Find trusted pros near you.</h2>
           <p className="mt-1 text-primary-foreground/80">Verified electricians, plumbers, carpenters, pool builders & more across Ghana.</p>
           <Link
-            to="/workers"
+            {...(user
+              ? ({ to: "/workers" } as any)
+              : ({ to: "/auth", search: { mode: "login", role: "customer" } } as any))}
             className="mt-5 flex items-center gap-3 rounded-2xl bg-card text-foreground px-4 py-3.5 shadow-elevated"
           >
             <Search className="size-5 text-muted-foreground" />
             <span className="text-muted-foreground">Search by skill, name, or area…</span>
           </Link>
           <Link
-            to="/jobs/new"
+            {...(user
+              ? ({ to: "/jobs/new" } as any)
+              : ({ to: "/auth", search: { mode: "signup", role: "customer" } } as any))}
             className="mt-3 flex items-center gap-2 rounded-2xl bg-gold text-gold-foreground px-4 py-3 shadow-elevated font-semibold"
           >
             <Camera className="size-5" />
@@ -114,33 +120,51 @@ function Home() {
             <span className="opacity-50">·</span>
             <Sparkles className="size-4 text-gold" /> Top-rated
           </div>
+
         </div>
       </header>
 
 
       <main className="mx-auto max-w-md px-5 py-6 space-y-8">
+        {!user && <GuestGateCard />}
+
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg font-bold">Browse services</h3>
-            <Link to="/workers" className="text-sm font-semibold text-primary">See all <ArrowRight className="inline size-3.5" /></Link>
+            <Link
+              {...(user
+                ? ({ to: "/workers" } as any)
+                : ({ to: "/auth", search: { mode: "login", role: "customer" } } as any))}
+              className="text-sm font-semibold text-primary"
+            >
+              See all <ArrowRight className="inline size-3.5" />
+            </Link>
           </div>
-          <FeaturedCategoryGrid categories={categories} />
+          <FeaturedCategoryGrid categories={categories} locked={!user} />
 
         </section>
 
         <section>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg font-bold">Top-rated pros</h3>
-            <Link to="/workers" className="text-sm font-semibold text-primary">See all</Link>
+            <Link
+              {...(user
+                ? ({ to: "/workers" } as any)
+                : ({ to: "/auth", search: { mode: "login", role: "customer" } } as any))}
+              className="text-sm font-semibold text-primary"
+            >
+              See all
+            </Link>
           </div>
           {featured.length === 0 ? (
             <EmptyWorkers />
           ) : (
             <div className="space-y-3">
-              {featured.map((w) => <WorkerCard key={w.user_id} w={w} />)}
+              {featured.map((w) => <WorkerCard key={w.user_id} w={w} locked={!user} />)}
             </div>
           )}
         </section>
+
 
         {!user && (
           <section className="rounded-2xl bg-card border border-border p-5 shadow-card">

@@ -32,7 +32,7 @@ const STATE_LABEL: Record<AvailabilityState, string> = {
   unavailable: "Unavailable",
 };
 
-export function WorkerCard({ w }: { w: WorkerCardData }) {
+export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: boolean }) {
   const state: AvailabilityState =
     w.availability_state ?? ((w.is_available ?? true) ? "available" : "unavailable");
   
@@ -44,12 +44,14 @@ export function WorkerCard({ w }: { w: WorkerCardData }) {
       : state === "busy"
         ? "bg-gold/20 text-gold-foreground"
         : "bg-muted text-muted-foreground";
+  const className =
+    "block rounded-2xl border border-border bg-card p-3 shadow-card hover:shadow-elevated transition-all";
+  const linkProps = locked
+    ? ({ to: "/auth", search: { mode: "login", role: "customer" } } as const)
+    : ({ to: "/workers/$id", params: { id: w.user_id } } as const);
   return (
-    <Link
-      to="/workers/$id"
-      params={{ id: w.user_id }}
-      className="block rounded-2xl border border-border bg-card p-3 shadow-card hover:shadow-elevated transition-all"
-    >
+    <Link {...(linkProps as any)} className={className}>
+
       <div className="flex gap-3">
         <div className="relative size-16 shrink-0 rounded-xl bg-primary-soft overflow-hidden flex items-center justify-center text-primary font-bold text-xl">
           {w.avatar_url ? (

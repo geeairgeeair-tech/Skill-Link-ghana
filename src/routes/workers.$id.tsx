@@ -9,6 +9,8 @@ import { StarRating } from "@/components/star-rating";
 import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
+import { GuestGate } from "@/components/guest-gate";
+
 
 export const Route = createFileRoute("/workers/$id")({
   head: () => ({
@@ -23,12 +25,13 @@ export const Route = createFileRoute("/workers/$id")({
 function WorkerDetail() {
   const { id } = Route.useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeProfId, setActiveProfId] = useState<string | null>(null);
 
 
   const workerQ = useQuery({
     queryKey: ["worker", id],
+    enabled: !!user,
     queryFn: async () => {
       const { data: wp, error } = await supabase
         .from("worker_profiles")
@@ -49,6 +52,7 @@ function WorkerDetail() {
 
   const professionsQ = useQuery({
     queryKey: ["worker-professions", id],
+    enabled: !!user,
     queryFn: async () =>
       (await supabase
         .from("worker_professions")
@@ -63,6 +67,7 @@ function WorkerDetail() {
 
   const portfolioQ = useQuery({
     queryKey: ["worker-portfolio", id],
+    enabled: !!user,
     queryFn: async () => (await supabase.from("worker_portfolio").select("*").eq("worker_id", id).order("sort_order").order("created_at", { ascending: false })).data ?? [],
   });
 
@@ -107,6 +112,7 @@ function WorkerDetail() {
 
   const statusQ = useQuery({
     queryKey: ["worker-status", id],
+    enabled: !!user,
     refetchInterval: 20000,
     queryFn: async () => {
       const { data } = await supabase.rpc("get_worker_public_status", { _worker_id: id });
@@ -115,7 +121,10 @@ function WorkerDetail() {
   });
 
 
+  if (authLoading) return <ProfileSkeleton />;
+  if (!user) return <GuestGate />;
   if (workerQ.isLoading) return <ProfileSkeleton />;
+
   if (workerQ.isError) {
     return (
       <div className="p-8 text-center space-y-3">

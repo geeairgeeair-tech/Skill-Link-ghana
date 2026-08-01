@@ -23,7 +23,13 @@ export const FEATURED_CATEGORY_SLUGS = [
 ];
 
 
-export function FeaturedCategoryGrid({ categories }: { categories: any[] }) {
+export function FeaturedCategoryGrid({
+  categories,
+  locked = false,
+}: {
+  categories: any[];
+  locked?: boolean;
+}) {
   const order = new Map(FEATURED_CATEGORY_SLUGS.map((s, i) => [s, i]));
   const shortlist = (categories ?? [])
     .filter((c: any) => order.has(c.slug))
@@ -35,8 +41,9 @@ export function FeaturedCategoryGrid({ categories }: { categories: any[] }) {
       {list.map((c: any) => (
         <Link
           key={c.id}
-          to="/workers"
-          search={{ category: c.slug }}
+          {...(locked
+            ? ({ to: "/auth", search: { mode: "login", role: "customer" } } as any)
+            : ({ to: "/workers", search: { category: c.slug } } as any))}
           className="flex flex-col items-center gap-1.5 group"
         >
           <div className="size-14 rounded-2xl bg-primary-soft grid place-items-center text-primary group-hover:scale-105 transition-transform shadow-card">
@@ -48,6 +55,7 @@ export function FeaturedCategoryGrid({ categories }: { categories: any[] }) {
     </div>
   );
 }
+
 
 /**
  * Customer marketplace block reused inside the professional experience so a

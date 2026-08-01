@@ -8,6 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
+import { useAuth } from "@/hooks/use-auth";
+import { GuestGate } from "@/components/guest-gate";
+
 
 const SORTS = ["rating", "experience", "jobs", "newest"] as const;
 type SortKey = typeof SORTS[number];
@@ -35,8 +38,10 @@ export const Route = createFileRoute("/workers/")({
 function WorkersPage() {
   const search = Route.useSearch();
   const navigate = useNavigate({ from: "/workers" });
+  const { user, loading: authLoading } = useAuth();
   const [q, setQ] = useState(search.q);
   const [filtersOpen, setFiltersOpen] = useState(false);
+
 
   const category = search.category || undefined;
   const sort = (SORTS.includes(search.sort as SortKey) ? search.sort : "rating") as SortKey;
@@ -53,6 +58,7 @@ function WorkersPage() {
   const { data: busyIds } = useQuery({
     queryKey: ["busy-workers"],
     refetchInterval: 30000,
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase.rpc("list_busy_workers");
       return new Set<string>(((data ?? []) as any[]).map((r) => r.worker_id));
@@ -61,6 +67,8 @@ function WorkersPage() {
 
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],
+    enabled: !!user,
+
     queryFn: async (): Promise<WorkerCardData[]> => {
       // Resolve category slug → id, then union primary + additional profession workers
       let categoryId: string | null = null;
@@ -187,7 +195,13 @@ function WorkersPage() {
     navigate({ search: { q: "", category: "", minRating: 0, minExperience: 0, availableOnly: false, sort: "rating" } });
   };
 
+  if (authLoading) {
+    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (!user) return <GuestGate />;
+
   return (
+
     <AppShell>
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-md px-5 pt-4 pb-3">

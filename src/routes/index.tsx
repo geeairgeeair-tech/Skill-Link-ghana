@@ -95,14 +95,18 @@ function Home() {
           <h2 className="text-3xl font-extrabold leading-tight">Find trusted pros near you.</h2>
           <p className="mt-1 text-primary-foreground/80">Verified electricians, plumbers, carpenters, pool builders & more across Ghana.</p>
           <Link
-            to="/workers"
+            {...(user
+              ? ({ to: "/workers" } as any)
+              : ({ to: "/auth", search: { mode: "login", role: "customer" } } as any))}
             className="mt-5 flex items-center gap-3 rounded-2xl bg-card text-foreground px-4 py-3.5 shadow-elevated"
           >
             <Search className="size-5 text-muted-foreground" />
             <span className="text-muted-foreground">Search by skill, name, or area…</span>
           </Link>
           <Link
-            to="/jobs/new"
+            {...(user
+              ? ({ to: "/jobs/new" } as any)
+              : ({ to: "/auth", search: { mode: "signup", role: "customer" } } as any))}
             className="mt-3 flex items-center gap-2 rounded-2xl bg-gold text-gold-foreground px-4 py-3 shadow-elevated font-semibold"
           >
             <Camera className="size-5" />
@@ -114,6 +118,7 @@ function Home() {
             <span className="opacity-50">·</span>
             <Sparkles className="size-4 text-gold" /> Top-rated
           </div>
+
         </div>
       </header>
 

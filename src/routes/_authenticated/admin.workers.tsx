@@ -278,3 +278,75 @@ function ProfessionsReviewPanel() {
     </section>
   );
 }
+
+function EquipmentReviewPanel() {
+  const qc = useQueryClient();
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["admin-equipment-pending"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("worker_professions")
+        .select("id, user_id, equipment_images, equipment_status, updated_at, categories(name)")
+        .eq("equipment_status", "pending")
+        .order("updated_at", { ascending: true });
+      const rows = data ?? [];
+      const ids = Array.from(new Set(rows.map((r: any) => r.user_id)));
+      const map: Record<string, any> = {};
+      if (ids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name").in("id", ids);
+        (profs ?? []).forEach((p: any) => { map[p.id] = p; });
+      }
+      return await Promise.all(
+        rows.map(async (r: any) => ({
+          ...r,
+          profile: map[r.user_id] ?? null,
+          shots: await signMedia(toMediaRefs(r.equipment_images, "worker-docs")),
+        })),
+      );
+    },
+  });
+
+  const review = async (id: string, approve: boolean) => {
+    let reason: string | null = null;
+    if (!approve) {
+      reason = window.prompt("Why is the equipment rejected? (min 5 chars)");
+      if (!reason || reason.trim().length < 5) return toast.error("Reason required");
+    }
+    const { error } = await (supabase.rpc as any)("admin_review_equipment", {
+      _profession_id: id, _approve: approve, _reason: reason?.trim() ?? null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success(approve ? "Equipment verified" : "Equipment rejected");
+    qc.invalidateQueries({ queryKey: ["admin-equipment-pending"] });
+  };
+
+  return (
+    <section className="rounded-2xl bg-card border border-border p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-display font-bold">Equipment to verify</h3>
+        <button onClick={() => refetch()} className="text-xs text-primary font-semibold">Refresh</button>
+      </div>
+      {isLoading ? <p className="text-sm text-muted-foreground">Loading…</p>
+        : (data ?? []).length === 0 ? <p className="text-sm text-muted-foreground">No equipment awaiting review.</p>
+        : (data ?? []).map((r: any) => (
+          <div key={r.id} className="py-2 border-t border-border first:border-0">
+            <p className="text-sm font-semibold">{r.profile?.full_name ?? "Worker"} — {r.categories?.name}</p>
+            <p className="text-[11px] text-muted-foreground">{r.shots.length} photo(s) · updated {new Date(r.updated_at).toLocaleDateString()}</p>
+            {r.shots.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {r.shots.map((s: any) => (
+                  <a key={s.path} href={s.url} target="_blank" rel="noreferrer">
+                    <img src={s.url} alt="Equipment" className="w-full aspect-square object-cover rounded-lg border border-border" />
+                  </a>
+                ))}
+              </div>
+            )}
+            <div className="mt-2 flex gap-2">
+              <button onClick={() => review(r.id, true)} className="text-[10px] px-2 py-1 rounded bg-success text-success-foreground font-bold">Approve equipment</button>
+              <button onClick={() => review(r.id, false)} className="text-[10px] px-2 py-1 rounded bg-destructive text-destructive-foreground font-bold">Reject</button>
+            </div>
+          </div>
+        ))}
+    </section>
+  );
+}

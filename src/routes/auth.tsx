@@ -48,11 +48,18 @@ function AuthPage() {
     else navigate({ to: "/" });
   };
 
+  const passwordsMatch = password.length > 0 && password === confirmPassword;
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (mode === "signup" && !passwordsMatch) {
+      toast.error("Passwords do not match");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
+
         const { data, error } = await supabase.auth.signUp({
           email, password,
           options: {
@@ -123,17 +130,33 @@ function AuthPage() {
           )}
           <Field icon={Mail} placeholder="Email" value={email} onChange={setEmail} type="email" required />
           <Field icon={Lock} placeholder="Password" value={password} onChange={setPassword} type="password" required />
+          {mode === "signup" && (
+            <>
+              <Field
+                icon={Lock}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                type="password"
+                required
+              />
+              {confirmPassword.length > 0 && !passwordsMatch && (
+                <p className="text-xs font-semibold text-destructive -mt-1">Passwords do not match</p>
+              )}
+            </>
+          )}
           {mode === "login" && (
             <div className="flex justify-end -mt-1">
               <Link to="/forgot-password" className="text-xs font-semibold text-primary">Forgot password?</Link>
             </div>
           )}
           <button
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !passwordsMatch)}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
           >
             {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
           </button>
+
         </form>
 
 

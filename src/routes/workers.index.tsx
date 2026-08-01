@@ -195,7 +195,13 @@ function WorkersPage() {
     navigate({ search: { q: "", category: "", minRating: 0, minExperience: 0, availableOnly: false, sort: "rating" } });
   };
 
+  if (authLoading) {
+    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+  }
+  if (!user) return <GuestGate />;
+
   return (
+
     <AppShell>
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border">
         <div className="mx-auto max-w-md px-5 pt-4 pb-3">

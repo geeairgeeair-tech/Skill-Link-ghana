@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { isJobEditable } from "@/lib/job-editable";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -134,7 +134,7 @@ function JobDetail() {
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
           {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}
-          {isOwner && (job as any).status === "open" && (
+          {isOwner && isJobEditable((job as any).status, jobBookingStatus) && (
             <Link to="/jobs/$id/edit" params={{ id }} className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-primary">
               <Pencil className="size-3.5"/> Edit this post
             </Link>

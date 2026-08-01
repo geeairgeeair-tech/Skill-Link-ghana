@@ -8,6 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
+import { isJobEditable } from "@/lib/job-editable";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/mine")({
   component: MyJobPosts,

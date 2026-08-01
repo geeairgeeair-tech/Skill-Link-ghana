@@ -51,6 +51,18 @@ export function ConfirmCompletionModal({ booking, onClose, onDone }: { booking: 
           {booking.completion_note && <p className="italic mt-1">"{booking.completion_note}"</p>}
         </div>
 
+        {booking.final_amount_reason && (
+          <div className="mt-3 rounded-xl border border-primary/30 bg-primary-soft/60 p-3 text-xs space-y-1">
+            <p className="font-semibold text-primary uppercase tracking-wide text-[10px]">
+              Why the final amount differs from the estimate
+            </p>
+            <p className="font-semibold">{booking.final_amount_reason}</p>
+            {booking.final_amount_note && <p className="italic text-muted-foreground">"{booking.final_amount_note}"</p>}
+            <p className="text-muted-foreground">Please review this explanation before confirming payment.</p>
+          </div>
+        )}
+
+
         <label className="block mt-4 text-xs font-semibold">Amount you paid (GH₵)</label>
         <input type="number" min={1} step="0.01" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)}
           className="mt-1 w-full rounded-xl border border-input bg-background p-3 text-sm" />

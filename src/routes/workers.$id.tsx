@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, MapPin, Phone, MessageCircle, Calendar, ShieldCheck, Briefcase, Clock } from "lucide-react";
 import { toast } from "sonner";
@@ -7,9 +7,12 @@ import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/star-rating";
 import { VerificationBadge } from "@/components/verification-badge";
+import { EquipmentBadge } from "@/components/equipment-badge";
+import { signMedia, toMediaRefs } from "@/lib/media";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
 import { GuestGate } from "@/components/guest-gate";
+
 
 
 export const Route = createFileRoute("/workers/$id")({
@@ -56,13 +59,14 @@ function WorkerDetail() {
     queryFn: async () =>
       (await supabase
         .from("worker_professions")
-        .select("id, bio, years_experience, service_description, starting_price, is_primary, category_id, categories(name)")
+        .select("id, bio, years_experience, service_description, starting_price, callout_fee, daily_rate, strengths, portfolio_images, equipment_status, is_primary, category_id, categories(name)")
         .eq("user_id", id)
         .eq("verification_status", "approved")
         .order("is_primary", { ascending: false })
         .order("created_at", { ascending: true })
       ).data ?? [],
   });
+
 
 
   const portfolioQ = useQuery({
@@ -247,71 +251,83 @@ function WorkerDetail() {
           )}
         </header>
 
-        <Section title="About">
-          {w.bio ? (
-            <p className="text-sm leading-relaxed whitespace-pre-line">{w.bio}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">This pro hasn't added a bio yet.</p>
-          )}
-        </Section>
+        {professions.length > 0 && (
+          <div className="mt-5 flex flex-wrap gap-2">
+            {professions.map((pr: any) => {
+              const active = pr.id === activeProf?.id;
+              return (
+                <button
+                  key={pr.id}
+                  onClick={() => setActiveProfId(pr.id)}
+                  className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground"}`}
+                >
+                  <BadgeCheck className="size-3" />
+                  {pr.categories?.name ?? "Service"}
+                  {pr.is_primary && <span className="text-[10px] opacity-70">Primary</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
-        <Section title="Services">
-          {professions.length > 0 ? (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {professions.map((pr: any) => {
-                  const active = pr.id === activeProf?.id;
-                  return (
-                    <button
-                      key={pr.id}
-                      onClick={() => setActiveProfId(pr.id)}
-                      className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors ${active ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}
-                    >
-                      <BadgeCheck className="size-3" />
-                      {pr.categories?.name ?? "Service"}
-                      {pr.is_primary && <span className="text-[10px] opacity-70">Primary</span>}
-                    </button>
-                  );
-                })}
+        {activeProf ? (
+          <>
+            <Section title={activeProf.categories?.name ?? "Service"}>
+              <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                <VerificationBadge status="approved" />
+                <EquipmentBadge status={activeProf.equipment_status} />
               </div>
-              {activeProf && (
-                <div className="mt-3 space-y-2">
-                  {activeProf.bio && <p className="text-sm leading-relaxed whitespace-pre-line">{activeProf.bio}</p>}
-                  {activeProf.service_description && (
-                    <p className="text-sm text-muted-foreground whitespace-pre-line">{activeProf.service_description}</p>
-                  )}
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <PriceRow label="Experience" value={`${activeProf.years_experience ?? w.years_experience ?? 0}y`} />
-                    <PriceRow label="From" value={`GH₵${activeProf.starting_price ?? w.starting_price ?? 0}`} />
+              {activeProf.bio ? (
+                <p className="text-sm leading-relaxed whitespace-pre-line">{activeProf.bio}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">No bio added for this profession yet.</p>
+              )}
+              {activeProf.service_description && (
+                <p className="text-sm text-muted-foreground whitespace-pre-line mt-2">{activeProf.service_description}</p>
+              )}
+
+              {(activeProf.strengths ?? []).length > 0 && (
+                <div className="mt-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Professional strengths</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {(activeProf.strengths as string[]).map((s) => (
+                      <span key={s} className="text-[11px] font-semibold bg-primary-soft text-primary px-2.5 py-1 rounded-full">{s}</span>
+                    ))}
                   </div>
                 </div>
               )}
-            </>
-          ) : (
-            <span className="inline-flex items-center gap-1 text-xs font-semibold bg-primary-soft text-primary px-2.5 py-1.5 rounded-lg">
-              {w.categories?.name ?? "General services"}
-              <span className="text-[10px] opacity-70">Primary</span>
-            </span>
-          )}
 
-          <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
-            <PriceRow label="Call-out fee" value={`GH₵${w.callout_fee ?? 0}`} />
-            <PriceRow label="Hourly rate" value={`GH₵${w.hourly_rate ?? 0}/hr`} />
-          </div>
-        </Section>
+              <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                <PriceRow label="Starting price" value={`GH₵${activeProf.starting_price ?? 0}`} />
+                <PriceRow label="Call-out fee" value={`GH₵${activeProf.callout_fee ?? 0}`} />
+                <PriceRow label="Daily rate" value={`GH₵${activeProf.daily_rate ?? 0}`} />
+                <PriceRow label="Experience" value={`${activeProf.years_experience ?? w.years_experience ?? 0}y`} />
+              </div>
+            </Section>
 
+            <ProfessionPortfolio profession={activeProf} />
+          </>
+        ) : (
+          <Section title="About">
+            {w.bio ? (
+              <p className="text-sm leading-relaxed whitespace-pre-line">{w.bio}</p>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">This pro hasn't added a bio yet.</p>
+            )}
+            <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+              <PriceRow label="Starting price" value={`GH₵${w.starting_price ?? 0}`} />
+              <PriceRow label="Call-out fee" value={`GH₵${w.callout_fee ?? 0}`} />
+            </div>
+          </Section>
+        )}
 
         <Section title="Service area">
           <LocationMap area={w.service_area ?? p.city} height={180} />
           <p className="mt-2 text-xs text-muted-foreground inline-flex items-center gap-1"><MapPin className="size-3" /> {w.service_area ?? "Ghana"}</p>
         </Section>
 
-        <Section title={`Portfolio${portfolioQ.data && portfolioQ.data.length > 0 ? ` (${portfolioQ.data.length})` : ""}`}>
-          {portfolioQ.isLoading ? (
-            <div className="grid grid-cols-2 gap-2">
-              {Array.from({ length: 4 }).map((_, i) => <div key={i} className="aspect-square rounded-xl bg-muted animate-pulse" />)}
-            </div>
-          ) : portfolioQ.data && portfolioQ.data.length > 0 ? (
+        {portfolioQ.data && portfolioQ.data.length > 0 && (
+          <Section title={`More work (${portfolioQ.data.length})`}>
             <div className="grid grid-cols-2 gap-2">
               {portfolioQ.data.map((it: any) => (
                 <div key={it.id} className="rounded-xl overflow-hidden border border-border bg-muted">
@@ -324,10 +340,9 @@ function WorkerDetail() {
                 </div>
               ))}
             </div>
-          ) : (
-            <p className="text-sm text-muted-foreground italic">No portfolio items added yet.</p>
-          )}
-        </Section>
+          </Section>
+        )}
+
 
         <Section title={`Reviews${reviewsQ.data && reviewsQ.data.length > 0 ? ` (${reviewsQ.data.length})` : ""}`}>
           {!user ? (
@@ -461,5 +476,31 @@ function ProfileSkeleton() {
         ))}
       </div>
     </div>
+  );
+}
+
+function ProfessionPortfolio({ profession }: { profession: any }) {
+  const [shots, setShots] = useState<{ path: string; url: string }[]>([]);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const refs = toMediaRefs(profession?.portfolio_images);
+      if (refs.length === 0) { setShots([]); return; }
+      const signed = await signMedia(refs);
+      if (alive) setShots(signed.map((s) => ({ path: s.path, url: s.url })));
+    })();
+    return () => { alive = false; };
+  }, [profession?.id]);
+
+  if (shots.length === 0) return null;
+  return (
+    <Section title={`${profession?.categories?.name ?? "Service"} portfolio (${shots.length})`}>
+      <div className="grid grid-cols-2 gap-2">
+        {shots.map((s) => (
+          <img key={s.path} src={s.url} alt="Portfolio work" loading="lazy"
+            className="aspect-square w-full object-cover rounded-xl border border-border" />
+        ))}
+      </div>
+    </Section>
   );
 }

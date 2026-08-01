@@ -37,7 +37,7 @@ export const Route = createFileRoute("/workers/")({
 
 function WorkersPage() {
   const search = Route.useSearch();
-  const navigate = useNavigate({ from: "/workers" });
+  const navigate = useNavigate({ from: "/workers/" });
   const { user, loading: authLoading } = useAuth();
   const [q, setQ] = useState(search.q);
   const [filtersOpen, setFiltersOpen] = useState(false);

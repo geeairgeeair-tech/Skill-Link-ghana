@@ -866,9 +866,15 @@ export type Database = {
       worker_professions: {
         Row: {
           bio: string | null
+          callout_fee: number | null
           category_id: string
           certificates: Json
           created_at: string
+          daily_rate: number | null
+          equipment_images: Json
+          equipment_rejection_reason: string | null
+          equipment_reviewed_at: string | null
+          equipment_status: string
           id: string
           is_primary: boolean
           portfolio_images: Json
@@ -876,6 +882,7 @@ export type Database = {
           reviewed_at: string | null
           service_description: string | null
           starting_price: number | null
+          strengths: Json
           submitted_at: string
           updated_at: string
           user_id: string
@@ -884,9 +891,15 @@ export type Database = {
         }
         Insert: {
           bio?: string | null
+          callout_fee?: number | null
           category_id: string
           certificates?: Json
           created_at?: string
+          daily_rate?: number | null
+          equipment_images?: Json
+          equipment_rejection_reason?: string | null
+          equipment_reviewed_at?: string | null
+          equipment_status?: string
           id?: string
           is_primary?: boolean
           portfolio_images?: Json
@@ -894,6 +907,7 @@ export type Database = {
           reviewed_at?: string | null
           service_description?: string | null
           starting_price?: number | null
+          strengths?: Json
           submitted_at?: string
           updated_at?: string
           user_id: string
@@ -902,9 +916,15 @@ export type Database = {
         }
         Update: {
           bio?: string | null
+          callout_fee?: number | null
           category_id?: string
           certificates?: Json
           created_at?: string
+          daily_rate?: number | null
+          equipment_images?: Json
+          equipment_rejection_reason?: string | null
+          equipment_reviewed_at?: string | null
+          equipment_status?: string
           id?: string
           is_primary?: boolean
           portfolio_images?: Json
@@ -912,6 +932,7 @@ export type Database = {
           reviewed_at?: string | null
           service_description?: string | null
           starting_price?: number | null
+          strengths?: Json
           submitted_at?: string
           updated_at?: string
           user_id?: string
@@ -1168,6 +1189,10 @@ export type Database = {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
       }
+      admin_review_equipment: {
+        Args: { _approve: boolean; _profession_id: string; _reason?: string }
+        Returns: undefined
+      }
       booking_add_photos: {
         Args: { _booking_id: string; _kind: string; _urls: Json }
         Returns: undefined
@@ -1316,11 +1341,15 @@ export type Database = {
       worker_add_profession: {
         Args: {
           _bio: string
+          _callout_fee?: number
           _category_id: string
           _certificates?: Json
+          _daily_rate?: number
+          _equipment?: Json
           _portfolio?: Json
           _service_description?: string
           _starting_price?: number
+          _strengths?: Json
           _years: number
         }
         Returns: string
@@ -1410,6 +1439,21 @@ export type Database = {
           _message: string
           _note?: string
           _proposed_amount: number
+        }
+        Returns: undefined
+      }
+      worker_update_profession: {
+        Args: {
+          _bio?: string
+          _callout_fee?: number
+          _daily_rate?: number
+          _equipment?: Json
+          _portfolio?: Json
+          _profession_id: string
+          _service_description?: string
+          _starting_price?: number
+          _strengths?: Json
+          _years?: number
         }
         Returns: undefined
       }

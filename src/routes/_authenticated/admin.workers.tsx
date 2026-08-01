@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
+import { signMedia, toMediaRefs } from "@/lib/media";
 
 export const Route = createFileRoute("/_authenticated/admin/workers")({
   component: AdminWorkersPage,

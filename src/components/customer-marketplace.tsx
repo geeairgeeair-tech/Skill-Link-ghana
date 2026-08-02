@@ -83,6 +83,8 @@ export function CustomerMarketplaceSection() {
 
   const { data: recommended } = useQuery({
     queryKey: ["recommended-workers", user?.id],
+    staleTime: 5 * 60_000,
+
     queryFn: async (): Promise<WorkerCardData[]> => {
       const { data } = await supabase
         .from("worker_profiles")

@@ -136,7 +136,7 @@ function WorkerProfilePage() {
 
       </header>
 
-      <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
+      <main className="mx-auto max-w-md px-5 mt-5 space-y-3">
         <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
           status === "approved" ? "bg-success/10 border-success/30"
           : status === "rejected" ? "bg-destructive/10 border-destructive/30"
@@ -144,8 +144,8 @@ function WorkerProfilePage() {
           {status === "approved" ? <BadgeCheck className="size-5 text-success" /> : status === "rejected" ? <ShieldAlert className="size-5 text-destructive" /> : <Clock className="size-5" />}
           <div className="min-w-0">
             <p className="font-semibold capitalize">{status === "approved" ? "Verified professional" : `Verification ${status}`}</p>
-            {status === "rejected" && (wp as any).rejection_reason && (
-              <p className="text-sm text-muted-foreground">{(wp as any).rejection_reason}</p>
+            {status === "rejected" && rejectionReason && (
+              <p className="text-sm text-muted-foreground">{rejectionReason}</p>
             )}
             {status !== "approved" && (
               <Link to="/worker/onboarding" className="inline-block mt-1 text-xs font-semibold text-primary">Update documents</Link>

@@ -10,6 +10,7 @@ import { AvatarUpload } from "@/components/avatar-upload";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
 
 export const Route = createFileRoute("/_authenticated/worker/profile")({
   head: () => ({ meta: [{ title: "My worker profile — Skill Link" }] }),

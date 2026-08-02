@@ -65,7 +65,10 @@ function WorkerProfilePage() {
     });
   }, [wp?.user_id, wp?.updated_at]);
 
+  if (wpLoading || nameLoading) return <PageSkeleton rows={4} />;
+
   if (!wp) {
+
     return (
       <AppShell>
         <main className="mx-auto max-w-md px-5 py-10 text-center space-y-3">

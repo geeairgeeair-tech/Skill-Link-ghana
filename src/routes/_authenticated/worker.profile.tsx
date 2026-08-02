@@ -71,10 +71,11 @@ function WorkerProfilePage() {
     });
   }, [wp?.user_id, wp?.updated_at]);
 
-  if (wpLoading || nameLoading) return <PageSkeleton rows={4} />;
+  if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
 
-  if (!wp) {
-
+  // Only a truly non-professional account (never onboarded) sees the setup CTA.
+  // An approved / pending / rejected / suspended pro keeps this page during refetches.
+  if (!wp && !hasApplication) {
     return (
       <AppShell>
         <main className="mx-auto max-w-md px-5 py-10 text-center space-y-3">
@@ -87,7 +88,9 @@ function WorkerProfilePage() {
     );
   }
 
-  const status = String(wp.verification_status);
+  if (!wp) return <PageSkeleton rows={4} />;
+
+  const status = String(wp.verification_status ?? proStatus);
 
   const save = async () => {
     if (!user) return;
@@ -104,8 +107,15 @@ function WorkerProfilePage() {
 
   const toggleAvailable = async (next: boolean) => {
     if (!user) return;
+    const key = ["my-worker-profile", user.id];
+    const previous = qc.getQueryData(key);
+    // Optimistic: patch only availability fields, never replace the profile record.
+    qc.setQueryData(key, (old: any) => (old ? { ...old, is_available: next } : old));
     const { error } = await supabase.from("worker_profiles").update({ is_available: next } as any).eq("user_id", user.id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      qc.setQueryData(key, previous);
+      return toast.error(error.message);
+    }
     toast.success(next ? "You're available for jobs" : "Marked unavailable");
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };

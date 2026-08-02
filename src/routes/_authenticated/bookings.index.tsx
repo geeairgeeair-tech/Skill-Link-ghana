@@ -71,10 +71,13 @@ function BookingsPage() {
   const [confirmFor, setConfirmFor] = useState<any | null>(null);
   const [disputeFor, setDisputeFor] = useState<any | null>(null);
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
+    staleTime: 30_000,
+    placeholderData: (prev: any) => prev,
     queryFn: async () => {
+
       const { data: rows, error } = await supabase
         .from("bookings")
         .select("*, categories(name), reviews(id, rating, comment)")

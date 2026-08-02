@@ -368,7 +368,22 @@ function BookingDetail() {
           </p>
 
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
+
+          {isCustomer && (b.payment_status ?? "unpaid") !== "paid" && (b.final_amount ?? b.estimated_amount) != null && (
+            <div className="mt-3">
+              <button
+                type="button"
+                disabled
+                title="Mobile Money payments are coming soon"
+                className="w-full rounded-xl border border-border bg-muted/60 py-3 font-semibold text-sm inline-flex items-center justify-center gap-2 opacity-80 cursor-not-allowed"
+              >
+                <Smartphone className="size-4" /> Pay with MoMo
+              </button>
+              <p className="text-[10px] text-muted-foreground mt-1 text-center">Mobile Money payments coming soon — settle in cash for now.</p>
+            </div>
+          )}
         </section>
+
 
         {/* Estimate */}
         <EstimateSection

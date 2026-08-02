@@ -56,16 +56,10 @@ function WorkerProfilePage() {
   useEffect(() => {
     if (!wp) return;
     setForm({
-      bio: wp.bio ?? "",
-      years_experience: wp.years_experience ?? 0,
       city: wp.city ?? "",
       service_area: wp.service_area ?? "",
-      hourly_rate: wp.hourly_rate ?? 0,
-      callout_fee: wp.callout_fee ?? 0,
-      starting_price: wp.starting_price ?? 0,
       unavailable_note: (wp as any).unavailable_note ?? "",
     });
-    setPortfolio(Array.isArray(wp.portfolio_images) ? (wp.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
   }, [wp?.user_id, wp?.updated_at]);
 
   if (!wp) {

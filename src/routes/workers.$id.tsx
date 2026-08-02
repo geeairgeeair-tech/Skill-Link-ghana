@@ -30,6 +30,8 @@ function WorkerDetail() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [activeProfId, setActiveProfId] = useState<string | null>(null);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+
 
 
   const workerQ = useQuery({

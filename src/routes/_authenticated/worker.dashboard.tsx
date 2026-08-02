@@ -47,12 +47,14 @@ function WorkerDashboard() {
   });
 
 
-  const { data: bookings } = useQuery({
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ["worker-bookings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: rows, error } = await supabase
-        .from("bookings").select("*, categories(name)")
+        .from("bookings")
+        .select("id, status, description, budget, estimated_cost, scheduled_at, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
         .eq("worker_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
@@ -68,12 +70,14 @@ function WorkerDashboard() {
   const { data: applications } = useQuery({
     queryKey: ["worker-app-count", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => (await supabase.from("job_applications").select("id, status").eq("worker_id", user!.id)).data ?? [],
   });
 
-  const { data: myProfile } = useQuery({
+  const { data: myProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () =>
       (await supabase.from("profiles").select("full_name, avatar_url").eq("id", user!.id).maybeSingle()).data,
   });
@@ -83,6 +87,7 @@ function WorkerDashboard() {
   const { data: returns } = useQuery({
     queryKey: ["worker-returns", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => (await supabase.from("return_requests").select("*").eq("worker_id", user!.id)
       .in("status", ["pending", "info_requested", "scheduled", "accepted"]).order("created_at", { ascending: false })).data ?? [],
   });
@@ -90,6 +95,7 @@ function WorkerDashboard() {
   const { data: earnings } = useQuery({
     queryKey: ["worker-earnings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase.rpc("worker_earnings_summary", { _worker_id: user!.id } as any);
       return (data as any)?.[0] ?? null;
@@ -99,8 +105,10 @@ function WorkerDashboard() {
   const { data: tickets } = useQuery({
     queryKey: ["worker-tickets", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () => (await supabase.from("support_tickets").select("id, status").eq("user_id", user!.id)).data ?? [],
   });
+
 
   useEffect(() => {
     if (!user) return;

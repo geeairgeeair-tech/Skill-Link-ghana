@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";
 
 export type ProStatus = "none" | "pending" | "approved" | "rejected" | "suspended";
@@ -49,8 +50,7 @@ export function useAppRole() {
       qc.invalidateQueries({ queryKey: ["my-professions"] });
       qc.invalidateQueries({ queryKey: ["worker-professions"] });
     };
-    const ch = supabase
-      .channel(`pro-status:${user.id}:${Math.random().toString(36).slice(2)}`)
+    const ch = uniqueChannel(`pro-status:${user.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "worker_profiles", filter: `user_id=eq.${user.id}` },

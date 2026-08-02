@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 
@@ -51,7 +52,7 @@ function AdminBookingsPage() {
   });
 
   useEffect(() => {
-    const ch = supabase.channel("admin-bookings")
+    const ch = uniqueChannel("admin-bookings")
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
         qc.invalidateQueries({ queryKey: ["admin-bookings-page"] });
       })

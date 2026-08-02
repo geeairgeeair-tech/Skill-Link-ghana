@@ -20,6 +20,7 @@ import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";
 import { useAppRole } from "@/hooks/use-app-role";
 
@@ -169,8 +170,7 @@ function BookingDetail() {
       qc.invalidateQueries({ queryKey: ["worker-jobs"] });
       qc.invalidateQueries({ queryKey: ["my-bookings"] });
     };
-    const ch = supabase
-      .channel(`booking-detail:${bookingId}`)
+    const ch = uniqueChannel(`booking-detail:${bookingId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         refreshBooking)
       .on("postgres_changes", { event: "*", schema: "public", table: "booking_estimates", filter: `booking_id=eq.${bookingId}` },

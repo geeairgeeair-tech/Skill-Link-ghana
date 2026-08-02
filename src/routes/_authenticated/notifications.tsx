@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationTarget } from "@/lib/notification-target";
@@ -38,7 +39,7 @@ function NotificationsPage() {
 
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`notif:${user.id}`)
+    const ch = uniqueChannel(`notif:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: ["notifications", user.id] }))
       .subscribe();

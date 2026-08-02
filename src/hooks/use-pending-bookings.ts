@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";
 
 /**
@@ -27,8 +28,7 @@ export function usePendingBookings() {
 
   useEffect(() => {
     if (!enabled) return;
-    const ch = supabase
-      .channel(`worker-pending:${user!.id}`)
+    const ch = uniqueChannel(`worker-pending:${user!.id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user!.id}` },

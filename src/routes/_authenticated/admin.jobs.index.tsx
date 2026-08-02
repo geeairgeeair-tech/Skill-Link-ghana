@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { useAuth } from "@/hooks/use-auth";
@@ -54,7 +55,7 @@ function AdminJobsPage() {
 
   useEffect(() => {
     if (role !== "admin") return;
-    const ch = supabase.channel("admin-jobs")
+    const ch = uniqueChannel("admin-jobs")
       .on("postgres_changes", { event: "*", schema: "public", table: "job_requests" }, () => {
         qc.invalidateQueries({ queryKey: ["admin-jobs-page"] });
       })

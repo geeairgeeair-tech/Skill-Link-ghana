@@ -5,6 +5,7 @@ import { Send, Lock, ClipboardList, Paperclip, Loader2, Check, CheckCheck } from
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { uploadImage } from "@/components/image-upload";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -93,8 +94,7 @@ function ChatPage() {
     let cancelled = false;
     let retry: ReturnType<typeof setTimeout> | undefined;
 
-    const channel = supabase
-      .channel(`chat:${bookingId}`)
+    const channel = uniqueChannel(`chat:${bookingId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },
         (payload) => mergeRef.current(payload.new))
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `booking_id=eq.${bookingId}` },

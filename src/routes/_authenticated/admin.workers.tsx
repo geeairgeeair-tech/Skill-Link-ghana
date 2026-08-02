@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { VerificationBadge } from "@/components/verification-badge";
@@ -234,8 +235,7 @@ function ProfessionsReviewPanel() {
   });
 
   useEffect(() => {
-    const ch = supabase
-      .channel("admin-professions-pending")
+    const ch = uniqueChannel("admin-professions-pending")
       .on("postgres_changes", { event: "*", schema: "public", table: "worker_professions" },
         () => qc.invalidateQueries({ queryKey: ["admin-professions-pending"] }))
       .subscribe();

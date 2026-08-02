@@ -7,6 +7,7 @@ import {
   CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
   Navigation, LifeBuoy, Gavel, Image as ImageIcon, Truck, Flag, PlayCircle,
   UserCheck, Scale, Home as HomeIcon,
+  Smartphone,
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";

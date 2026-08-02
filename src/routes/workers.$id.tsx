@@ -273,10 +273,11 @@ function WorkerDetail() {
         {activeProf ? (
           <>
             <Section title={activeProf.categories?.name ?? "Service"}>
+              {/* Account-level verification badge lives in the header only — professions show equipment status. */}
               <div className="flex flex-wrap items-center gap-1.5 mb-2">
-                <VerificationBadge status="approved" />
                 <EquipmentBadge status={activeProf.equipment_status} />
               </div>
+
               {activeProf.bio ? (
                 <p className="text-sm leading-relaxed whitespace-pre-line">{activeProf.bio}</p>
               ) : (

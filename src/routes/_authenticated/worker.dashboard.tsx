@@ -4,8 +4,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { VerificationBadge } from "@/components/verification-badge";
 import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -22,14 +22,16 @@ export const Route = createFileRoute("/_authenticated/worker/dashboard")({
 const ACTIVE = ["accepted", "on_the_way", "arrived", "in_progress", "awaiting_customer_confirmation", "disputed"];
 const cedis = (n: any) => `GH₵${Number(n ?? 0).toLocaleString()}`;
 const isToday = (d?: string | null) => !!d && new Date(d).toDateString() === new Date().toDateString();
+const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"];
 
 function WorkerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: wp } = useQuery({
+  const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
@@ -44,12 +46,15 @@ function WorkerDashboard() {
     },
   });
 
-  const { data: bookings } = useQuery({
+
+  const { data: bookings, isLoading: bookingsLoading } = useQuery({
     queryKey: ["worker-bookings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: rows, error } = await supabase
-        .from("bookings").select("*, categories(name)")
+        .from("bookings")
+        .select("id, status, description, budget, estimated_cost, scheduled_at, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
         .eq("worker_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
@@ -65,12 +70,14 @@ function WorkerDashboard() {
   const { data: applications } = useQuery({
     queryKey: ["worker-app-count", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => (await supabase.from("job_applications").select("id, status").eq("worker_id", user!.id)).data ?? [],
   });
 
-  const { data: myProfile } = useQuery({
+  const { data: myProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () =>
       (await supabase.from("profiles").select("full_name, avatar_url").eq("id", user!.id).maybeSingle()).data,
   });
@@ -80,6 +87,7 @@ function WorkerDashboard() {
   const { data: returns } = useQuery({
     queryKey: ["worker-returns", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => (await supabase.from("return_requests").select("*").eq("worker_id", user!.id)
       .in("status", ["pending", "info_requested", "scheduled", "accepted"]).order("created_at", { ascending: false })).data ?? [],
   });
@@ -87,6 +95,7 @@ function WorkerDashboard() {
   const { data: earnings } = useQuery({
     queryKey: ["worker-earnings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase.rpc("worker_earnings_summary", { _worker_id: user!.id } as any);
       return (data as any)?.[0] ?? null;
@@ -96,8 +105,10 @@ function WorkerDashboard() {
   const { data: tickets } = useQuery({
     queryKey: ["worker-tickets", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () => (await supabase.from("support_tickets").select("id, status").eq("user_id", user!.id)).data ?? [],
   });
+
 
   useEffect(() => {
     if (!user) return;
@@ -126,9 +137,12 @@ function WorkerDashboard() {
   const activeList = list.filter((b: any) => ACTIVE.includes(b.status));
   const busy = activeList.length > 0;
   const pendingRequests = list.filter((b: any) => b.status === "pending");
-  const todayJobs = activeList.filter((b: any) => isToday(b.scheduled_at) || b.status === "in_progress");
-  const upcoming = activeList.filter((b: any) => !todayJobs.includes(b));
-  const completed = list.filter((b: any) => b.status === "completed").length;
+  /** Jobs actually finished today — derived from completion timestamps, so it resets itself each day. */
+  const todayJobs = list.filter(
+    (b: any) => COMPLETED_STATUSES.includes(b.status) && (isToday(b.customer_confirmed_at) || isToday(b.worker_completed_at)),
+  );
+  const liveJobs = activeList;
+  const completed = list.filter((b: any) => COMPLETED_STATUSES.includes(b.status)).length;
   const pendingApps = (applications ?? []).filter((a: any) => a.status === "pending").length;
   const openTickets = (tickets ?? []).filter((t: any) => t.status !== "closed" && t.status !== "resolved").length;
 
@@ -143,6 +157,9 @@ function WorkerDashboard() {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   })();
 
+  // Never render customer / unverified content while the professional record is still loading.
+  if (wpLoading || profileLoading) return <PageSkeleton rows={5} />;
+
   return (
     <AppShell>
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
@@ -153,10 +170,7 @@ function WorkerDashboard() {
               : (myProfile?.full_name?.[0]?.toUpperCase() ?? "?")}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
-              {wp && <VerificationBadge status={status} />}
-            </div>
+            <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
             <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
           </div>
         </div>
@@ -164,6 +178,12 @@ function WorkerDashboard() {
 
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
+        {wp && isVerified && (
+          <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
+            <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace
+          </div>
+        )}
+
         {!wp && (
           <Link to="/worker/onboarding" className="block rounded-2xl bg-gold text-gold-foreground p-4 shadow-elevated">
             <div className="flex items-center gap-3">
@@ -172,6 +192,7 @@ function WorkerDashboard() {
             </div>
           </Link>
         )}
+
 
         {wp && status === "rejected" && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
@@ -209,11 +230,8 @@ function WorkerDashboard() {
           </div>
         )}
 
-        {wp && isVerified && (
-          <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
-            <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace
-          </div>
-        )}
+
+
 
         {wp && completion < 100 && (
           <Link to="/worker/profile" className="block rounded-2xl bg-card border border-border p-4">
@@ -272,28 +290,22 @@ function WorkerDashboard() {
 
         <div className="grid grid-cols-2 gap-2">
           <StatTile to="/worker/jobs" icon={CalendarDays} label="Today's jobs" value={todayJobs.length} />
-          <StatTile to="/worker/jobs" icon={Briefcase} label="Upcoming" value={upcoming.length} />
           <StatTile to="/worker/applications" icon={FileText} label="Pending applications" value={pendingApps} />
-          
           <StatTile to="/worker/earnings" icon={Wallet} label="Total earned" value={cedis(earnings?.total_paid)} />
           <StatTile to="/worker/reviews" icon={Star} label="Rating" value={(wp as any)?.rating ? `${(wp as any).rating} ★` : "—"} />
           <StatTile to="/worker/jobs" icon={BadgeCheck} label="Completed jobs" value={completed} />
           <StatTile to="/support" icon={LifeBuoy} label="Open tickets" value={openTickets} />
         </div>
 
-        {todayJobs.length > 0 && (
+        {bookingsLoading && <div className="h-24 rounded-2xl bg-muted animate-pulse" />}
+
+        {liveJobs.length > 0 && (
           <div className="space-y-2">
-            <h2 className="font-display font-bold">Today</h2>
-            {todayJobs.map((b: any) => <BookingRow key={b.id} b={b} />)}
+            <h2 className="font-display font-bold">Active jobs</h2>
+            {liveJobs.map((b: any) => <BookingRow key={b.id} b={b} />)}
           </div>
         )}
 
-        {upcoming.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="font-display font-bold">Upcoming</h2>
-            {upcoming.map((b: any) => <BookingRow key={b.id} b={b} />)}
-          </div>
-        )}
 
         <div className="grid grid-cols-2 gap-2 pb-4">
           <Tile to="/worker/profile" icon={UserCog} title="My profile" subtitle="Bio, pricing, documents" />

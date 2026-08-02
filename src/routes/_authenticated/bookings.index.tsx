@@ -71,10 +71,13 @@ function BookingsPage() {
   const [confirmFor, setConfirmFor] = useState<any | null>(null);
   const [disputeFor, setDisputeFor] = useState<any | null>(null);
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
+    staleTime: 30_000,
+    placeholderData: (prev: any) => prev,
     queryFn: async () => {
+
       const { data: rows, error } = await supabase
         .from("bookings")
         .select("*, categories(name), reviews(id, rating, comment)")
@@ -120,7 +123,10 @@ function BookingsPage() {
         </div>
       </header>
       <main className="mx-auto max-w-md px-5 space-y-3 mt-3 pb-32">
-        {visible.length === 0 ? (
+        {isLoading && !data ? (
+          Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+        ) : visible.length === 0 ? (
+
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
             <Calendar className="size-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">No {TABS.find(t=>t.key===tab)?.label.toLowerCase()} bookings.</p>

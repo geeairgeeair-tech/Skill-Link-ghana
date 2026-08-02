@@ -68,7 +68,10 @@ function ProfessionsPage() {
         </div>
       </header>
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3 pb-32">
-        {isLoading ? <p className="text-sm text-muted-foreground p-4">Loading…</p> : null}
+        {isLoading
+          ? Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+          : null}
+
         {(profs ?? []).map((p: any) =>
           editingId === p.id ? (
             <ProfessionForm

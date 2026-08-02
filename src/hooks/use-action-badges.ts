@@ -72,7 +72,11 @@ export function useProfessionalActionCount() {
   return enabled ? data ?? 0 : 0;
 }
 
-/** Outstanding-action count for the customer "Bookings" tab (any user). */
+/**
+ * Outstanding-action count for the customer surfaces ("Hire", "My Bookings").
+ * Counts live bookings (estimate approval / active work / completion
+ * confirmation) plus completed bookings that still need a review.
+ */
 export function useCustomerActionCount() {
   const { user } = useAppRole();
   const key = ["badge-customer-actions", user?.id];
@@ -80,15 +84,23 @@ export function useCustomerActionCount() {
   const { data } = useQuery({
     queryKey: key,
     enabled: !!user,
+    staleTime: 30_000,
     queryFn: async () => {
-      const [{ data: bookings }, { data: returns }] = await Promise.all([
+      const [{ data: bookings }, { data: returns }, { data: reviewable }] = await Promise.all([
         supabase.from("bookings").select("id, status").eq("customer_id", user!.id).in("status", CUSTOMER_ACTION_STATUSES as any),
         supabase.from("return_requests").select("id").eq("customer_id", user!.id).in("status", ["info_requested", "scheduled", "accepted"]),
+        supabase
+          .from("bookings")
+          .select("id, reviews(id)")
+          .eq("customer_id", user!.id)
+          .in("status", ["completed", "closed", "customer_confirmed_complete"] as any),
       ]);
-      return (bookings?.length ?? 0) + (returns?.length ?? 0);
+      const pendingReviews = (reviewable ?? []).filter((b: any) => (b.reviews ?? []).length === 0).length;
+      return (bookings?.length ?? 0) + (returns?.length ?? 0) + pendingReviews;
     },
   });
 
   useRealtimeRefresh(user?.id, key, "customer_id");
   return user ? data ?? 0 : 0;
 }
+

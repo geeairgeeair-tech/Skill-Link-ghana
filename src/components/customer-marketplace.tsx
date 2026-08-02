@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, PlusSquare, Calendar, Megaphone } from "lucide-react";
+import { ArrowRight, Search, PlusSquare, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAuth } from "@/hooks/use-auth";
+import { useCustomerActionCount } from "@/hooks/use-action-badges";
+
 
 /** Slugs shown as the "everyday services" shortlist on home / hire surfaces. */
 export const FEATURED_CATEGORY_SLUGS = [
@@ -63,9 +65,12 @@ export function FeaturedCategoryGrid({
  */
 export function CustomerMarketplaceSection() {
   const { user } = useAuth();
+  const customerActions = useCustomerActionCount();
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
+    staleTime: 30 * 60_000,
+
     queryFn: async () => {
       const { data } = await supabase
         .from("categories")
@@ -78,6 +83,8 @@ export function CustomerMarketplaceSection() {
 
   const { data: recommended } = useQuery({
     queryKey: ["recommended-workers", user?.id],
+    staleTime: 5 * 60_000,
+
     queryFn: async (): Promise<WorkerCardData[]> => {
       const { data } = await supabase
         .from("worker_profiles")
@@ -120,6 +127,8 @@ export function CustomerMarketplaceSection() {
   const { data: myBookings } = useQuery({
     queryKey: ["my-customer-bookings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
+
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
@@ -154,10 +163,16 @@ export function CustomerMarketplaceSection() {
           </Link>
           <Link
             to="/bookings"
-            className="rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm inline-flex items-center gap-2"
+            className="relative rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm inline-flex items-center gap-2"
           >
             <Calendar className="size-4 text-primary" /> My Hires
+            {customerActions > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold grid place-items-center">
+                {customerActions > 9 ? "9+" : customerActions}
+              </span>
+            )}
           </Link>
+
         </div>
       </section>
 
@@ -224,16 +239,6 @@ export function CustomerMarketplaceSection() {
         )}
       </section>
 
-      <section className="rounded-2xl bg-primary-soft/60 border border-border p-4">
-        <p className="font-display font-bold inline-flex items-center gap-2">
-          <Megaphone className="size-4 text-primary" /> Platform updates
-        </p>
-        <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-4">
-          <li>You can now hire other professionals without a second account.</li>
-          <li>Bookings, chat and notifications are shared across both experiences.</li>
-          <li>Free Beta — no commission on completed jobs.</li>
-        </ul>
-      </section>
     </div>
   );
 }

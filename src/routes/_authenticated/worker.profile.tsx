@@ -8,7 +8,7 @@ import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 
 import { supabase } from "@/integrations/supabase/client";
-import { VerificationBadge } from "@/components/verification-badge";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/worker/profile")({
@@ -26,26 +26,29 @@ function WorkerProfilePage() {
   });
   const [saving, setSaving] = useState(false);
 
-  const { data: wp } = useQuery({
+  const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
         .select(
-          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, created_at, updated_at",
+          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, rejection_reason, created_at, updated_at",
         )
         .eq("user_id", user!.id).maybeSingle();
       return data;
     },
   });
 
-  const { data: myProfile } = useQuery({
+  const { data: myProfile, isLoading: nameLoading } = useQuery({
     queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () =>
       (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
   });
+
 
 
   useEffect(() => {
@@ -62,7 +65,10 @@ function WorkerProfilePage() {
     });
   }, [wp?.user_id, wp?.updated_at]);
 
+  if (wpLoading || nameLoading) return <PageSkeleton rows={4} />;
+
   if (!wp) {
+
     return (
       <AppShell>
         <main className="mx-auto max-w-md px-5 py-10 text-center space-y-3">
@@ -105,9 +111,9 @@ function WorkerProfilePage() {
           <BackButton fallback="/worker/dashboard" className="text-primary-foreground/90 hover:text-primary-foreground mb-2" />
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker profile"}</h1>
-            <VerificationBadge status={status} />
           </div>
-          <p className="text-sm opacity-80">Everything customers see about you</p>
+          <p className="text-sm opacity-80">Your account settings</p>
+
         </div>
 
       </header>

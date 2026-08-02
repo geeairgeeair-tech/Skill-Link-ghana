@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, PlusSquare, Calendar, Megaphone } from "lucide-react";
+import { ArrowRight, Search, PlusSquare, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAuth } from "@/hooks/use-auth";
+import { useCustomerActionCount } from "@/hooks/use-action-badges";
+
 
 /** Slugs shown as the "everyday services" shortlist on home / hire surfaces. */
 export const FEATURED_CATEGORY_SLUGS = [
@@ -224,16 +226,6 @@ export function CustomerMarketplaceSection() {
         )}
       </section>
 
-      <section className="rounded-2xl bg-primary-soft/60 border border-border p-4">
-        <p className="font-display font-bold inline-flex items-center gap-2">
-          <Megaphone className="size-4 text-primary" /> Platform updates
-        </p>
-        <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-4">
-          <li>You can now hire other professionals without a second account.</li>
-          <li>Bookings, chat and notifications are shared across both experiences.</li>
-          <li>Free Beta — no commission on completed jobs.</li>
-        </ul>
-      </section>
     </div>
   );
 }

@@ -34,7 +34,7 @@ function WorkerProfilePage() {
       const { data } = await supabase
         .from("worker_profiles")
         .select(
-          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, created_at, updated_at",
+          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, rejection_reason, created_at, updated_at",
         )
         .eq("user_id", user!.id).maybeSingle();
       return data;
@@ -112,6 +112,7 @@ function WorkerProfilePage() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker profile"}</h1>
           </div>
+          <p className="text-sm opacity-80">Your account settings</p>
 
         </div>
 

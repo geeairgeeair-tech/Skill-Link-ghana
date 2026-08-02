@@ -290,28 +290,22 @@ function WorkerDashboard() {
 
         <div className="grid grid-cols-2 gap-2">
           <StatTile to="/worker/jobs" icon={CalendarDays} label="Today's jobs" value={todayJobs.length} />
-          <StatTile to="/worker/jobs" icon={Briefcase} label="Upcoming" value={upcoming.length} />
           <StatTile to="/worker/applications" icon={FileText} label="Pending applications" value={pendingApps} />
-          
           <StatTile to="/worker/earnings" icon={Wallet} label="Total earned" value={cedis(earnings?.total_paid)} />
           <StatTile to="/worker/reviews" icon={Star} label="Rating" value={(wp as any)?.rating ? `${(wp as any).rating} ★` : "—"} />
           <StatTile to="/worker/jobs" icon={BadgeCheck} label="Completed jobs" value={completed} />
           <StatTile to="/support" icon={LifeBuoy} label="Open tickets" value={openTickets} />
         </div>
 
-        {todayJobs.length > 0 && (
+        {bookingsLoading && <div className="h-24 rounded-2xl bg-muted animate-pulse" />}
+
+        {liveJobs.length > 0 && (
           <div className="space-y-2">
-            <h2 className="font-display font-bold">Today</h2>
-            {todayJobs.map((b: any) => <BookingRow key={b.id} b={b} />)}
+            <h2 className="font-display font-bold">Active jobs</h2>
+            {liveJobs.map((b: any) => <BookingRow key={b.id} b={b} />)}
           </div>
         )}
 
-        {upcoming.length > 0 && (
-          <div className="space-y-2">
-            <h2 className="font-display font-bold">Upcoming</h2>
-            {upcoming.map((b: any) => <BookingRow key={b.id} b={b} />)}
-          </div>
-        )}
 
         <div className="grid grid-cols-2 gap-2 pb-4">
           <Tile to="/worker/profile" icon={UserCog} title="My profile" subtitle="Bio, pricing, documents" />

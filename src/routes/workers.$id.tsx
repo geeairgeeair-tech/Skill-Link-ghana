@@ -356,7 +356,7 @@ function WorkerDetail() {
             </div>
           ) : reviewsQ.data && reviewsQ.data.length > 0 ? (
             <div className="space-y-3">
-              {reviewsQ.data.map((r: any) => (
+              {(showAllReviews ? reviewsQ.data : reviewsQ.data.slice(0, 3)).map((r: any) => (
                 <div key={r.id} className="rounded-xl border border-border p-3">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
@@ -383,10 +383,20 @@ function WorkerDetail() {
                   </div>
                 </div>
               ))}
+              {reviewsQ.data.length > 3 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllReviews((v) => !v)}
+                  className="w-full rounded-xl border border-border py-2 text-sm font-semibold text-primary"
+                >
+                  {showAllReviews ? "Show less" : `See all ${reviewsQ.data.length} reviews`}
+                </button>
+              )}
             </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">No reviews yet — be the first to hire and review this pro.</p>
           )}
+
         </Section>
       </div>
 

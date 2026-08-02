@@ -6,7 +6,7 @@ import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet, LogOut 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
-import { ImageUpload } from "@/components/image-upload";
+
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,10 +21,8 @@ function WorkerProfilePage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [portfolio, setPortfolio] = useState<string[]>([]);
   const [form, setForm] = useState({
-    bio: "", years_experience: 0, city: "", service_area: "",
-    hourly_rate: 0, callout_fee: 0, starting_price: 0, unavailable_note: "",
+    city: "", service_area: "", unavailable_note: "",
   });
   const [saving, setSaving] = useState(false);
 
@@ -58,16 +56,10 @@ function WorkerProfilePage() {
   useEffect(() => {
     if (!wp) return;
     setForm({
-      bio: wp.bio ?? "",
-      years_experience: wp.years_experience ?? 0,
       city: wp.city ?? "",
       service_area: wp.service_area ?? "",
-      hourly_rate: wp.hourly_rate ?? 0,
-      callout_fee: wp.callout_fee ?? 0,
-      starting_price: wp.starting_price ?? 0,
       unavailable_note: (wp as any).unavailable_note ?? "",
     });
-    setPortfolio(Array.isArray(wp.portfolio_images) ? (wp.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
   }, [wp?.user_id, wp?.updated_at]);
 
   if (!wp) {
@@ -95,13 +87,8 @@ function WorkerProfilePage() {
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
 
-  const savePortfolio = async (urls: string[]) => {
-    setPortfolio(urls);
-    if (!user) return;
-    const { error } = await supabase.from("worker_profiles").update({ portfolio_images: urls } as any).eq("user_id", user.id);
-    if (error) toast.error(error.message);
-    else qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
-  };
+
+
 
   const toggleAvailable = async (next: boolean) => {
     if (!user) return;
@@ -164,47 +151,23 @@ function WorkerProfilePage() {
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
         </Section>
 
-        <Section title="About & service area">
-          <Field label="Bio">
-            <textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
+        <Section title="Location & service area">
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Years experience">
-              <input type="number" min={0} value={form.years_experience} onChange={(e) => setForm({ ...form, years_experience: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
             <Field label="City">
               <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             </Field>
-          </div>
-          <Field label="Service area">
-            <input value={form.service_area} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
-        </Section>
-
-        <Section title="Pricing">
-          <div className="grid grid-cols-3 gap-2">
-            <Field label="Call-out">
-              <input type="number" min={0} value={form.callout_fee} onChange={(e) => setForm({ ...form, callout_fee: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-            <Field label="Hourly">
-              <input type="number" min={0} value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-            <Field label="From">
-              <input type="number" min={0} value={form.starting_price} onChange={(e) => setForm({ ...form, starting_price: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            <Field label="Service area">
+              <input value={form.service_area} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             </Field>
           </div>
           <button onClick={save} disabled={saving} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50">
             {saving ? "Saving…" : "Save changes"}
           </button>
+          <p className="text-[11px] text-muted-foreground">
+            Bio, experience, prices, portfolio and strengths are now set per profession in <Link to="/worker/professions" className="text-primary font-semibold">My professions</Link>.
+          </p>
         </Section>
 
-        <Section title="Portfolio">
-          {user && (
-            <ImageUpload bucket="worker-portfolio" userId={user.id} prefix="work" multiple max={8}
-              label="Photos of your work" hint="Saved automatically. Up to 8 photos."
-              value={portfolio} onChange={savePortfolio} />
-          )}
-        </Section>
 
         <Section title="Verification documents">
           {(() => {

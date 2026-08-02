@@ -163,10 +163,16 @@ export function CustomerMarketplaceSection() {
           </Link>
           <Link
             to="/bookings"
-            className="rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm inline-flex items-center gap-2"
+            className="relative rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm inline-flex items-center gap-2"
           >
             <Calendar className="size-4 text-primary" /> My Hires
+            {customerActions > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold grid place-items-center">
+                {customerActions > 9 ? "9+" : customerActions}
+              </span>
+            )}
           </Link>
+
         </div>
       </section>
 

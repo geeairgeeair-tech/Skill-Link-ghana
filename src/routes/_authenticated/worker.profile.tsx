@@ -26,9 +26,10 @@ function WorkerProfilePage() {
   });
   const [saving, setSaving] = useState(false);
 
-  const { data: wp } = useQuery({
+  const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
@@ -40,12 +41,14 @@ function WorkerProfilePage() {
     },
   });
 
-  const { data: myProfile } = useQuery({
+  const { data: myProfile, isLoading: nameLoading } = useQuery({
     queryKey: ["my-profile-name", user?.id],
     enabled: !!user,
+    staleTime: 5 * 60_000,
     queryFn: async () =>
       (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
   });
+
 
 
   useEffect(() => {

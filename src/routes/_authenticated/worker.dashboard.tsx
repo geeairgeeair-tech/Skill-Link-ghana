@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
@@ -112,8 +113,7 @@ function WorkerDashboard() {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`worker-dash:${user.id}`)
+    const channel = uniqueChannel(`worker-dash:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: ["worker-bookings", user.id] }))
       .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `worker_id=eq.${user.id}` },

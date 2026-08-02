@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { useAppRole } from "@/hooks/use-app-role";
 
 /** Booking statuses that still need the Professional to act. */
@@ -34,8 +35,7 @@ function useRealtimeRefresh(userId: string | undefined, key: unknown[], column: 
   useEffect(() => {
     if (!userId) return;
     const refresh = () => qc.invalidateQueries({ queryKey: key });
-    const ch = supabase
-      .channel(`badge:${column}:${userId}`)
+    const ch = uniqueChannel(`badge:${column}:${userId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `${column}=eq.${userId}` }, refresh)
       .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` }, refresh)
       .subscribe();

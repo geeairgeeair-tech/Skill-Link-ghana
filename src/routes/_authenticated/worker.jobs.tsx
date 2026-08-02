@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { CompleteJobModal } from "@/components/complete-job-modal";
@@ -93,8 +94,7 @@ function JobsPage() {
 
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`worker-jobs:${user.id}`)
+    const channel = uniqueChannel(`worker-jobs:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
         () => {
           qc.invalidateQueries({ queryKey: ["worker-jobs", user.id] });

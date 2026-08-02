@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
-import { VerificationBadge } from "@/components/verification-badge";
 import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
 

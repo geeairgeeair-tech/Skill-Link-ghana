@@ -8,7 +8,7 @@ import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 
 import { supabase } from "@/integrations/supabase/client";
-import { VerificationBadge } from "@/components/verification-badge";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/worker/profile")({

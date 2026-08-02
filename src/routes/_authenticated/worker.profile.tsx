@@ -10,6 +10,7 @@ import { AvatarUpload } from "@/components/avatar-upload";
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppRole } from "@/hooks/use-app-role";
 
 export const Route = createFileRoute("/_authenticated/worker/profile")({
   head: () => ({ meta: [{ title: "My worker profile — Skill Link" }] }),
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/worker/profile")({
 
 function WorkerProfilePage() {
   const { user } = useAuth();
+  const { proStatus, hasApplication, rejectionReason, loading: roleLoading } = useAppRole();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -30,13 +32,19 @@ function WorkerProfilePage() {
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
     staleTime: 60_000,
+    // Keep the last known professional record on screen while a refetch runs, so an
+    // approved pro is never briefly treated as "no worker profile".
+    placeholderData: (prev: any) => prev,
     queryFn: async () => {
-      const { data } = await supabase
+      // NOTE: only columns readable by the owner may be selected here — restricted
+      // columns (e.g. rejection_reason, identity docs) come from RPCs / useAppRole.
+      const { data, error } = await supabase
         .from("worker_profiles")
         .select(
-          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, rejection_reason, created_at, updated_at",
+          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, created_at, updated_at",
         )
         .eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
       return data;
     },
   });
@@ -65,10 +73,11 @@ function WorkerProfilePage() {
     });
   }, [wp?.user_id, wp?.updated_at]);
 
-  if (wpLoading || nameLoading) return <PageSkeleton rows={4} />;
+  if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
 
-  if (!wp) {
-
+  // Only a truly non-professional account (never onboarded) sees the setup CTA.
+  // An approved / pending / rejected / suspended pro keeps this page during refetches.
+  if (!wp && !hasApplication) {
     return (
       <AppShell>
         <main className="mx-auto max-w-md px-5 py-10 text-center space-y-3">
@@ -81,7 +90,9 @@ function WorkerProfilePage() {
     );
   }
 
-  const status = String(wp.verification_status);
+  if (!wp) return <PageSkeleton rows={4} />;
+
+  const status = String(wp.verification_status ?? proStatus);
 
   const save = async () => {
     if (!user) return;
@@ -98,8 +109,15 @@ function WorkerProfilePage() {
 
   const toggleAvailable = async (next: boolean) => {
     if (!user) return;
+    const key = ["my-worker-profile", user.id];
+    const previous = qc.getQueryData(key);
+    // Optimistic: patch only availability fields, never replace the profile record.
+    qc.setQueryData(key, (old: any) => (old ? { ...old, is_available: next } : old));
     const { error } = await supabase.from("worker_profiles").update({ is_available: next } as any).eq("user_id", user.id);
-    if (error) return toast.error(error.message);
+    if (error) {
+      qc.setQueryData(key, previous);
+      return toast.error(error.message);
+    }
     toast.success(next ? "You're available for jobs" : "Marked unavailable");
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
@@ -118,7 +136,7 @@ function WorkerProfilePage() {
 
       </header>
 
-      <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
+      <main className="mx-auto max-w-md px-5 mt-5 space-y-3">
         <div className={`rounded-2xl border p-4 flex items-start gap-3 ${
           status === "approved" ? "bg-success/10 border-success/30"
           : status === "rejected" ? "bg-destructive/10 border-destructive/30"
@@ -126,8 +144,8 @@ function WorkerProfilePage() {
           {status === "approved" ? <BadgeCheck className="size-5 text-success" /> : status === "rejected" ? <ShieldAlert className="size-5 text-destructive" /> : <Clock className="size-5" />}
           <div className="min-w-0">
             <p className="font-semibold capitalize">{status === "approved" ? "Verified professional" : `Verification ${status}`}</p>
-            {status === "rejected" && (wp as any).rejection_reason && (
-              <p className="text-sm text-muted-foreground">{(wp as any).rejection_reason}</p>
+            {status === "rejected" && rejectionReason && (
+              <p className="text-sm text-muted-foreground">{rejectionReason}</p>
             )}
             {status !== "approved" && (
               <Link to="/worker/onboarding" className="inline-block mt-1 text-xs font-semibold text-primary">Update documents</Link>

@@ -177,7 +177,7 @@ function WorkerDashboard() {
       </header>
 
 
-      <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
+      <main className="mx-auto max-w-md px-5 mt-5 space-y-4">
         {wp && isVerified && (
           <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
             <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace

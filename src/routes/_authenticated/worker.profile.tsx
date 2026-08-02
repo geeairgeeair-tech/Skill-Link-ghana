@@ -20,6 +20,7 @@ export const Route = createFileRoute("/_authenticated/worker/profile")({
 function WorkerProfilePage() {
   const { user } = useAuth();
   const { proStatus, hasApplication, rejectionReason, loading: roleLoading } = useAppRole();
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [form, setForm] = useState({

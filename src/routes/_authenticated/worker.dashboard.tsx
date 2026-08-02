@@ -137,9 +137,12 @@ function WorkerDashboard() {
   const activeList = list.filter((b: any) => ACTIVE.includes(b.status));
   const busy = activeList.length > 0;
   const pendingRequests = list.filter((b: any) => b.status === "pending");
-  const todayJobs = activeList.filter((b: any) => isToday(b.scheduled_at) || b.status === "in_progress");
-  const upcoming = activeList.filter((b: any) => !todayJobs.includes(b));
-  const completed = list.filter((b: any) => b.status === "completed").length;
+  /** Jobs actually finished today — derived from completion timestamps, so it resets itself each day. */
+  const todayJobs = list.filter(
+    (b: any) => COMPLETED_STATUSES.includes(b.status) && (isToday(b.customer_confirmed_at) || isToday(b.worker_completed_at)),
+  );
+  const liveJobs = activeList;
+  const completed = list.filter((b: any) => COMPLETED_STATUSES.includes(b.status)).length;
   const pendingApps = (applications ?? []).filter((a: any) => a.status === "pending").length;
   const openTickets = (tickets ?? []).filter((t: any) => t.status !== "closed" && t.status !== "resolved").length;
 
@@ -154,6 +157,9 @@ function WorkerDashboard() {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   })();
 
+  // Never render customer / unverified content while the professional record is still loading.
+  if (wpLoading || profileLoading) return <DashboardSkeleton />;
+
   return (
     <AppShell>
       <header className="fg-gradient-hero text-primary-foreground px-5 pt-6 pb-8 rounded-b-3xl">
@@ -164,10 +170,7 @@ function WorkerDashboard() {
               : (myProfile?.full_name?.[0]?.toUpperCase() ?? "?")}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
-              {wp && <VerificationBadge status={status} />}
-            </div>
+            <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker"}</h1>
             <p className="text-primary-foreground/80 text-sm">Manage your jobs & profile</p>
           </div>
         </div>
@@ -175,6 +178,12 @@ function WorkerDashboard() {
 
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-4">
+        {wp && isVerified && (
+          <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
+            <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace
+          </div>
+        )}
+
         {!wp && (
           <Link to="/worker/onboarding" className="block rounded-2xl bg-gold text-gold-foreground p-4 shadow-elevated">
             <div className="flex items-center gap-3">
@@ -183,6 +192,7 @@ function WorkerDashboard() {
             </div>
           </Link>
         )}
+
 
         {wp && status === "rejected" && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">

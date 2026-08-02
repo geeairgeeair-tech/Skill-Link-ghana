@@ -111,9 +111,8 @@ function WorkerProfilePage() {
           <BackButton fallback="/worker/dashboard" className="text-primary-foreground/90 hover:text-primary-foreground mb-2" />
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="font-display text-2xl font-bold truncate">{myProfile?.full_name || "Worker profile"}</h1>
-            <VerificationBadge status={status} />
           </div>
-          <p className="text-sm opacity-80">Everything customers see about you</p>
+
         </div>
 
       </header>

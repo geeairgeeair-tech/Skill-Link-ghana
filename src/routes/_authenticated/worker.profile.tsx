@@ -156,47 +156,23 @@ function WorkerProfilePage() {
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
         </Section>
 
-        <Section title="About & service area">
-          <Field label="Bio">
-            <textarea rows={3} value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
+        <Section title="Location & service area">
           <div className="grid grid-cols-2 gap-2">
-            <Field label="Years experience">
-              <input type="number" min={0} value={form.years_experience} onChange={(e) => setForm({ ...form, years_experience: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
             <Field label="City">
               <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             </Field>
-          </div>
-          <Field label="Service area">
-            <input value={form.service_area} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
-        </Section>
-
-        <Section title="Pricing">
-          <div className="grid grid-cols-3 gap-2">
-            <Field label="Call-out">
-              <input type="number" min={0} value={form.callout_fee} onChange={(e) => setForm({ ...form, callout_fee: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-            <Field label="Hourly">
-              <input type="number" min={0} value={form.hourly_rate} onChange={(e) => setForm({ ...form, hourly_rate: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-            <Field label="From">
-              <input type="number" min={0} value={form.starting_price} onChange={(e) => setForm({ ...form, starting_price: +e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+            <Field label="Service area">
+              <input value={form.service_area} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
             </Field>
           </div>
           <button onClick={save} disabled={saving} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50">
             {saving ? "Saving…" : "Save changes"}
           </button>
+          <p className="text-[11px] text-muted-foreground">
+            Bio, experience, prices, portfolio and strengths are now set per profession in <Link to="/worker/professions" className="text-primary font-semibold">My professions</Link>.
+          </p>
         </Section>
 
-        <Section title="Portfolio">
-          {user && (
-            <ImageUpload bucket="worker-portfolio" userId={user.id} prefix="work" multiple max={8}
-              label="Photos of your work" hint="Saved automatically. Up to 8 photos."
-              value={portfolio} onChange={savePortfolio} />
-          )}
-        </Section>
 
         <Section title="Verification documents">
           {(() => {

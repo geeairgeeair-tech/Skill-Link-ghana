@@ -30,13 +30,19 @@ function WorkerProfilePage() {
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
     staleTime: 60_000,
+    // Keep the last known professional record on screen while a refetch runs, so an
+    // approved pro is never briefly treated as "no worker profile".
+    placeholderData: (prev: any) => prev,
     queryFn: async () => {
-      const { data } = await supabase
+      // NOTE: only columns readable by the owner may be selected here — restricted
+      // columns (e.g. rejection_reason, identity docs) come from RPCs / useAppRole.
+      const { data, error } = await supabase
         .from("worker_profiles")
         .select(
-          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, rejection_reason, created_at, updated_at",
+          "user_id, category_id, bio, years_experience, city, service_area, hourly_rate, callout_fee, starting_price, portfolio_images, verification_status, rating, reviews_count, jobs_completed, is_featured, is_available, unavailable_note, created_at, updated_at",
         )
         .eq("user_id", user!.id).maybeSingle();
+      if (error) throw error;
       return data;
     },
   });

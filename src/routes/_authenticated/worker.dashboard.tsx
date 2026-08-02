@@ -22,14 +22,16 @@ export const Route = createFileRoute("/_authenticated/worker/dashboard")({
 const ACTIVE = ["accepted", "on_the_way", "arrived", "in_progress", "awaiting_customer_confirmation", "disputed"];
 const cedis = (n: any) => `GH₵${Number(n ?? 0).toLocaleString()}`;
 const isToday = (d?: string | null) => !!d && new Date(d).toDateString() === new Date().toDateString();
+const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"];
 
 function WorkerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: wp } = useQuery({
+  const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("worker_profiles")
@@ -43,6 +45,7 @@ function WorkerDashboard() {
       return { ...data, date_of_birth: row.date_of_birth ?? null, ghana_card_url: row.ghana_card_url ?? null, selfie_url: row.selfie_url ?? null } as any;
     },
   });
+
 
   const { data: bookings } = useQuery({
     queryKey: ["worker-bookings", user?.id],

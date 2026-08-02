@@ -21,10 +21,8 @@ function WorkerProfilePage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [portfolio, setPortfolio] = useState<string[]>([]);
   const [form, setForm] = useState({
-    bio: "", years_experience: 0, city: "", service_area: "",
-    hourly_rate: 0, callout_fee: 0, starting_price: 0, unavailable_note: "",
+    city: "", service_area: "", unavailable_note: "",
   });
   const [saving, setSaving] = useState(false);
 

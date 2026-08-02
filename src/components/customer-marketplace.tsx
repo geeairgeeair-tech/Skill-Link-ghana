@@ -127,6 +127,8 @@ export function CustomerMarketplaceSection() {
   const { data: myBookings } = useQuery({
     queryKey: ["my-customer-bookings", user?.id],
     enabled: !!user,
+    staleTime: 60_000,
+
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")

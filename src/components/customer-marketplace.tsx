@@ -65,9 +65,12 @@ export function FeaturedCategoryGrid({
  */
 export function CustomerMarketplaceSection() {
   const { user } = useAuth();
+  const customerActions = useCustomerActionCount();
 
   const { data: categories } = useQuery({
     queryKey: ["categories"],
+    staleTime: 30 * 60_000,
+
     queryFn: async () => {
       const { data } = await supabase
         .from("categories")

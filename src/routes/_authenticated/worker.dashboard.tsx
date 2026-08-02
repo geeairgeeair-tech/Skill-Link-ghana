@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { VerificationBadge } from "@/components/verification-badge";
 import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
+import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
 import {
@@ -158,7 +159,7 @@ function WorkerDashboard() {
   })();
 
   // Never render customer / unverified content while the professional record is still loading.
-  if (wpLoading || profileLoading) return <DashboardSkeleton />;
+  if (wpLoading || profileLoading) return <PageSkeleton rows={5} />;
 
   return (
     <AppShell>

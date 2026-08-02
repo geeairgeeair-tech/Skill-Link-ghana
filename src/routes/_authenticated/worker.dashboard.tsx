@@ -230,11 +230,8 @@ function WorkerDashboard() {
           </div>
         )}
 
-        {wp && isVerified && (
-          <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
-            <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace
-          </div>
-        )}
+
+
 
         {wp && completion < 100 && (
           <Link to="/worker/profile" className="block rounded-2xl bg-card border border-border p-4">

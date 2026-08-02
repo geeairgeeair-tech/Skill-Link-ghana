@@ -6,7 +6,7 @@ import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet, LogOut 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
-import { ImageUpload } from "@/components/image-upload";
+
 import { supabase } from "@/integrations/supabase/client";
 import { VerificationBadge } from "@/components/verification-badge";
 import { useAuth } from "@/hooks/use-auth";

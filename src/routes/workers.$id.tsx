@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, MapPin, Phone, MessageCircle, Calendar, ShieldCheck, Briefcase, Clock } from "lucide-react";
+import { BadgeCheck, MapPin, Phone, MessageCircle, Calendar, Briefcase, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,7 +170,6 @@ function WorkerDetail() {
       ? "This worker is currently working on another booking."
       : "This worker is currently unavailable. Please choose another professional or check again later.";
   const memberSince = p.created_at ? new Date(p.created_at) : null;
-  const isVerified = w.verification_status === "approved";
 
   const isSelf = !!user && user.id === id;
 

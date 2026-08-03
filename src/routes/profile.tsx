@@ -102,6 +102,7 @@ function ProfilePage() {
           <div className="rounded-2xl bg-warning/15 border border-warning/30 p-4">
             <p className="font-semibold inline-flex items-center gap-2"><Clock className="size-4"/> Professional Application — Pending Review</p>
             <p className="text-xs text-muted-foreground mt-1">You keep full customer access while an admin reviews your documents.</p>
+            <Link to="/worker/onboarding" className="mt-2 inline-block text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground font-semibold">Continue application</Link>
           </div>
         )}
 

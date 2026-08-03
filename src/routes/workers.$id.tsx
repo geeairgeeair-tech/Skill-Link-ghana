@@ -223,12 +223,6 @@ function WorkerDetail() {
                   <span className={`size-1.5 rounded-full ${state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground"}`} />
                   {statusLabel}
                 </span>
-
-                {isVerified && (
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                    <ShieldCheck className="size-3" /> Verified
-                  </span>
-                )}
               </div>
               {!available && w.unavailable_note && (
                 <p className="text-xs text-muted-foreground mt-1 italic">"{w.unavailable_note}"</p>

@@ -130,7 +130,7 @@ function JobsBoard() {
                 : "Posted by customers across Ghana."}
             </p>
           </div>
-          {role === "worker" ? (
+          {isVerifiedWorker ? (
             <Link to="/worker/applications" className="h-11 px-3 rounded-full bg-primary-foreground/15 text-primary-foreground text-xs font-semibold inline-flex items-center gap-1">
               <ListChecks className="size-4"/> My apps
             </Link>

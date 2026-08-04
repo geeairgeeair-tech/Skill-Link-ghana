@@ -125,6 +125,11 @@ export type Database = {
           amount_paid: number | null
           arrived_at: string | null
           budget: number | null
+          cancel_note: string | null
+          cancel_reason_code: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          cancelled_by_role: string | null
           category_id: string | null
           completion_note: string | null
           completion_photos: Json
@@ -178,6 +183,11 @@ export type Database = {
           amount_paid?: number | null
           arrived_at?: string | null
           budget?: number | null
+          cancel_note?: string | null
+          cancel_reason_code?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_by_role?: string | null
           category_id?: string | null
           completion_note?: string | null
           completion_photos?: Json
@@ -231,6 +241,11 @@ export type Database = {
           amount_paid?: number | null
           arrived_at?: string | null
           budget?: number | null
+          cancel_note?: string | null
+          cancel_reason_code?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          cancelled_by_role?: string | null
           category_id?: string | null
           completion_note?: string | null
           completion_photos?: Json
@@ -1206,7 +1221,7 @@ export type Database = {
         Returns: undefined
       }
       customer_cancel_booking: {
-        Args: { _booking_id: string; _reason?: string }
+        Args: { _booking_id: string; _note?: string; _reason_code?: string }
         Returns: undefined
       }
       customer_cancel_job_request: {
@@ -1363,6 +1378,10 @@ export type Database = {
           _proposed_amount: number
         }
         Returns: string
+      }
+      worker_cancel_booking: {
+        Args: { _booking_id: string; _note?: string; _reason_code: string }
+        Returns: undefined
       }
       worker_decline_booking: {
         Args: {

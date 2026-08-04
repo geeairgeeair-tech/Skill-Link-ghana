@@ -362,17 +362,17 @@ function BookingDetail() {
           <h3 className="font-display font-bold text-sm mb-3 inline-flex items-center gap-1"><Wallet className="size-4"/> Amounts</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
             <Amount label="Customer budget" value={fmtGHS(b.budget ?? b.estimated_cost)} />
-            <Amount label="Customer budget" value={fmtGHS(b.estimated_amount ?? b.estimated_cost ?? b.budget)} />
+            <Amount label="Accepted estimate" value={fmtGHS(b.estimated_amount)} />
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            The customer's original budget is kept separate from the professional's estimate.
+            The customer's original budget is kept separate from the professional's accepted estimate.
           </p>
 
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
 
-          {isCustomer && (b.payment_status ?? "unpaid") !== "paid" && (b.final_amount ?? b.estimated_amount) != null && (
+          {isCustomer && status !== "cancelled" && (b.payment_status ?? "unpaid") !== "paid" && (b.final_amount ?? b.estimated_amount) != null && (
             <div className="mt-3">
               <button
                 type="button"

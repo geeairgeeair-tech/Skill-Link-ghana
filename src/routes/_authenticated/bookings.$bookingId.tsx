@@ -280,6 +280,15 @@ function BookingDetail() {
         { label: "Completed", at: status === "completed" || status === "closed" ? (b.payment_confirmed_at ?? b.customer_confirmed_at) : null, actor: "System", Icon: CheckCircle2 },
       ];
 
+  if (status === "cancelled") {
+    timeline.push({
+      label: `Cancelled by ${b.cancelled_by_role === "worker" ? "Professional" : "Customer"}${cancelLabel ? ` — ${cancelLabel}` : ""}`,
+      at: b.cancelled_at ?? b.updated_at,
+      actor: b.cancelled_by_role === "worker" ? workerName : customerName,
+      Icon: XCircle,
+    });
+  }
+
   const availabilityLabel =
     data.workerStatus === "busy" ? "Currently busy"
     : data.workerMeta?.is_available === false ? "Unavailable"

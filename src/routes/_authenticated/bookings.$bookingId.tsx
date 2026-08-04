@@ -18,6 +18,7 @@ import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
+import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
@@ -111,6 +112,7 @@ function BookingDetail() {
   const [showComplete, setShowComplete] = useState(false);
   const [showDecline, setShowDecline] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],
@@ -224,8 +226,11 @@ function BookingDetail() {
   const canArrived = isWorker && status === "on_the_way";
   const canStart = isWorker && status === "arrived";
   const canComplete = isWorker && ["in_progress", "worker_on_the_way", "work_started"].includes(status);
-  const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed","closed","customer_confirmed_complete"].includes(status);
+  const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed","closed","customer_confirmed_complete","cancelled"].includes(status);
   const canDispute = isCustomer && ["awaiting_customer_confirmation","worker_marked_complete","in_progress","completed"].includes(status);
+  // Either party may cancel any time before the work is completed.
+  const canCancel = (isCustomer || isWorker) && !ENDED.includes(status) && !["disputed","awaiting_customer_confirmation","worker_marked_complete"].includes(status);
+  const cancelLabel = cancelReasonLabel(b.cancelled_by_role, b.cancel_reason_code);
 
   const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
   const destination =
@@ -277,6 +282,15 @@ function BookingDetail() {
         { label: "Customer confirmed", at: b.customer_confirmed_at, actor: customerName, Icon: UserCheck },
         { label: "Completed", at: status === "completed" || status === "closed" ? (b.payment_confirmed_at ?? b.customer_confirmed_at) : null, actor: "System", Icon: CheckCircle2 },
       ];
+
+  if (status === "cancelled") {
+    timeline.push({
+      label: `Cancelled by ${b.cancelled_by_role === "worker" ? "Professional" : "Customer"}${cancelLabel ? ` — ${cancelLabel}` : ""}`,
+      at: b.cancelled_at ?? b.updated_at,
+      actor: b.cancelled_by_role === "worker" ? workerName : customerName,
+      Icon: XCircle,
+    });
+  }
 
   const availabilityLabel =
     data.workerStatus === "busy" ? "Currently busy"
@@ -360,17 +374,17 @@ function BookingDetail() {
           <h3 className="font-display font-bold text-sm mb-3 inline-flex items-center gap-1"><Wallet className="size-4"/> Amounts</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
             <Amount label="Customer budget" value={fmtGHS(b.budget ?? b.estimated_cost)} />
-            <Amount label="Customer budget" value={fmtGHS(b.estimated_amount ?? b.estimated_cost ?? b.budget)} />
+            <Amount label="Accepted estimate" value={fmtGHS(b.estimated_amount)} />
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            The customer's original budget is kept separate from the professional's estimate.
+            The customer's original budget is kept separate from the professional's accepted estimate.
           </p>
 
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>
 
-          {isCustomer && (b.payment_status ?? "unpaid") !== "paid" && (b.final_amount ?? b.estimated_amount) != null && (
+          {isCustomer && status !== "cancelled" && (b.payment_status ?? "unpaid") !== "paid" && (b.final_amount ?? b.estimated_amount) != null && (
             <div className="mt-3">
               <button
                 type="button"
@@ -484,6 +498,17 @@ function BookingDetail() {
             {b.decline_note && <p className="text-xs text-muted-foreground mt-1 italic">"{b.decline_note}"</p>}
           </section>
         )}
+        {status === "cancelled" && (
+          <section className="rounded-2xl bg-destructive/5 border border-destructive/20 p-3 text-sm">
+            <p className="font-semibold text-destructive inline-flex items-center gap-1">
+              <XCircle className="size-4"/> Cancelled by {b.cancelled_by_role === "worker" ? "Professional" : b.cancelled_by_role === "customer" ? "Customer" : "—"}
+            </p>
+            {b.cancelled_at && <p className="text-xs text-muted-foreground mt-1">{new Date(b.cancelled_at).toLocaleString()}</p>}
+            {cancelLabel && <p className="text-xs mt-1">Reason: <span className="font-semibold">{cancelLabel}</span></p>}
+            {b.cancel_note && <p className="text-xs text-muted-foreground mt-1 italic">"{b.cancel_note}"</p>}
+            <p className="text-[11px] text-muted-foreground mt-2">Payment and reviews are disabled for cancelled bookings. The chat history stays available as read-only.</p>
+          </section>
+        )}
         {["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
           <section className="rounded-2xl bg-gold/10 border border-gold/30 p-3 text-sm">
             <p className="font-semibold inline-flex items-center gap-1"><Clock className="size-4"/> Awaiting customer confirmation</p>
@@ -593,22 +618,13 @@ function BookingDetail() {
               </button>
             </>
           )}
-          {isCustomer && status === "pending" && (
+          {canCancel && (
             <button
               disabled={busy !== null}
-              onClick={async () => {
-                if (!window.confirm("Cancel this booking request?")) return;
-                setBusy("cancel");
-                const { error } = await supabase.rpc("customer_cancel_booking", { _booking_id: b.id } as any);
-                setBusy(null);
-                if (error) return toast.error(error.message);
-                toast.success("Request cancelled");
-                qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
-                qc.invalidateQueries({ queryKey: ["my-bookings"] });
-              }}
+              onClick={() => setShowCancel(true)}
               className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
             >
-              <XCircle className="size-4" /> Cancel request
+              <XCircle className="size-4" /> Cancel booking
             </button>
           )}
           {navUrl && (
@@ -694,6 +710,21 @@ function BookingDetail() {
           onDone={() => {
             setShowDecline(false);
             qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+          }}
+        />
+      )}
+
+      {showCancel && (
+        <CancelBookingModal
+          bookingId={b.id}
+          as={isWorker ? "worker" : "customer"}
+          bookingStatus={status}
+          onClose={() => setShowCancel(false)}
+          onDone={() => {
+            setShowCancel(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["my-bookings"] });
             qc.invalidateQueries({ queryKey: ["worker-jobs"] });
           }}
         />

@@ -18,6 +18,7 @@ import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
+import { CancelBookingModal, cancelReasonLabel, LATE_CANCEL_STATUSES } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
@@ -111,6 +112,7 @@ function BookingDetail() {
   const [showComplete, setShowComplete] = useState(false);
   const [showDecline, setShowDecline] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],

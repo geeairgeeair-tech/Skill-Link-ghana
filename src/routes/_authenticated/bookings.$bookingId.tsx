@@ -18,7 +18,7 @@ import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
-import { CancelBookingModal, cancelReasonLabel, LATE_CANCEL_STATUSES } from "@/components/cancel-booking-modal";
+import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
@@ -231,7 +231,6 @@ function BookingDetail() {
   // Either party may cancel any time before the work is completed.
   const canCancel = (isCustomer || isWorker) && !ENDED.includes(status) && !["disputed","awaiting_customer_confirmation","worker_marked_complete"].includes(status);
   const cancelLabel = cancelReasonLabel(b.cancelled_by_role, b.cancel_reason_code);
-  void LATE_CANCEL_STATUSES;
 
   const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
   const destination =

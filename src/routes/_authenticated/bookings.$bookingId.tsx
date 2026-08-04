@@ -700,6 +700,21 @@ function BookingDetail() {
           }}
         />
       )}
+
+      {showCancel && (
+        <CancelBookingModal
+          bookingId={b.id}
+          as={isWorker ? "worker" : "customer"}
+          bookingStatus={status}
+          onClose={() => setShowCancel(false)}
+          onDone={() => {
+            setShowCancel(false);
+            qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+            qc.invalidateQueries({ queryKey: ["my-bookings"] });
+            qc.invalidateQueries({ queryKey: ["worker-jobs"] });
+          }}
+        />
+      )}
     </div>
   );
 }

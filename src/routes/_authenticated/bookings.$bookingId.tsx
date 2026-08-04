@@ -226,8 +226,12 @@ function BookingDetail() {
   const canArrived = isWorker && status === "on_the_way";
   const canStart = isWorker && status === "arrived";
   const canComplete = isWorker && ["in_progress", "worker_on_the_way", "work_started"].includes(status);
-  const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed","closed","customer_confirmed_complete"].includes(status);
+  const canChat = ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","worker_on_the_way","work_started","completed","disputed","closed","customer_confirmed_complete","cancelled"].includes(status);
   const canDispute = isCustomer && ["awaiting_customer_confirmation","worker_marked_complete","in_progress","completed"].includes(status);
+  // Either party may cancel any time before the work is completed.
+  const canCancel = (isCustomer || isWorker) && !ENDED.includes(status) && !["disputed","awaiting_customer_confirmation","worker_marked_complete"].includes(status);
+  const cancelLabel = cancelReasonLabel(b.cancelled_by_role, b.cancel_reason_code);
+  void LATE_CANCEL_STATUSES;
 
   const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
   const destination =

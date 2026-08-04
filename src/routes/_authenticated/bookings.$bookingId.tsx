@@ -486,6 +486,17 @@ function BookingDetail() {
             {b.decline_note && <p className="text-xs text-muted-foreground mt-1 italic">"{b.decline_note}"</p>}
           </section>
         )}
+        {status === "cancelled" && (
+          <section className="rounded-2xl bg-destructive/5 border border-destructive/20 p-3 text-sm">
+            <p className="font-semibold text-destructive inline-flex items-center gap-1">
+              <XCircle className="size-4"/> Cancelled by {b.cancelled_by_role === "worker" ? "Professional" : b.cancelled_by_role === "customer" ? "Customer" : "—"}
+            </p>
+            {b.cancelled_at && <p className="text-xs text-muted-foreground mt-1">{new Date(b.cancelled_at).toLocaleString()}</p>}
+            {cancelLabel && <p className="text-xs mt-1">Reason: <span className="font-semibold">{cancelLabel}</span></p>}
+            {b.cancel_note && <p className="text-xs text-muted-foreground mt-1 italic">"{b.cancel_note}"</p>}
+            <p className="text-[11px] text-muted-foreground mt-2">Payment and reviews are disabled for cancelled bookings. The chat history stays available as read-only.</p>
+          </section>
+        )}
         {["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
           <section className="rounded-2xl bg-gold/10 border border-gold/30 p-3 text-sm">
             <p className="font-semibold inline-flex items-center gap-1"><Clock className="size-4"/> Awaiting customer confirmation</p>

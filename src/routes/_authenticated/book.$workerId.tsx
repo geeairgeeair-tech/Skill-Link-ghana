@@ -35,6 +35,7 @@ function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [profId, setProfId] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const submittedOnce = useRef(false);
 
   const { data: w, isLoading } = useQuery({

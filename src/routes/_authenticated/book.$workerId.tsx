@@ -143,7 +143,13 @@ function BookPage() {
     submittedOnce.current = true;
     setSubmitting(true);
     const controller = new AbortController();
-    let timeout: number | undefined;
+    const timeoutFailure = new Promise<never>((_, reject) => {
+      window.setTimeout(() => {
+        controller.abort();
+        reject(new Error("Booking request timed out after 25 seconds. Please retry."));
+      }, 25000);
+    });
+    const timeout = window.setTimeout(() => controller.abort(), 25000);
     try {
       // 1. Upload every selected file FIRST so the booking is created with its media.
       const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
@@ -152,9 +158,10 @@ function BookPage() {
         for (const f of files) {
           const safe = f.name.replace(/[^\w.\-]+/g, "_");
           const path = `${user.id}/bookings/${group}/${safe}`;
-          const { error: upErr } = await supabase.storage
+          const uploadRequest = supabase.storage
             .from("job-media")
             .upload(path, f, { upsert: true, contentType: f.type || undefined });
+          const { error: upErr } = await Promise.race([uploadRequest, timeoutFailure]);
           if (upErr) throw new Error(`Could not upload ${f.name}: ${upErr.message}`);
           refs.push({
             path,
@@ -188,12 +195,6 @@ function BookPage() {
         _longitude: lng,
         _photos: refs,
       } as any).abortSignal(controller.signal).single();
-      const timeoutFailure = new Promise<never>((_, reject) => {
-        timeout = window.setTimeout(() => {
-          controller.abort();
-          reject(new Error("Booking request timed out after 25 seconds. Please retry."));
-        }, 25000);
-      });
       const { data: inserted, error } = await Promise.race([rpcRequest, timeoutFailure]);
       if (error) throw error;
       if (!inserted?.id || !Array.isArray(inserted.photos)) {
@@ -221,7 +222,7 @@ function BookPage() {
       });
       toast.error(message);
     } finally {
-      if (timeout !== undefined) window.clearTimeout(timeout);
+      window.clearTimeout(timeout);
       setSubmitting(false);
     }
   };

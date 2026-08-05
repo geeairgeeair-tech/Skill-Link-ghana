@@ -268,6 +268,7 @@ function BookPage() {
         throw new Error("Your photos could not be attached to the booking. Please try again.");
       }
 
+      bookedRef.current = true;
       setBookingId(inserted.id);
       submissionId.current = null;
       setStep("success");

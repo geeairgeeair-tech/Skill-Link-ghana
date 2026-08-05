@@ -474,13 +474,48 @@ function BookPage() {
           {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
         </Field>
 
-        <Field label="Photos / videos (optional, up to 5)">
-          <label className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-card p-3 text-sm cursor-pointer">
-            <Camera className="size-4" />
-            <span>{files.length ? `${files.length} file(s) selected` : "Attach files"}</span>
-            <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e)=>onPickFiles(e.target.files)} />
-          </label>
+        <Field label={`Photos (optional, up to ${MAX_PHOTOS})`}>
+          <div className="space-y-2">
+            {uploads.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {uploads.map((u) => (
+                  <div key={u.id} className="relative size-20 rounded-xl overflow-hidden border border-border bg-muted">
+                    <img src={u.preview} alt={u.name} className="size-full object-cover" />
+                    {u.status !== "done" && (
+                      <span className="absolute inset-0 grid place-items-center bg-foreground/40">
+                        {u.status === "uploading" ? (
+                          <Loader2 className="size-5 animate-spin text-background" />
+                        ) : (
+                          <button type="button" onClick={() => runUpload(u)} aria-label="Retry upload">
+                            <RefreshCw className="size-5 text-background" />
+                          </button>
+                        )}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeUpload(u)}
+                      className="absolute top-0.5 right-0.5 size-5 rounded-full bg-background/90 grid place-items-center"
+                      aria-label="Remove photo"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {uploads.length < MAX_PHOTOS && (
+              <label className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-card p-3 text-sm cursor-pointer">
+                <Camera className="size-4" />
+                <span>Add photo</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e)=>{ void onPickFiles(e.target.files); e.currentTarget.value = ""; }} />
+              </label>
+            )}
+            {uploading && <p className="text-xs text-muted-foreground">Uploading photos…</p>}
+            {uploadFailed && <p className="text-xs text-destructive">A photo failed to upload — retry or remove it.</p>}
+          </div>
         </Field>
+
 
         <Field label="Service address">
           <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />

@@ -82,6 +82,11 @@ export function BookingMedia({ value, title = "Job photos and videos" }: { value
           )}
         </div>
       )}
+      {!isLoading && missing > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          {missing} file{missing > 1 ? "s are" : " is"} no longer available.
+        </p>
+      )}
     </section>
   );
 }

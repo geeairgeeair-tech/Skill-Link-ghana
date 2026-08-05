@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/book/$workerId")({
 type Urgency = "normal" | "urgent" | "emergency";
 type Step = "form" | "review" | "success";
 
+const PLACEHOLDERS = ["n/a", "na", "none", "test", "unknown", "-", ".", "xxx"];
+
 function BookPage() {
   const { workerId } = Route.useParams();
   const navigate = useNavigate();

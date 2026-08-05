@@ -33,13 +33,27 @@ function BookPage() {
   const [urgency, setUrgency] = useState<Urgency>("normal");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [uploads, setUploads] = useState<Upload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [profId, setProfId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const submittedOnce = useRef(false);
   const submissionId = useRef<string | null>(null);
+  const uploadGroup = useRef<string>(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const bookedRef = useRef(false);
+  const uploadsRef = useRef<Upload[]>([]);
+  uploadsRef.current = uploads;
+
+  // Clean up any uploaded-but-unused attachments when the customer abandons the form.
+  useEffect(() => {
+    return () => {
+      if (bookedRef.current) return;
+      const paths = uploadsRef.current.filter((u) => u.status === "done").map((u) => u.path);
+      if (paths.length) supabase.storage.from("job-media").remove(paths);
+    };
+  }, []);
+
 
   const { data: w, isLoading } = useQuery({
     queryKey: ["book-worker", workerId],

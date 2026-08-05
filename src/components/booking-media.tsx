@@ -39,6 +39,8 @@ export function BookingMedia({ value, title = "Job photos and videos" }: { value
 
   if (raw.length === 0) return null;
 
+  const missing = data ? Math.max(0, raw.length - data.length) : 0;
+
   return (
     <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
       <h3 className="font-display font-bold text-sm inline-flex items-center gap-1">
@@ -79,6 +81,11 @@ export function BookingMedia({ value, title = "Job photos and videos" }: { value
             ),
           )}
         </div>
+      )}
+      {!isLoading && missing > 0 && (
+        <p className="text-[11px] text-muted-foreground">
+          {missing} file{missing > 1 ? "s are" : " is"} no longer available.
+        </p>
       )}
     </section>
   );

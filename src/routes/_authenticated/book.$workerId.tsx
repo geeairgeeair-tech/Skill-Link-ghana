@@ -142,8 +142,30 @@ function BookPage() {
     submittedOnce.current = true;
     setSubmitting(true);
     try {
+      // 1. Upload every selected file FIRST so the booking is created with its media.
+      const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
+      if (files.length) {
+        const group = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        for (const f of files) {
+          const safe = f.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${user.id}/bookings/${group}/${safe}`;
+          const { error: upErr } = await supabase.storage
+            .from("job-media")
+            .upload(path, f, { upsert: true, contentType: f.type || undefined });
+          if (upErr) throw new Error(`Could not upload ${f.name}: ${upErr.message}`);
+          refs.push({
+            path,
+            bucket: "job-media",
+            kind: f.type.startsWith("video") ? "video" : "image",
+            name: safe,
+          });
+        }
+      }
+
       const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
       const estimated = (w.callout_fee ?? 0) + (w.hourly_rate ?? 0);
+
+      // 2. Create the booking once, with the photos array included.
       const { data: inserted, error } = await supabase.from("bookings").insert({
         customer_id: user.id,
         worker_id: workerId,
@@ -158,32 +180,16 @@ function BookPage() {
         estimated_cost: estimated,
         budget: budget ? Number(budget) : null,
         urgency,
-      } as any).select("id").single();
+        photos: refs,
+      } as any).select("id, photos").single();
       if (error) throw error;
 
-      // Upload media and link every file to this booking
-      if (files.length) {
-        const refs: { path: string; bucket: string; kind: string; name: string }[] = [];
-        for (const f of files) {
-          const safe = f.name.replace(/[^\w.\-]+/g, "_");
-          const path = `${user.id}/bookings/${inserted.id}/${Date.now()}-${safe}`;
-          const { error: upErr } = await supabase.storage
-            .from("job-media")
-            .upload(path, f, { upsert: false, contentType: f.type || undefined });
-          if (upErr) {
-            console.warn("upload failed", upErr.message);
-            continue;
-          }
-          refs.push({ path, bucket: "job-media", kind: f.type.startsWith("video") ? "video" : "image", name: safe });
-        }
-        if (refs.length) {
-          const { error: linkErr } = await supabase
-            .from("bookings")
-            .update({ photos: refs } as any)
-            .eq("id", inserted.id);
-          if (linkErr) toast.error("Booking created, but attaching media failed");
-        }
+      // 3. Confirm the media actually persisted before leaving the form.
+      const saved = Array.isArray(inserted?.photos) ? inserted.photos : [];
+      if (refs.length && saved.length !== refs.length) {
+        throw new Error("Your photos could not be attached to the booking. Please try again.");
       }
+
       setBookingId(inserted.id);
       setStep("success");
     } catch (err: any) {

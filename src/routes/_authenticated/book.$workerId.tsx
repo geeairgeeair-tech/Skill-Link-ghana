@@ -37,6 +37,7 @@ function BookPage() {
   const [profId, setProfId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const submittedOnce = useRef(false);
+  const submissionId = useRef<string | null>(null);
 
   const { data: w, isLoading } = useQuery({
     queryKey: ["book-worker", workerId],
@@ -141,6 +142,8 @@ function BookPage() {
     }
     submittedOnce.current = true;
     setSubmitting(true);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 25000);
     try {
       // 1. Upload every selected file FIRST so the booking is created with its media.
       const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
@@ -164,24 +167,27 @@ function BookPage() {
 
       const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
       const estimated = (w.callout_fee ?? 0) + (w.hourly_rate ?? 0);
+      const currentSubmissionId = submissionId.current ?? crypto.randomUUID();
+      submissionId.current = currentSubmissionId;
 
-      // 2. Create the booking once, with the photos array included.
-      const { data: inserted, error } = await supabase.from("bookings").insert({
-        customer_id: user.id,
-        worker_id: workerId,
-        category_id: selectedProf?.category_id ?? w.category_id,
-        worker_profession_id: selectedProf?.id ?? null,
-        description: description.trim(),
-        address: address.trim(),
-        service_area: area.trim(),
-        latitude: lat,
-        longitude: lng,
-        scheduled_at: scheduledAt,
-        estimated_cost: estimated,
-        budget: budget ? Number(budget) : null,
-        urgency,
-        photos: refs,
-      } as any).select("id, photos").single();
+      // 2. Create exactly one booking through the ownership-validating RPC.
+      // The stable submission ID makes a timed-out request safe to retry.
+      const { data: inserted, error } = await supabase.rpc("customer_create_booking", {
+        _submission_id: currentSubmissionId,
+        _worker_id: workerId,
+        _worker_profession_id: selectedProf?.id ?? "",
+        _category_id: selectedProf?.category_id ?? w.category_id,
+        _description: description.trim(),
+        _address: address.trim(),
+        _service_area: area.trim(),
+        _scheduled_at: scheduledAt,
+        _estimated_cost: estimated,
+        _budget: budget ? Number(budget) : null,
+        _urgency: urgency,
+        _latitude: lat,
+        _longitude: lng,
+        _photos: refs,
+      } as any).abortSignal(controller.signal).single();
       if (error) throw error;
 
       // 3. Confirm the media actually persisted before leaving the form.
@@ -191,11 +197,16 @@ function BookPage() {
       }
 
       setBookingId(inserted.id);
+      submissionId.current = null;
       setStep("success");
     } catch (err: any) {
       submittedOnce.current = false;
-      toast.error(err.message ?? "Could not send booking");
+      const message = controller.signal.aborted
+        ? "The booking request took too long. Please retry — you will not be charged or booked twice."
+        : err?.message ?? "Could not send booking. Please try again.";
+      toast.error(message);
     } finally {
+      window.clearTimeout(timeout);
       setSubmitting(false);
     }
   };

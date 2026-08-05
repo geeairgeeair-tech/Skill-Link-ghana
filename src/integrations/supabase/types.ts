@@ -168,6 +168,7 @@ export type Database = {
           service_area: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          submission_id: string | null
           updated_at: string
           urgency: string
           worker_completed_at: string | null
@@ -226,6 +227,7 @@ export type Database = {
           service_area?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          submission_id?: string | null
           updated_at?: string
           urgency?: string
           worker_completed_at?: string | null
@@ -284,6 +286,7 @@ export type Database = {
           service_area?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          submission_id?: string | null
           updated_at?: string
           urgency?: string
           worker_completed_at?: string | null
@@ -1239,6 +1242,28 @@ export type Database = {
           _would_hire_again?: boolean
         }
         Returns: undefined
+      }
+      customer_create_booking: {
+        Args: {
+          _address: string
+          _budget: number
+          _category_id: string
+          _description: string
+          _estimated_cost: number
+          _latitude: number
+          _longitude: number
+          _photos?: Json
+          _scheduled_at: string
+          _service_area: string
+          _submission_id: string
+          _urgency: string
+          _worker_id: string
+          _worker_profession_id: string
+        }
+        Returns: {
+          id: string
+          photos: Json
+        }[]
       }
       customer_decline_job_application: {
         Args: { _application_id: string; _reason: string }

@@ -17,7 +17,9 @@ export function WorkProgressPanel({
   const progress: string[] = Array.isArray(booking.progress_photos) ? booking.progress_photos : [];
   const completion: string[] = Array.isArray(booking.completion_photos) ? booking.completion_photos : [];
   const status: string = booking.status;
-  const canEdit = isWorker && ["arrived", "in_progress"].includes(status);
+  const canUploadProgress = isWorker && ["arrived", "in_progress"].includes(status);
+  const canUploadCompletion = isWorker && ["arrived", "in_progress", "completed_by_worker"].includes(status);
+  const canEdit = canUploadProgress || canUploadCompletion;
   const refresh = () => qc.invalidateQueries({ queryKey: ["booking-detail", booking.id] });
 
   if (!canEdit && progress.length === 0 && completion.length === 0 && !booking.is_paused) return null;
@@ -75,16 +77,18 @@ export function WorkProgressPanel({
         )
       )}
 
-      {canEdit && (
-        <div className="space-y-3">
-          <ImageUpload bucket="job-media" userId={userId} prefix="progress" multiple max={10}
-            label="Progress photos" hint="Show the customer how the job is going."
-            value={progress} onChange={(urls) => addPhotos("progress", urls)} />
-          <ImageUpload bucket="job-media" userId={userId} prefix="completion" multiple max={10}
-            label="Completion photos" hint="Attach before you mark the job complete."
-            value={completion} onChange={(urls) => addPhotos("completion", urls)} />
-        </div>
-      )}
+      <div className="space-y-3">
+        {canUploadProgress && (
+          <ImageUpload bucket="job-media" userId={userId} prefix="progress" multiple max={Math.max(0, 10 - progress.length)}
+            label="Upload work progress photos" hint={`Show the customer how the job is going. ${progress.length} uploaded.`}
+            value={[]} onChange={(urls) => addPhotos("progress", urls)} />
+        )}
+        {canUploadCompletion && (
+          <ImageUpload bucket="job-media" userId={userId} prefix="completion" multiple max={Math.max(0, 10 - completion.length)}
+            label="Upload completion photos" hint={`Attach before you mark the job complete. ${completion.length} uploaded.`}
+            value={[]} onChange={(urls) => addPhotos("completion", urls)} />
+        )}
+      </div>
     </section>
   );
 }

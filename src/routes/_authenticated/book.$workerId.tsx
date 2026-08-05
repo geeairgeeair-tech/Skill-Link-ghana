@@ -124,11 +124,59 @@ function BookPage() {
     );
   };
 
-  const onPickFiles = (list: FileList | null) => {
-    if (!list) return;
-    const arr = Array.from(list).slice(0, 5);
-    setFiles(arr);
+  /** Uploads one already-compressed photo and tracks its progress state. */
+  const runUpload = async (item: Upload) => {
+    if (!user) return;
+    setUploads((prev) => prev.map((u) => (u.id === item.id ? { ...u, status: "uploading", error: undefined } : u)));
+    const { error } = await supabase.storage
+      .from("job-media")
+      .upload(item.path, item.file, { upsert: true, contentType: item.file.type || undefined });
+    setUploads((prev) =>
+      prev.map((u) =>
+        u.id === item.id ? { ...u, status: error ? "error" : "done", error: error?.message } : u,
+      ),
+    );
+    if (error) toast.error(`Could not upload ${item.name}: ${error.message}`);
   };
+
+  const onPickFiles = async (list: FileList | null) => {
+    if (!list || !user) return;
+    const room = MAX_PHOTOS - uploads.length;
+    if (room <= 0) return toast.error(`You can attach up to ${MAX_PHOTOS} photos`);
+    const picked = Array.from(list).slice(0, room);
+    for (const raw of picked) {
+      if (!raw.type.startsWith("image/")) {
+        toast.error("Only photos can be attached");
+        continue;
+      }
+      try {
+        const file = await compressImage(raw);
+        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const item: Upload = {
+          id: crypto.randomUUID(),
+          name: safe,
+          path: `${user.id}/bookings/${uploadGroup.current}/${crypto.randomUUID()}-${safe}`,
+          preview: URL.createObjectURL(file),
+          file,
+          status: "uploading",
+        };
+        setUploads((prev) => [...prev, item]);
+        void runUpload(item);
+      } catch (e: any) {
+        toast.error(e?.message ?? "Could not process that image");
+      }
+    }
+  };
+
+  const removeUpload = (item: Upload) => {
+    setUploads((prev) => prev.filter((u) => u.id !== item.id));
+    URL.revokeObjectURL(item.preview);
+    if (item.status === "done") supabase.storage.from("job-media").remove([item.path]);
+  };
+
+  const uploading = uploads.some((u) => u.status === "uploading");
+  const uploadFailed = uploads.some((u) => u.status === "error");
+
 
   const validate = () => {
     const next: Record<string, string> = {};

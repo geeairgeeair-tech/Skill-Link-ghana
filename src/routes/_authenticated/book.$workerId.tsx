@@ -161,12 +161,27 @@ function BookPage() {
       } as any).select("id").single();
       if (error) throw error;
 
-      // Upload media (best effort)
+      // Upload media and link every file to this booking
       if (files.length) {
+        const refs: { path: string; bucket: string; kind: string; name: string }[] = [];
         for (const f of files) {
-          const path = `${user.id}/bookings/${inserted.id}/${Date.now()}-${f.name}`;
-          const { error: upErr } = await supabase.storage.from("job-media").upload(path, f, { upsert: false });
-          if (upErr) console.warn("upload failed", upErr.message);
+          const safe = f.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${user.id}/bookings/${inserted.id}/${Date.now()}-${safe}`;
+          const { error: upErr } = await supabase.storage
+            .from("job-media")
+            .upload(path, f, { upsert: false, contentType: f.type || undefined });
+          if (upErr) {
+            console.warn("upload failed", upErr.message);
+            continue;
+          }
+          refs.push({ path, bucket: "job-media", kind: f.type.startsWith("video") ? "video" : "image", name: safe });
+        }
+        if (refs.length) {
+          const { error: linkErr } = await supabase
+            .from("bookings")
+            .update({ photos: refs } as any)
+            .eq("id", inserted.id);
+          if (linkErr) toast.error("Booking created, but attaching media failed");
         }
       }
       setBookingId(inserted.id);

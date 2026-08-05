@@ -214,6 +214,8 @@ function BookPage() {
     if (profList.length > 0 && !selectedProf) {
       return toast.error("Please choose which service you need from this worker");
     }
+    if (uploading) return toast.error("Please wait for your photos to finish uploading");
+    if (uploadFailed) return toast.error("Retry or remove the failed photo before confirming");
     submittedOnce.current = true;
     setSubmitting(true);
     const controller = new AbortController();
@@ -225,26 +227,11 @@ function BookPage() {
       }, 25000);
     });
     try {
-      // 1. Upload every selected file FIRST so the booking is created with its media.
-      const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
-      if (files.length) {
-        const group = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        for (const f of files) {
-          const safe = f.name.replace(/[^\w.\-]+/g, "_");
-          const path = `${user.id}/bookings/${group}/${safe}`;
-          const uploadRequest = supabase.storage
-            .from("job-media")
-            .upload(path, f, { upsert: true, contentType: f.type || undefined });
-          const { error: upErr } = await Promise.race([uploadRequest, timeoutFailure]);
-          if (upErr) throw new Error(`Could not upload ${f.name}: ${upErr.message}`);
-          refs.push({
-            path,
-            bucket: "job-media",
-            kind: f.type.startsWith("video") ? "video" : "image",
-            name: safe,
-          });
-        }
-      }
+      // Photos are already in storage — the booking call only links their paths.
+      const refs = uploads
+        .filter((u) => u.status === "done")
+        .map((u) => ({ path: u.path, bucket: "job-media", kind: "image" as const, name: u.name }));
+
 
       const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
       const estimated = (w.callout_fee ?? 0) + (w.hourly_rate ?? 0);

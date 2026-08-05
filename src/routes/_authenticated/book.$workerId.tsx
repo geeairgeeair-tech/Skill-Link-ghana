@@ -100,6 +100,19 @@ function BookPage() {
     setFiles(arr);
   };
 
+  const validate = () => {
+    const next: Record<string, string> = {};
+    const desc = description.trim();
+    const addr = address.trim();
+    const ar = area.trim();
+    if (desc.length < 10) next.description = "Please describe the job before continuing.";
+    if (addr.length < 5 || PLACEHOLDERS.includes(addr.toLowerCase())) next.address = "Enter the exact service address.";
+    if (ar.length < 3 || PLACEHOLDERS.includes(ar.toLowerCase())) next.area = "Enter the general service area.";
+    if (!date) next.date = "Choose a preferred date.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const goReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (availability && availability !== "available") {
@@ -108,8 +121,8 @@ function BookPage() {
     if (profList.length > 0 && !selectedProf) {
       return toast.error("Please choose which service you need from this worker");
     }
-    if (!description.trim() || !address.trim() || !area.trim() || !date) {
-      return toast.error("Please fill service description, address, area and preferred date");
+    if (!validate()) {
+      return toast.error("Please fix the highlighted fields");
     }
     setStep("review");
   };

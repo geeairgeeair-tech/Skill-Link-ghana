@@ -89,23 +89,26 @@ function Onboarding() {
     if (!commit) return toast.error("Please accept the professional commitment");
 
     setLoading(true);
-    const { ghana_card_number, ...rest } = form;
-    const payload: any = {
-      user_id: user.id,
-      ...rest,
-      portfolio_images: portfolio,
-      documents_submitted_at: new Date().toISOString(),
-      documents_resubmission_requested_at: null,
-      documents_resubmission_reason: null,
-      documents_last_reminder_days: null,
-    };
-    if (ghana_card_number.trim()) payload.ghana_card_number = ghana_card_number.trim();
-    if (ghanaCard[0]) payload.ghana_card_url = ghanaCard[0];
-    if (selfie[0]) payload.selfie_url = selfie[0];
-
-    const { error } = await supabase.from("worker_profiles").upsert(payload, { onConflict: "user_id" });
+    // Saved through a security-definer RPC: the owner cannot write the restricted
+    // identity columns on worker_profiles directly, which is what produced the
+    // "permission denied for table worker_profiles" error on submit.
+    const { error } = await (supabase.rpc as any)("worker_submit_verification", {
+      _category_id: form.category_id,
+      _bio: form.bio,
+      _years_experience: form.years_experience,
+      _city: form.city,
+      _service_area: form.service_area,
+      _hourly_rate: form.hourly_rate,
+      _callout_fee: form.callout_fee,
+      _starting_price: form.starting_price,
+      _date_of_birth: form.date_of_birth,
+      _portfolio_images: portfolio,
+      _ghana_card_number: form.ghana_card_number.trim() || null,
+      _ghana_card_url: ghanaCard[0] ?? null,
+      _selfie_url: selfie[0] ?? null,
+    });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error.message || "Could not submit verification. Please try again.");
     toast.success("Documents submitted — pending admin verification.");
     navigate({ to: "/worker/dashboard" });
   };

@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2, Loader2, X, RefreshCw } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/image-compress";
 import { useAuth } from "@/hooks/use-auth";
+
 
 export const Route = createFileRoute("/_authenticated/book/$workerId")({
   component: BookPage,

@@ -75,7 +75,7 @@ export function WorkProgressPanel({
         )
       )}
 
-      {canEdit ? (
+      {canEdit && (
         <div className="space-y-3">
           <ImageUpload bucket="job-media" userId={userId} prefix="progress" multiple max={10}
             label="Progress photos" hint="Show the customer how the job is going."
@@ -84,23 +84,7 @@ export function WorkProgressPanel({
             label="Completion photos" hint="Attach before you mark the job complete."
             value={completion} onChange={(urls) => addPhotos("completion", urls)} />
         </div>
-      ) : (
-        <>
-          {progress.length > 0 && <PhotoGrid label="Progress photos" urls={progress} />}
-          {completion.length > 0 && <PhotoGrid label="Completion photos" urls={completion} />}
-        </>
       )}
     </section>
-  );
-}
-
-function PhotoGrid({ label, urls }: { label: string; urls: string[] }) {
-  return (
-    <div>
-      <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">{label}</p>
-      <div className="flex flex-wrap gap-2">
-        {urls.map((u) => <img key={u} src={u} alt={label} className="size-20 rounded-xl object-cover border border-border" />)}
-      </div>
-    </div>
   );
 }

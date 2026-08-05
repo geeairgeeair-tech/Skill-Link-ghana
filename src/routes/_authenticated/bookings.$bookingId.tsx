@@ -428,8 +428,8 @@ function BookingDetail() {
                 <p className="inline-flex items-center gap-1"><Clock className="size-3"/>Time: {new Date(b.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
               </>
             )}
-            {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>{b.service_area}</p>}
-            {b.address && showAddress && <p className="text-foreground/80">📍 {b.address}</p>}
+            {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
+            {b.address && showAddress && <p className="text-foreground/80">📍 Exact service address: {b.address}</p>}
             {b.completion_note && <p className="italic">Worker note: "{b.completion_note}"</p>}
           </div>
           {b.job_application_id && (

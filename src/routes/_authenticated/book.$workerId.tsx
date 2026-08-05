@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2 } from "lucide-react";
+import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2, Loader2, X, RefreshCw } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
+import { compressImage } from "@/lib/image-compress";
 import { useAuth } from "@/hooks/use-auth";
+
 
 export const Route = createFileRoute("/_authenticated/book/$workerId")({
   component: BookPage,
@@ -13,7 +15,17 @@ export const Route = createFileRoute("/_authenticated/book/$workerId")({
 
 type Urgency = "normal" | "urgent" | "emergency";
 type Step = "form" | "review" | "success";
+type Upload = {
+  id: string;
+  name: string;
+  path: string;
+  preview: string;
+  file: File;
+  status: "uploading" | "done" | "error";
+  error?: string;
+};
 
+const MAX_PHOTOS = 3;
 const PLACEHOLDERS = ["n/a", "na", "none", "test", "unknown", "-", ".", "xxx"];
 
 function BookPage() {
@@ -31,13 +43,27 @@ function BookPage() {
   const [urgency, setUrgency] = useState<Urgency>("normal");
   const [lat, setLat] = useState<number | null>(null);
   const [lng, setLng] = useState<number | null>(null);
-  const [files, setFiles] = useState<File[]>([]);
+  const [uploads, setUploads] = useState<Upload[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [profId, setProfId] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const submittedOnce = useRef(false);
   const submissionId = useRef<string | null>(null);
+  const uploadGroup = useRef<string>(`${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  const bookedRef = useRef(false);
+  const uploadsRef = useRef<Upload[]>([]);
+  uploadsRef.current = uploads;
+
+  // Clean up any uploaded-but-unused attachments when the customer abandons the form.
+  useEffect(() => {
+    return () => {
+      if (bookedRef.current) return;
+      const paths = uploadsRef.current.filter((u) => u.status === "done").map((u) => u.path);
+      if (paths.length) supabase.storage.from("job-media").remove(paths);
+    };
+  }, []);
+
 
   const { data: w, isLoading } = useQuery({
     queryKey: ["book-worker", workerId],
@@ -98,11 +124,59 @@ function BookPage() {
     );
   };
 
-  const onPickFiles = (list: FileList | null) => {
-    if (!list) return;
-    const arr = Array.from(list).slice(0, 5);
-    setFiles(arr);
+  /** Uploads one already-compressed photo and tracks its progress state. */
+  const runUpload = async (item: Upload) => {
+    if (!user) return;
+    setUploads((prev) => prev.map((u) => (u.id === item.id ? { ...u, status: "uploading", error: undefined } : u)));
+    const { error } = await supabase.storage
+      .from("job-media")
+      .upload(item.path, item.file, { upsert: true, contentType: item.file.type || undefined });
+    setUploads((prev) =>
+      prev.map((u) =>
+        u.id === item.id ? { ...u, status: error ? "error" : "done", error: error?.message } : u,
+      ),
+    );
+    if (error) toast.error(`Could not upload ${item.name}: ${error.message}`);
   };
+
+  const onPickFiles = async (list: FileList | null) => {
+    if (!list || !user) return;
+    const room = MAX_PHOTOS - uploads.length;
+    if (room <= 0) return toast.error(`You can attach up to ${MAX_PHOTOS} photos`);
+    const picked = Array.from(list).slice(0, room);
+    for (const raw of picked) {
+      if (!raw.type.startsWith("image/")) {
+        toast.error("Only photos can be attached");
+        continue;
+      }
+      try {
+        const file = await compressImage(raw);
+        const safe = file.name.replace(/[^\w.\-]+/g, "_");
+        const item: Upload = {
+          id: crypto.randomUUID(),
+          name: safe,
+          path: `${user.id}/bookings/${uploadGroup.current}/${crypto.randomUUID()}-${safe}`,
+          preview: URL.createObjectURL(file),
+          file,
+          status: "uploading",
+        };
+        setUploads((prev) => [...prev, item]);
+        void runUpload(item);
+      } catch (e: any) {
+        toast.error(e?.message ?? "Could not process that image");
+      }
+    }
+  };
+
+  const removeUpload = (item: Upload) => {
+    setUploads((prev) => prev.filter((u) => u.id !== item.id));
+    URL.revokeObjectURL(item.preview);
+    if (item.status === "done") supabase.storage.from("job-media").remove([item.path]);
+  };
+
+  const uploading = uploads.some((u) => u.status === "uploading");
+  const uploadFailed = uploads.some((u) => u.status === "error");
+
 
   const validate = () => {
     const next: Record<string, string> = {};
@@ -140,6 +214,8 @@ function BookPage() {
     if (profList.length > 0 && !selectedProf) {
       return toast.error("Please choose which service you need from this worker");
     }
+    if (uploading) return toast.error("Please wait for your photos to finish uploading");
+    if (uploadFailed) return toast.error("Retry or remove the failed photo before confirming");
     submittedOnce.current = true;
     setSubmitting(true);
     const controller = new AbortController();
@@ -151,26 +227,11 @@ function BookPage() {
       }, 25000);
     });
     try {
-      // 1. Upload every selected file FIRST so the booking is created with its media.
-      const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
-      if (files.length) {
-        const group = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        for (const f of files) {
-          const safe = f.name.replace(/[^\w.\-]+/g, "_");
-          const path = `${user.id}/bookings/${group}/${safe}`;
-          const uploadRequest = supabase.storage
-            .from("job-media")
-            .upload(path, f, { upsert: true, contentType: f.type || undefined });
-          const { error: upErr } = await Promise.race([uploadRequest, timeoutFailure]);
-          if (upErr) throw new Error(`Could not upload ${f.name}: ${upErr.message}`);
-          refs.push({
-            path,
-            bucket: "job-media",
-            kind: f.type.startsWith("video") ? "video" : "image",
-            name: safe,
-          });
-        }
-      }
+      // Photos are already in storage — the booking call only links their paths.
+      const refs = uploads
+        .filter((u) => u.status === "done")
+        .map((u) => ({ path: u.path, bucket: "job-media", kind: "image" as const, name: u.name }));
+
 
       const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
       const estimated = (w.callout_fee ?? 0) + (w.hourly_rate ?? 0);
@@ -207,6 +268,7 @@ function BookPage() {
         throw new Error("Your photos could not be attached to the booking. Please try again.");
       }
 
+      bookedRef.current = true;
       setBookingId(inserted.id);
       submissionId.current = null;
       setStep("success");
@@ -341,16 +403,23 @@ function BookPage() {
             <Row label="Urgency"><span className="capitalize">{urgency}</span></Row>
             {budget && <Row label="Budget">GH₵{budget}</Row>}
             {lat && lng && <Row label="GPS">{lat.toFixed(4)}, {lng.toFixed(4)}</Row>}
-            {files.length > 0 && <Row label="Attachments">{files.length} file(s)</Row>}
+            {uploads.length > 0 && (
+              <Row label="Photos">
+                {uploads.filter((u) => u.status === "done").length} of {uploads.length} uploaded
+              </Row>
+            )}
           </div>
+          {uploading && <p className="text-xs text-muted-foreground">Uploading photos… please wait before confirming.</p>}
+          {uploadFailed && <p className="text-xs text-destructive">A photo failed to upload — go back and retry or remove it.</p>}
           <button
             onClick={confirmSubmit}
-            disabled={submitting}
+            disabled={submitting || uploading || uploadFailed}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
           >
-            {submitting ? "Sending…" : "Confirm & send booking"}
+            {submitting ? "Sending…" : uploading ? "Uploading photos…" : "Confirm & send booking"}
           </button>
           <button onClick={() => setStep("form")} disabled={submitting} className="w-full rounded-xl border border-input py-3 font-semibold">Back to edit</button>
+
         </div>
       </div>
     );
@@ -413,13 +482,48 @@ function BookPage() {
           {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
         </Field>
 
-        <Field label="Photos / videos (optional, up to 5)">
-          <label className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-card p-3 text-sm cursor-pointer">
-            <Camera className="size-4" />
-            <span>{files.length ? `${files.length} file(s) selected` : "Attach files"}</span>
-            <input type="file" accept="image/*,video/*" multiple className="hidden" onChange={(e)=>onPickFiles(e.target.files)} />
-          </label>
+        <Field label={`Photos (optional, up to ${MAX_PHOTOS})`}>
+          <div className="space-y-2">
+            {uploads.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {uploads.map((u) => (
+                  <div key={u.id} className="relative size-20 rounded-xl overflow-hidden border border-border bg-muted">
+                    <img src={u.preview} alt={u.name} className="size-full object-cover" />
+                    {u.status !== "done" && (
+                      <span className="absolute inset-0 grid place-items-center bg-foreground/40">
+                        {u.status === "uploading" ? (
+                          <Loader2 className="size-5 animate-spin text-background" />
+                        ) : (
+                          <button type="button" onClick={() => runUpload(u)} aria-label="Retry upload">
+                            <RefreshCw className="size-5 text-background" />
+                          </button>
+                        )}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeUpload(u)}
+                      className="absolute top-0.5 right-0.5 size-5 rounded-full bg-background/90 grid place-items-center"
+                      aria-label="Remove photo"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {uploads.length < MAX_PHOTOS && (
+              <label className="flex items-center justify-center gap-2 rounded-xl border border-dashed border-input bg-card p-3 text-sm cursor-pointer">
+                <Camera className="size-4" />
+                <span>Add photo</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e)=>{ void onPickFiles(e.target.files); e.currentTarget.value = ""; }} />
+              </label>
+            )}
+            {uploading && <p className="text-xs text-muted-foreground">Uploading photos…</p>}
+            {uploadFailed && <p className="text-xs text-destructive">A photo failed to upload — retry or remove it.</p>}
+          </div>
         </Field>
+
 
         <Field label="Service address">
           <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />

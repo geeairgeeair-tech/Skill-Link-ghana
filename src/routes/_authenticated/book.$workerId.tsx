@@ -376,7 +376,8 @@ function BookPage() {
         </Field>
 
         <Field label="Job description">
-          <textarea required value={description} onChange={(e)=>setDescription(e.target.value)} rows={4} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="What needs to be done?" />
+          <textarea required value={description} onChange={(e)=>{setDescription(e.target.value); setErrors((p)=>({...p, description: ""}));}} rows={4} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.description ? "border-destructive" : "border-input"}`} placeholder="What needs to be done? (at least 10 characters)" />
+          {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
         </Field>
 
         <Field label="Photos / videos (optional, up to 5)">
@@ -388,12 +389,15 @@ function BookPage() {
         </Field>
 
         <Field label="Service address">
-          <input required value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="e.g. House #12, East Legon" />
+          <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />
+          {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
         </Field>
 
         <Field label="General service area">
-          <input required value={area} onChange={(e)=>setArea(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="e.g. East Legon, Accra" />
+          <input required value={area} onChange={(e)=>{setArea(e.target.value); setErrors((p)=>({...p, area: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.area ? "border-destructive" : "border-input"}`} placeholder="e.g. East Legon, Accra" />
+          {errors.area && <p className="text-xs text-destructive mt-1">{errors.area}</p>}
         </Field>
+
 
         <button type="button" onClick={requestGps} className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-input py-2.5 text-sm font-semibold">
           <Locate className="size-4" /> {lat && lng ? `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : "Use my current location"}

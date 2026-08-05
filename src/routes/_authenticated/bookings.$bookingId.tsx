@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { BackButton } from "@/components/back-button";
+import { BookingMedia } from "@/components/booking-media";
 import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
@@ -244,7 +245,6 @@ function BookingDetail() {
     : null;
 
   const showAddress = isCustomer || isAdmin || ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","completed","disputed","closed"].includes(status);
-  const photos: string[] = Array.isArray(b.photos) ? b.photos.filter((p: any) => typeof p === "string") : [];
   const progressPhotos: string[] = Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : [];
   const completionPhotos: string[] = Array.isArray(b.completion_photos) ? b.completion_photos.filter((p: any) => typeof p === "string") : [];
 
@@ -447,20 +447,16 @@ function BookingDetail() {
           </section>
         )}
 
-        {/* Photos / attachments */}
+        {/* Customer job photos & videos */}
+        <BookingMedia value={b.photos} />
+
+        {/* Work media */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
-          <h3 className="font-display font-bold text-sm inline-flex items-center gap-1"><ImageIcon className="size-4"/> Photos & attachments</h3>
-          {photos.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No photos or attachments on this booking.</p>
-          ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {photos.map((src, i) => (
-                <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
-                  <img src={src} alt={`Booking attachment ${i + 1}`} className="size-full object-cover" loading="lazy" />
-                </a>
-              ))}
-            </div>
+          <h3 className="font-display font-bold text-sm inline-flex items-center gap-1"><ImageIcon className="size-4"/> Work photos</h3>
+          {progressPhotos.length === 0 && completionPhotos.length === 0 && (
+            <p className="text-xs text-muted-foreground">No work photos on this booking yet.</p>
           )}
+
           {progressPhotos.length > 0 && (
             <>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Work in progress</p>

@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/book/$workerId")({
 type Urgency = "normal" | "urgent" | "emergency";
 type Step = "form" | "review" | "success";
 
+const PLACEHOLDERS = ["n/a", "na", "none", "test", "unknown", "-", ".", "xxx"];
+
 function BookPage() {
   const { workerId } = Route.useParams();
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
   const [profId, setProfId] = useState<string>("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const submittedOnce = useRef(false);
 
   const { data: w, isLoading } = useQuery({
@@ -100,6 +103,19 @@ function BookPage() {
     setFiles(arr);
   };
 
+  const validate = () => {
+    const next: Record<string, string> = {};
+    const desc = description.trim();
+    const addr = address.trim();
+    const ar = area.trim();
+    if (desc.length < 10) next.description = "Please describe the job before continuing.";
+    if (addr.length < 5 || PLACEHOLDERS.includes(addr.toLowerCase())) next.address = "Enter the exact service address.";
+    if (ar.length < 3 || PLACEHOLDERS.includes(ar.toLowerCase())) next.area = "Enter the general service area.";
+    if (!date) next.date = "Choose a preferred date.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
   const goReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (availability && availability !== "available") {
@@ -108,8 +124,8 @@ function BookPage() {
     if (profList.length > 0 && !selectedProf) {
       return toast.error("Please choose which service you need from this worker");
     }
-    if (!description.trim() || !address.trim() || !area.trim() || !date) {
-      return toast.error("Please fill service description, address, area and preferred date");
+    if (!validate()) {
+      return toast.error("Please fix the highlighted fields");
     }
     setStep("review");
   };
@@ -145,12 +161,27 @@ function BookPage() {
       } as any).select("id").single();
       if (error) throw error;
 
-      // Upload media (best effort)
+      // Upload media and link every file to this booking
       if (files.length) {
+        const refs: { path: string; bucket: string; kind: string; name: string }[] = [];
         for (const f of files) {
-          const path = `${user.id}/bookings/${inserted.id}/${Date.now()}-${f.name}`;
-          const { error: upErr } = await supabase.storage.from("job-media").upload(path, f, { upsert: false });
-          if (upErr) console.warn("upload failed", upErr.message);
+          const safe = f.name.replace(/[^\w.\-]+/g, "_");
+          const path = `${user.id}/bookings/${inserted.id}/${Date.now()}-${safe}`;
+          const { error: upErr } = await supabase.storage
+            .from("job-media")
+            .upload(path, f, { upsert: false, contentType: f.type || undefined });
+          if (upErr) {
+            console.warn("upload failed", upErr.message);
+            continue;
+          }
+          refs.push({ path, bucket: "job-media", kind: f.type.startsWith("video") ? "video" : "image", name: safe });
+        }
+        if (refs.length) {
+          const { error: linkErr } = await supabase
+            .from("bookings")
+            .update({ photos: refs } as any)
+            .eq("id", inserted.id);
+          if (linkErr) toast.error("Booking created, but attaching media failed");
         }
       }
       setBookingId(inserted.id);
@@ -345,7 +376,8 @@ function BookPage() {
         </Field>
 
         <Field label="Job description">
-          <textarea required value={description} onChange={(e)=>setDescription(e.target.value)} rows={4} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="What needs to be done?" />
+          <textarea required value={description} onChange={(e)=>{setDescription(e.target.value); setErrors((p)=>({...p, description: ""}));}} rows={4} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.description ? "border-destructive" : "border-input"}`} placeholder="What needs to be done? (at least 10 characters)" />
+          {errors.description && <p className="text-xs text-destructive mt-1">{errors.description}</p>}
         </Field>
 
         <Field label="Photos / videos (optional, up to 5)">
@@ -357,12 +389,15 @@ function BookPage() {
         </Field>
 
         <Field label="Service address">
-          <input required value={address} onChange={(e)=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="e.g. House #12, East Legon" />
+          <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />
+          {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
         </Field>
 
         <Field label="General service area">
-          <input required value={area} onChange={(e)=>setArea(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="e.g. East Legon, Accra" />
+          <input required value={area} onChange={(e)=>{setArea(e.target.value); setErrors((p)=>({...p, area: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.area ? "border-destructive" : "border-input"}`} placeholder="e.g. East Legon, Accra" />
+          {errors.area && <p className="text-xs text-destructive mt-1">{errors.area}</p>}
         </Field>
+
 
         <button type="button" onClick={requestGps} className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-input py-2.5 text-sm font-semibold">
           <Locate className="size-4" /> {lat && lng ? `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : "Use my current location"}

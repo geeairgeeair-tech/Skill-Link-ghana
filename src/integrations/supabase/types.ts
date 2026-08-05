@@ -1476,6 +1476,27 @@ export type Database = {
         }
         Returns: string
       }
+      worker_submit_verification: {
+        Args: {
+          _bio: string
+          _callout_fee: number
+          _category_id: string
+          _city: string
+          _date_of_birth: string
+          _ghana_card_number?: string
+          _ghana_card_url?: string
+          _hourly_rate: number
+          _portfolio_images?: Json
+          _selfie_url?: string
+          _service_area: string
+          _starting_price: number
+          _years_experience: number
+        }
+        Returns: {
+          user_id: string
+          verification_status: string
+        }[]
+      }
       worker_update_job_application: {
         Args: {
           _application_id: string

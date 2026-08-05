@@ -143,13 +143,13 @@ function BookPage() {
     submittedOnce.current = true;
     setSubmitting(true);
     const controller = new AbortController();
+    let timeout = 0;
     const timeoutFailure = new Promise<never>((_, reject) => {
-      window.setTimeout(() => {
+      timeout = window.setTimeout(() => {
         controller.abort();
         reject(new Error("Booking request timed out after 25 seconds. Please retry."));
       }, 25000);
     });
-    const timeout = window.setTimeout(() => controller.abort(), 25000);
     try {
       // 1. Upload every selected file FIRST so the booking is created with its media.
       const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];

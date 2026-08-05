@@ -143,7 +143,13 @@ function BookPage() {
     submittedOnce.current = true;
     setSubmitting(true);
     const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 25000);
+    let timeout = 0;
+    const timeoutFailure = new Promise<never>((_, reject) => {
+      timeout = window.setTimeout(() => {
+        controller.abort();
+        reject(new Error("Booking request timed out after 25 seconds. Please retry."));
+      }, 25000);
+    });
     try {
       // 1. Upload every selected file FIRST so the booking is created with its media.
       const refs: { path: string; bucket: string; kind: "image" | "video"; name: string }[] = [];
@@ -152,9 +158,10 @@ function BookPage() {
         for (const f of files) {
           const safe = f.name.replace(/[^\w.\-]+/g, "_");
           const path = `${user.id}/bookings/${group}/${safe}`;
-          const { error: upErr } = await supabase.storage
+          const uploadRequest = supabase.storage
             .from("job-media")
             .upload(path, f, { upsert: true, contentType: f.type || undefined });
+          const { error: upErr } = await Promise.race([uploadRequest, timeoutFailure]);
           if (upErr) throw new Error(`Could not upload ${f.name}: ${upErr.message}`);
           refs.push({
             path,
@@ -172,7 +179,7 @@ function BookPage() {
 
       // 2. Create exactly one booking through the ownership-validating RPC.
       // The stable submission ID makes a timed-out request safe to retry.
-      const { data: inserted, error } = await supabase.rpc("customer_create_booking", {
+      const rpcRequest = supabase.rpc("customer_create_booking", {
         _submission_id: currentSubmissionId,
         _worker_id: workerId,
         _worker_profession_id: selectedProf?.id ?? "",
@@ -188,7 +195,11 @@ function BookPage() {
         _longitude: lng,
         _photos: refs,
       } as any).abortSignal(controller.signal).single();
+      const { data: inserted, error } = await Promise.race([rpcRequest, timeoutFailure]);
       if (error) throw error;
+      if (!inserted?.id || !Array.isArray(inserted.photos)) {
+        throw new Error("Booking service returned an invalid response. Please retry.");
+      }
 
       // 3. Confirm the media actually persisted before leaving the form.
       const saved = Array.isArray(inserted?.photos) ? inserted.photos : [];
@@ -201,9 +212,14 @@ function BookPage() {
       setStep("success");
     } catch (err: any) {
       submittedOnce.current = false;
-      const message = controller.signal.aborted
-        ? "The booking request took too long. Please retry — you will not be charged or booked twice."
-        : err?.message ?? "Could not send booking. Please try again.";
+      const message = err?.message ?? "Could not send booking. Please try again.";
+      console.error("customer_create_booking failed", {
+        message,
+        code: err?.code,
+        details: err?.details,
+        hint: err?.hint,
+        status: err?.status,
+      });
       toast.error(message);
     } finally {
       window.clearTimeout(timeout);

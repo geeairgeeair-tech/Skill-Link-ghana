@@ -402,16 +402,23 @@ function BookPage() {
             <Row label="Urgency"><span className="capitalize">{urgency}</span></Row>
             {budget && <Row label="Budget">GH₵{budget}</Row>}
             {lat && lng && <Row label="GPS">{lat.toFixed(4)}, {lng.toFixed(4)}</Row>}
-            {files.length > 0 && <Row label="Attachments">{files.length} file(s)</Row>}
+            {uploads.length > 0 && (
+              <Row label="Photos">
+                {uploads.filter((u) => u.status === "done").length} of {uploads.length} uploaded
+              </Row>
+            )}
           </div>
+          {uploading && <p className="text-xs text-muted-foreground">Uploading photos… please wait before confirming.</p>}
+          {uploadFailed && <p className="text-xs text-destructive">A photo failed to upload — go back and retry or remove it.</p>}
           <button
             onClick={confirmSubmit}
-            disabled={submitting}
+            disabled={submitting || uploading || uploadFailed}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
           >
-            {submitting ? "Sending…" : "Confirm & send booking"}
+            {submitting ? "Sending…" : uploading ? "Uploading photos…" : "Confirm & send booking"}
           </button>
           <button onClick={() => setStep("form")} disabled={submitting} className="w-full rounded-xl border border-input py-3 font-semibold">Back to edit</button>
+
         </div>
       </div>
     );

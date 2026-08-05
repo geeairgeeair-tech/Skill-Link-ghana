@@ -15,7 +15,17 @@ export const Route = createFileRoute("/_authenticated/book/$workerId")({
 
 type Urgency = "normal" | "urgent" | "emergency";
 type Step = "form" | "review" | "success";
+type Upload = {
+  id: string;
+  name: string;
+  path: string;
+  preview: string;
+  file: File;
+  status: "uploading" | "done" | "error";
+  error?: string;
+};
 
+const MAX_PHOTOS = 3;
 const PLACEHOLDERS = ["n/a", "na", "none", "test", "unknown", "-", ".", "xxx"];
 
 function BookPage() {

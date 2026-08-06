@@ -53,13 +53,32 @@ function AuthPage() {
   };
 
   const passwordsMatch = password.length > 0 && password === confirmPassword;
-
+  const normalizedPhone = normalizeGhanaPhone(phone);
+  const resolvedGender = gender === "self" ? genderSelf.trim() : gender;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "signup" && !passwordsMatch) {
-      toast.error("Passwords do not match");
-      return;
+    if (mode === "signup") {
+      if (!passwordsMatch) {
+        toast.error("Passwords do not match.");
+        return;
+      }
+      if (!dob) {
+        toast.error("Date of birth is required.");
+        return;
+      }
+      if (ageFrom(dob) < 18) {
+        toast.error("You must be at least 18 years old to use Skill Link.");
+        return;
+      }
+      if (!resolvedGender) {
+        toast.error("Please select your gender.");
+        return;
+      }
+      if (!normalizedPhone) {
+        toast.error("Enter a valid Ghana phone number (e.g. 024 000 0000).");
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -69,9 +88,18 @@ function AuthPage() {
           email, password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, phone, role },
+            data: {
+              full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              date_of_birth: dob,
+              gender: resolvedGender,
+              phone: normalizedPhone,
+              role,
+            },
           },
         });
+
         if (error) throw error;
         if (!data.session) {
           toast.success("Check your email to confirm your account.");

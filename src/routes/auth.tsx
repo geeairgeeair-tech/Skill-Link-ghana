@@ -27,7 +27,11 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
+  const [genderSelf, setGenderSelf] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -49,6 +53,7 @@ function AuthPage() {
   };
 
   const passwordsMatch = password.length > 0 && password === confirmPassword;
+
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

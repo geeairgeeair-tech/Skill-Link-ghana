@@ -1317,6 +1317,16 @@ export type Database = {
         Returns: undefined
       }
       get_job_request_address: { Args: { _id: string }; Returns: string }
+      get_job_request_private: {
+        Args: { _id: string }
+        Returns: {
+          address: string
+          landmark: string
+          lat: number
+          lng: number
+          location_instructions: string
+        }[]
+      }
       get_my_worker_verification: {
         Args: never
         Returns: {

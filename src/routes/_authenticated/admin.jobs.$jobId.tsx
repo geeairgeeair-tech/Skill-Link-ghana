@@ -36,7 +36,7 @@ function AdminJobDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("job_requests")
-        .select("id, title, description, budget, urgency, status, preferred_at, media, city, service_area, lat, lng, created_at, updated_at, customer_id, category_id, categories(name)")
+        .select("id, title, description, budget, urgency, status, preferred_at, media, city, service_area, created_at, updated_at, customer_id, category_id, categories(name)")
         .eq("id", jobId)
         .maybeSingle();
       if (error) throw error;

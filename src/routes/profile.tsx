@@ -255,3 +255,11 @@ function ProfilePage() {
 function Field({ label, children }: any) {
   return <label className="block"><p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">{label}</p>{children}</label>;
 }
+function ReadOnly({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="block">
+      <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">{label}</p>
+      <p className="w-full rounded-xl border border-input bg-muted/50 p-3 text-sm text-muted-foreground truncate">{value}</p>
+    </div>
+  );
+}

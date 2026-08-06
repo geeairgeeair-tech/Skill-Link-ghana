@@ -157,10 +157,51 @@ function AuthPage() {
         <form onSubmit={onSubmit} className="space-y-3">
           {mode === "signup" && (
             <>
-              <Field icon={UserIcon} placeholder="Full name" value={fullName} onChange={setFullName} required />
-              <Field icon={Phone} placeholder="Phone (e.g. 024 000 0000)" value={phone} onChange={setPhone} type="tel" />
+              <div className="grid grid-cols-2 gap-2">
+                <Field icon={UserIcon} placeholder="First legal name" value={firstName} onChange={setFirstName} required />
+                <Field icon={UserIcon} placeholder="Last legal name" value={lastName} onChange={setLastName} required />
+              </div>
+              <label className="block">
+                <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">Date of birth</p>
+                <input
+                  type="date"
+                  value={dob}
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                />
+                {dob && ageFrom(dob) < 18 && (
+                  <p className="text-xs font-semibold text-destructive mt-1">
+                    You must be at least 18 years old to use Skill Link.
+                  </p>
+                )}
+              </label>
+              <label className="block">
+                <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">Gender</p>
+                <select
+                  value={gender}
+                  required
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="self">Self-describe</option>
+                </select>
+              </label>
+              {gender === "self" && (
+                <Field icon={UserIcon} placeholder="Self-describe gender" value={genderSelf} onChange={setGenderSelf} required />
+              )}
+              <Field icon={Phone} placeholder="Phone (e.g. 024 000 0000)" value={phone} onChange={setPhone} type="tel" required />
+              {phone.trim().length > 0 && !normalizedPhone && (
+                <p className="text-xs font-semibold text-destructive -mt-1">Enter a valid Ghana phone number.</p>
+              )}
             </>
           )}
+
           <Field icon={Mail} placeholder="Email" value={email} onChange={setEmail} type="email" required />
           <Field icon={Lock} placeholder="Password" value={password} onChange={setPassword} type="password" required />
           {mode === "signup" && (

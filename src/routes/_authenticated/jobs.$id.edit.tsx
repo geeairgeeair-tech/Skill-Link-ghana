@@ -75,17 +75,17 @@ function EditJobPage() {
       description: prev?.description ?? j.description ?? "",
       category_id: prev?.category_id ?? j.category_id ?? "",
       city: prev?.city ?? j.city ?? "",
-      address: prev?.address ?? addr ?? j.address ?? "",
+      address: prev?.address ?? addr ?? "",
       service_area: prev?.service_area ?? j.service_area ?? "",
       region: prev?.region ?? j.region ?? "",
       area: prev?.area ?? j.area ?? "",
-      landmark: prev?.landmark ?? j.landmark ?? "",
-      location_instructions: prev?.location_instructions ?? j.location_instructions ?? "",
+      landmark: prev?.landmark ?? (priv as any)?.landmark ?? "",
+      location_instructions: prev?.location_instructions ?? (priv as any)?.location_instructions ?? "",
       budget: prev?.budget ?? (j.budget?.toString() ?? ""),
       urgency: prev?.urgency ?? j.urgency ?? "normal",
       preferred_at: prev?.preferred_at ?? (j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : ""),
     }));
-  }, [job, addr]);
+  }, [job, addr, priv]);
 
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (user && (job as any).customer_id !== user.id) return <div className="p-8 text-center">You can't edit this job.</div>;

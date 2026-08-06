@@ -223,10 +223,19 @@ function WorkerDashboard() {
           </div>
         )}
 
-        {wp && !isVerified && status !== "rejected" && (
+        {wp && status === "suspended" && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your Professional account has been suspended. Please contact Support.</p>
+            <Link to="/support" className="text-xs px-3 py-1.5 rounded-lg bg-muted font-semibold inline-flex items-center gap-1">
+              <LifeBuoy className="size-3" /> Contact support
+            </Link>
+          </div>
+        )}
+
+        {wp && !isVerified && status !== "rejected" && status !== "suspended" && (
           <div className="rounded-2xl bg-warning/15 border border-warning/30 p-4">
-            <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4" /> Awaiting verification</p>
-            <p className="text-sm text-muted-foreground mt-1">An admin is reviewing your documents. You'll be notified once approved.</p>
+            <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4" /> Verification under review</p>
+            <p className="text-sm text-muted-foreground mt-1">Your Professional verification is under review. You can continue setting up your profile while waiting.</p>
           </div>
         )}
 

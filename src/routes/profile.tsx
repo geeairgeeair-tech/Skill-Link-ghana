@@ -23,6 +23,25 @@ function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  // Legal identity is captured at sign-up and locked afterwards. Existing accounts
+  // that are missing any of the four fields may complete them exactly once.
+  const [identity, setIdentity] = useState<{ first_name: string | null; last_name: string | null; date_of_birth: string | null; gender: string | null } | null>(null);
+  const [idForm, setIdForm] = useState({ first_name: "", last_name: "", date_of_birth: "", gender: "" });
+  const [savingIdentity, setSavingIdentity] = useState(false);
+
+  const loadIdentity = (uid: string) =>
+    supabase.rpc("get_profile_identity", { _id: uid }).then(({ data }) => {
+      const c = (data as any)?.[0];
+      if (c) {
+        setPhone(c.phone ?? "");
+        setIdentity({
+          first_name: c.first_name ?? null,
+          last_name: c.last_name ?? null,
+          date_of_birth: c.date_of_birth ?? null,
+          gender: c.gender ?? null,
+        });
+      }
+    });
 
   useEffect(() => {
     if (!user) return;
@@ -33,6 +52,7 @@ function ProfilePage() {
       const c = (data as any)?.[0];
       if (c) { setPhone(c.phone ?? ""); setAddress(c.address ?? ""); }
     });
+    loadIdentity(user.id);
   }, [user?.id]);
 
   if (loading) return <AppShell><div className="p-8 text-center text-muted-foreground">Loading…</div></AppShell>;
@@ -45,11 +65,34 @@ function ProfilePage() {
     </AppShell>;
   }
 
+  const identityComplete =
+    !!identity?.first_name && !!identity?.last_name && !!identity?.date_of_birth && !!identity?.gender;
+
+  const maxDob = new Date();
+  maxDob.setFullYear(maxDob.getFullYear() - 18);
+  const maxDobStr = maxDob.toISOString().slice(0, 10);
+
+  const saveIdentity = async () => {
+    setSavingIdentity(true);
+    const { error } = await (supabase.rpc as any)("complete_profile_identity", {
+      _first_name: idForm.first_name,
+      _last_name: idForm.last_name,
+      _date_of_birth: idForm.date_of_birth || null,
+      _gender: idForm.gender,
+    });
+    setSavingIdentity(false);
+    if (error) return toast.error(error.message);
+    toast.success("Identity details saved and locked");
+    await loadIdentity(user.id);
+  };
+
   const save = async () => {
+    // Legal identity fields are intentionally not part of this update.
     const { error } = await supabase.from("profiles").update({ full_name, phone, address }).eq("id", user.id);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
   };
+
 
   const signOut = async () => {
     await supabase.auth.signOut();

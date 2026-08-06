@@ -34,7 +34,9 @@ function JobDetail() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, budget, city, status, urgency, preferred_at, media, created_at, customer_id, category_id, booking_id, lat, lng, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
+      // Exact location columns (address/lat/lng/landmark/instructions) are not
+      // readable here — the owner/admin/assigned pro reads them via RPC.
+      .select("id, title, description, budget, city, service_area, status, urgency, preferred_at, media, created_at, customer_id, category_id, booking_id, categories(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
   });
   const jobBookingId = (job as any)?.booking_id as string | null | undefined;

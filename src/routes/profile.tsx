@@ -120,7 +120,7 @@ function ProfilePage() {
 
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3 shadow-card">
           <div className="flex items-center gap-2">
-            <Lock className="size-4 text-muted-foreground" />
+            <LockIcon className="size-4 text-muted-foreground" />
             <p className="font-semibold text-sm">Legal identity</p>
           </div>
           {identityComplete ? (

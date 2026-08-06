@@ -1227,6 +1227,15 @@ export type Database = {
         Args: { _booking_id: string; _kind: string; _urls: Json }
         Returns: undefined
       }
+      complete_profile_identity: {
+        Args: {
+          _date_of_birth: string
+          _first_name: string
+          _gender: string
+          _last_name: string
+        }
+        Returns: undefined
+      }
       customer_accept_job_application: {
         Args: { _application_id: string }
         Returns: string

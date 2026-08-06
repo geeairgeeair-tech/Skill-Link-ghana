@@ -37,6 +37,10 @@ function Onboarding() {
     queryFn: async () => (await supabase.from("categories").select("*").order("sort_order")).data ?? [],
   });
 
+  // One account identity: date of birth comes from the signup profile and is locked
+  // once set. Verification never stores a separate identity record.
+  const [lockedDob, setLockedDob] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -45,11 +49,15 @@ function Onboarding() {
         .eq("user_id", user.id).maybeSingle();
       const { data: ident } = await supabase.rpc("get_worker_identity", { _user_id: user.id });
       const idRow: any = (ident as any)?.[0] ?? {};
+      const { data: acct } = await supabase.rpc("get_profile_identity", { _id: user.id });
+      const acctDob: string | null = (acct as any)?.[0]?.date_of_birth ?? null;
+      setLockedDob(acctDob);
       const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
       setAvatarUrl(prof?.avatar_url ?? null);
+      if (acctDob) setForm((f) => ({ ...f, date_of_birth: acctDob }));
       if (data) {
         setStatus((data as any).verification_status ?? null);
-        setForm({
+        setForm((f) => ({
           category_id: data.category_id ?? "", bio: data.bio ?? "",
           years_experience: data.years_experience ?? 0,
           ghana_card_number: "",
@@ -58,8 +66,8 @@ function Onboarding() {
           hourly_rate: data.hourly_rate ?? 50,
           callout_fee: data.callout_fee ?? 30,
           starting_price: data.starting_price ?? 50,
-          date_of_birth: idRow.date_of_birth ?? "",
-        });
+          date_of_birth: acctDob ?? idRow.date_of_birth ?? f.date_of_birth,
+        }));
         setPortfolio(Array.isArray(data.portfolio_images) ? (data.portfolio_images as any[]).filter((x) => typeof x === "string") : []);
         setCommit(true);
         setDocsOnFile({
@@ -70,6 +78,7 @@ function Onboarding() {
       }
     })();
   }, [user?.id]);
+
 
   const maxDob = new Date();
   maxDob.setFullYear(maxDob.getFullYear() - 18);
@@ -182,11 +191,25 @@ function Onboarding() {
             )}
           </Field>
           <Field label="Date of birth">
-            <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
-              onChange={e => setForm({...form, date_of_birth: e.target.value})}
-              className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+.</p>
+            {lockedDob ? (
+              <>
+                <p className="w-full rounded-xl border border-input bg-muted/50 p-3 text-sm text-muted-foreground">
+                  {new Date(lockedDob).toLocaleDateString()}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Legal identity details cannot be changed directly. Contact Support if a correction is required.
+                </p>
+              </>
+            ) : (
+              <>
+                <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
+                  onChange={e => setForm({...form, date_of_birth: e.target.value})}
+                  className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+                <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+. Locked after saving.</p>
+              </>
+            )}
           </Field>
+
           {(docsOnFile.card || docsOnFile.selfie) && (
             <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs space-y-1">
               <p className="font-semibold">Documents on file</p>

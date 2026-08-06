@@ -108,19 +108,36 @@ function Row({ n, onOpen }: any) {
   return (
     <button
       onClick={() => onOpen(n)}
-      className={`w-full text-left rounded-2xl border p-3 flex gap-3 transition-colors ${unread ? "bg-primary-soft/40 border-primary/20" : "bg-card border-border"}`}
+      className={[
+        "w-full text-left rounded-2xl border p-4 flex gap-3.5 transition-all duration-200",
+        "hover:shadow-elevated hover:-translate-y-0.5 active:scale-[0.99]",
+        unread
+          ? "bg-primary-soft/35 border-primary/20 shadow-card"
+          : "bg-card border-border shadow-card hover:bg-muted/40",
+      ].join(" ")}
     >
-      <div className={`size-9 shrink-0 rounded-full grid place-items-center ${unread ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-        <Icon className="size-4"/>
+      <div
+        className={[
+          "size-10 shrink-0 rounded-xl grid place-items-center shadow-sm",
+          unread ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+        ].join(" ")}
+      >
+        <Icon className="size-4.5" />
       </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <p className="font-semibold text-sm truncate">{n.title}</p>
-          <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
+        <div className="flex items-baseline justify-between gap-2">
+          <p className={["font-bold text-sm leading-tight truncate", unread ? "text-foreground" : "text-foreground/90"].join(" ")}>
+            {n.title}
+          </p>
+          <span className="text-[11px] font-medium text-muted-foreground shrink-0">{timeAgo}</span>
         </div>
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
+        <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{n.body}</p>
       </div>
-      {unread && <span className="size-2 rounded-full bg-primary self-center shrink-0"/>}
+      {unread && (
+        <span className="self-center shrink-0 flex flex-col items-center gap-1">
+          <span className="size-2.5 rounded-full bg-primary ring-2 ring-primary/20" />
+        </span>
+      )}
     </button>
   );
 }

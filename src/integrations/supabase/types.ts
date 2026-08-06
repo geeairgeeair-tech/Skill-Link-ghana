@@ -638,8 +638,12 @@ export type Database = {
           avatar_url: string | null
           city: string | null
           created_at: string
+          date_of_birth: string | null
+          first_name: string | null
           full_name: string
+          gender: string | null
           id: string
+          last_name: string | null
           phone: string | null
           updated_at: string
         }
@@ -648,8 +652,12 @@ export type Database = {
           avatar_url?: string | null
           city?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          first_name?: string | null
           full_name?: string
+          gender?: string | null
           id: string
+          last_name?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -658,8 +666,12 @@ export type Database = {
           avatar_url?: string | null
           city?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          first_name?: string | null
           full_name?: string
+          gender?: string | null
           id?: string
+          last_name?: string | null
           phone?: string | null
           updated_at?: string
         }
@@ -1322,6 +1334,16 @@ export type Database = {
         Args: { _id: string }
         Returns: {
           address: string
+          phone: string
+        }[]
+      }
+      get_profile_identity: {
+        Args: { _id?: string }
+        Returns: {
+          date_of_birth: string
+          first_name: string
+          gender: string
+          last_name: string
           phone: string
         }[]
       }

@@ -27,7 +27,11 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [fullName, setFullName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
+  const [genderSelf, setGenderSelf] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -49,12 +53,32 @@ function AuthPage() {
   };
 
   const passwordsMatch = password.length > 0 && password === confirmPassword;
+  const normalizedPhone = normalizeGhanaPhone(phone);
+  const resolvedGender = gender === "self" ? genderSelf.trim() : gender;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode === "signup" && !passwordsMatch) {
-      toast.error("Passwords do not match");
-      return;
+    if (mode === "signup") {
+      if (!passwordsMatch) {
+        toast.error("Passwords do not match.");
+        return;
+      }
+      if (!dob) {
+        toast.error("Date of birth is required.");
+        return;
+      }
+      if (ageFrom(dob) < 18) {
+        toast.error("You must be at least 18 years old to use Skill Link.");
+        return;
+      }
+      if (!resolvedGender) {
+        toast.error("Please select your gender.");
+        return;
+      }
+      if (!normalizedPhone) {
+        toast.error("Enter a valid Ghana phone number (e.g. 024 000 0000).");
+        return;
+      }
     }
     setLoading(true);
     try {
@@ -64,9 +88,18 @@ function AuthPage() {
           email, password,
           options: {
             emailRedirectTo: window.location.origin,
-            data: { full_name: fullName, phone, role },
+            data: {
+              full_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+              first_name: firstName.trim(),
+              last_name: lastName.trim(),
+              date_of_birth: dob,
+              gender: resolvedGender,
+              phone: normalizedPhone,
+              role,
+            },
           },
         });
+
         if (error) throw error;
         if (!data.session) {
           toast.success("Check your email to confirm your account.");
@@ -124,10 +157,51 @@ function AuthPage() {
         <form onSubmit={onSubmit} className="space-y-3">
           {mode === "signup" && (
             <>
-              <Field icon={UserIcon} placeholder="Full name" value={fullName} onChange={setFullName} required />
-              <Field icon={Phone} placeholder="Phone (e.g. 024 000 0000)" value={phone} onChange={setPhone} type="tel" />
+              <div className="grid grid-cols-2 gap-2">
+                <Field icon={UserIcon} placeholder="First legal name" value={firstName} onChange={setFirstName} required />
+                <Field icon={UserIcon} placeholder="Last legal name" value={lastName} onChange={setLastName} required />
+              </div>
+              <label className="block">
+                <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">Date of birth</p>
+                <input
+                  type="date"
+                  value={dob}
+                  required
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                />
+                {dob && ageFrom(dob) < 18 && (
+                  <p className="text-xs font-semibold text-destructive mt-1">
+                    You must be at least 18 years old to use Skill Link.
+                  </p>
+                )}
+              </label>
+              <label className="block">
+                <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">Gender</p>
+                <select
+                  value={gender}
+                  required
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full rounded-xl border border-input bg-card px-3 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                  <option value="self">Self-describe</option>
+                </select>
+              </label>
+              {gender === "self" && (
+                <Field icon={UserIcon} placeholder="Self-describe gender" value={genderSelf} onChange={setGenderSelf} required />
+              )}
+              <Field icon={Phone} placeholder="Phone (e.g. 024 000 0000)" value={phone} onChange={setPhone} type="tel" required />
+              {phone.trim().length > 0 && !normalizedPhone && (
+                <p className="text-xs font-semibold text-destructive -mt-1">Enter a valid Ghana phone number.</p>
+              )}
             </>
           )}
+
           <Field icon={Mail} placeholder="Email" value={email} onChange={setEmail} type="email" required />
           <Field icon={Lock} placeholder="Password" value={password} onChange={setPassword} type="password" required />
           {mode === "signup" && (
@@ -151,7 +225,12 @@ function AuthPage() {
             </div>
           )}
           <button
-            disabled={loading || (mode === "signup" && !passwordsMatch)}
+            disabled={
+              loading ||
+              (mode === "signup" &&
+                (!passwordsMatch || !dob || ageFrom(dob) < 18 || !resolvedGender || !normalizedPhone))
+            }
+
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
           >
             {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
@@ -203,4 +282,27 @@ function GoogleLogo() {
   return (
     <svg viewBox="0 0 24 24" className="size-5"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.99.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.1V7.07H2.18A11 11 0 0 0 1 12c0 1.77.42 3.45 1.18 4.93l3.66-2.83z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.83C6.71 7.31 9.14 5.38 12 5.38z"/></svg>
   );
+}
+
+/** Accurate age in whole years from an ISO yyyy-mm-dd birth date. */
+function ageFrom(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  if (Number.isNaN(d.getTime())) return -1;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  const m = now.getMonth() - d.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < d.getDate())) age--;
+  return age;
+}
+
+/** Normalize a Ghana phone number to +233XXXXXXXXX, or "" when invalid. */
+function normalizeGhanaPhone(input: string) {
+  const raw = input.replace(/[\s()-]/g, "");
+  let local = "";
+  if (/^\+233\d{9}$/.test(raw)) local = raw.slice(4);
+  else if (/^233\d{9}$/.test(raw)) local = raw.slice(3);
+  else if (/^0\d{9}$/.test(raw)) local = raw.slice(1);
+  else if (/^\d{9}$/.test(raw)) local = raw;
+  if (!local || !/^[2356]\d{8}$/.test(local)) return "";
+  return `+233${local}`;
 }

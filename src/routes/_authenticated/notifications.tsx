@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
+import { useRelativeTime } from "@/hooks/use-relative-time";
 import { notificationTarget } from "@/lib/notification-target";
 import { Bell, CheckCheck, Calendar, MessageCircle, Briefcase, ShieldCheck, XCircle } from "lucide-react";
 

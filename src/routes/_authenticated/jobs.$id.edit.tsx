@@ -42,7 +42,7 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, address, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, landmark, location_instructions, assigned_worker_id, booking_id")
+      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id")
       .eq("id", id).maybeSingle()).data,
   });
   const bookingId = (job as any)?.booking_id as string | null | undefined;
@@ -53,11 +53,14 @@ function EditJobPage() {
       ((await supabase.from("bookings").select("status").eq("id", bookingId!).maybeSingle()).data as any)
         ?.status as string | null,
   });
-  const { data: addr } = useQuery({
-    queryKey: ["job-edit-address", id],
+  // Exact location is private: only the owner/admin/assigned pro can read it.
+  const { data: priv } = useQuery({
+    queryKey: ["job-edit-private", id],
     enabled: !!job && !!user,
-    queryFn: async () => (await supabase.rpc("get_job_request_address", { _id: id })).data as string | null,
+    queryFn: async () =>
+      (((await (supabase.rpc as any)("get_job_request_private", { _id: id })).data as any[]) ?? [])[0] ?? null,
   });
+  const addr = (priv as any)?.address as string | null | undefined;
 
   const { data: categories } = useQuery({
     queryKey: ["categories-all"],

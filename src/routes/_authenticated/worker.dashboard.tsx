@@ -196,7 +196,7 @@ function WorkerDashboard() {
 
         {wp && status === "rejected" && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
-            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your verification was not approved.</p>
+            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your verification was not approved. Review the reason below and resubmit.</p>
             {(wp as any).rejection_reason && (
               <div className="rounded-lg bg-card border border-border p-2 text-sm">
                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Reason from admin</p>

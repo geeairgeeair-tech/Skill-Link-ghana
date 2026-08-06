@@ -225,7 +225,12 @@ function AuthPage() {
             </div>
           )}
           <button
-            disabled={loading || (mode === "signup" && !passwordsMatch)}
+            disabled={
+              loading ||
+              (mode === "signup" &&
+                (!passwordsMatch || !dob || ageFrom(dob) < 18 || !resolvedGender || !normalizedPhone))
+            }
+
             className="w-full rounded-xl bg-primary text-primary-foreground py-3.5 font-semibold disabled:opacity-50"
           >
             {loading ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}

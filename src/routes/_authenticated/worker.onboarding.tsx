@@ -191,11 +191,25 @@ function Onboarding() {
             )}
           </Field>
           <Field label="Date of birth">
-            <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
-              onChange={e => setForm({...form, date_of_birth: e.target.value})}
-              className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+.</p>
+            {lockedDob ? (
+              <>
+                <p className="w-full rounded-xl border border-input bg-muted/50 p-3 text-sm text-muted-foreground">
+                  {new Date(lockedDob).toLocaleDateString()}
+                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Legal identity details cannot be changed directly. Contact Support if a correction is required.
+                </p>
+              </>
+            ) : (
+              <>
+                <input required type="date" value={form.date_of_birth} max={maxDobStr} min="1900-01-01"
+                  onChange={e => setForm({...form, date_of_birth: e.target.value})}
+                  className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
+                <p className="text-[11px] text-muted-foreground mt-1">Private — used for age and identity checks only. You must be 18+. Locked after saving.</p>
+              </>
+            )}
           </Field>
+
           {(docsOnFile.card || docsOnFile.selfie) && (
             <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs space-y-1">
               <p className="font-semibold">Documents on file</p>

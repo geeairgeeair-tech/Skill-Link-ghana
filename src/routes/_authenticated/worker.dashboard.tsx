@@ -180,7 +180,7 @@ function WorkerDashboard() {
       <main className="mx-auto max-w-md px-5 mt-5 space-y-4">
         {wp && isVerified && (
           <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
-            <BadgeCheck className="size-4 text-success" /> Verified — you're live in the marketplace
+            <BadgeCheck className="size-4 text-success" /> Your account is verified.
           </div>
         )}
 
@@ -196,7 +196,7 @@ function WorkerDashboard() {
 
         {wp && status === "rejected" && (
           <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
-            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your verification was not approved.</p>
+            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your verification was not approved. Review the reason below and resubmit.</p>
             {(wp as any).rejection_reason && (
               <div className="rounded-lg bg-card border border-border p-2 text-sm">
                 <p className="text-[10px] uppercase font-bold text-muted-foreground">Reason from admin</p>
@@ -223,10 +223,19 @@ function WorkerDashboard() {
           </div>
         )}
 
-        {wp && !isVerified && status !== "rejected" && (
+        {wp && status === "suspended" && (
+          <div className="rounded-2xl bg-destructive/10 border border-destructive/30 p-4 space-y-2">
+            <p className="font-semibold inline-flex items-center gap-2 text-destructive"><AlertCircle className="size-4" /> Your Professional account has been suspended. Please contact Support.</p>
+            <Link to="/support" className="text-xs px-3 py-1.5 rounded-lg bg-muted font-semibold inline-flex items-center gap-1">
+              <LifeBuoy className="size-3" /> Contact support
+            </Link>
+          </div>
+        )}
+
+        {wp && !isVerified && status !== "rejected" && status !== "suspended" && (
           <div className="rounded-2xl bg-warning/15 border border-warning/30 p-4">
-            <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4" /> Awaiting verification</p>
-            <p className="text-sm text-muted-foreground mt-1">An admin is reviewing your documents. You'll be notified once approved.</p>
+            <p className="font-semibold inline-flex items-center gap-1"><AlertCircle className="size-4" /> Verification under review</p>
+            <p className="text-sm text-muted-foreground mt-1">Your Professional verification is under review. You can continue setting up your profile while waiting.</p>
           </div>
         )}
 

@@ -104,6 +104,7 @@ function NotificationsPage() {
 function Row({ n, onOpen }: any) {
   const Icon = ICONS[n.type] ?? Bell;
   const unread = !n.read_at;
+  const timeAgo = useRelativeTime(n.created_at);
   return (
     <button
       onClick={() => onOpen(n)}
@@ -115,7 +116,7 @@ function Row({ n, onOpen }: any) {
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold text-sm truncate">{n.title}</p>
-          <span className="text-[10px] text-muted-foreground shrink-0">{new Date(n.created_at).toLocaleDateString()}</span>
+          <span className="text-[10px] text-muted-foreground shrink-0">{timeAgo}</span>
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
       </div>

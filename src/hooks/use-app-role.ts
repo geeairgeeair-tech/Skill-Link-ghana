@@ -73,8 +73,11 @@ export function useAppRole() {
 
   const isAdmin = role === "admin";
   const isPro = proStatus === "approved";
-  const effectiveRole: EffectiveRole = isAdmin ? "admin" : isPro ? "worker" : "customer";
-  const homeTo = isAdmin ? "/admin" : isPro ? "/worker/dashboard" : "/";
+  // The Professional interface stays permanently once a worker profile exists —
+  // pending, approved, rejected and suspended all keep the Professional shell.
+  const hasProProfile = proStatus !== "none";
+  const effectiveRole: EffectiveRole = isAdmin ? "admin" : hasProProfile ? "worker" : "customer";
+  const homeTo = isAdmin ? "/admin" : hasProProfile ? "/worker/dashboard" : "/";
 
   const primaryProfession =
     professions.find((p) => p.is_primary && p.verification_status === "approved") ??

@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { useAuth } from "@/hooks/use-auth";
 import { useAppRole } from "@/hooks/use-app-role";
-import { LogOut, BadgeCheck, Wrench, ClipboardList, Clock } from "lucide-react";
+import { LogOut, BadgeCheck, Wrench, ClipboardList, Clock, Lock as LockIcon } from "lucide-react";
 
 
 export const Route = createFileRoute("/profile")({

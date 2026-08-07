@@ -84,6 +84,9 @@ function ProfilePage() {
     if (error) return toast.error(error.message);
     toast.success("Identity details saved and locked");
     await loadIdentity(user.id);
+    // Display name is derived from the legal identity, so refresh it too.
+    const { data: p } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    setName(p?.full_name ?? "");
   };
 
   const save = async () => {

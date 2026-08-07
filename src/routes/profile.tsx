@@ -172,7 +172,11 @@ function ProfilePage() {
         </div>
 
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3 shadow-card">
-          <Field label="Display name"><input value={full_name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
+          <ReadOnly label="Display name" value={full_name || "—"} />
+          <p className="text-[11px] text-muted-foreground">
+            Your display name is generated from your legal identity. Contact Support if a correction is required.
+          </p>
+
 
           <Field label="Phone"><input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
           <Field label="Address"><input value={address} onChange={e=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>

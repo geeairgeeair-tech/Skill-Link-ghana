@@ -70,7 +70,7 @@ function BookPage() {
     queryFn: async () => {
       const { data: wp } = await supabase
         .from("worker_profiles")
-        .select("user_id, category_id, hourly_rate, callout_fee, starting_price, service_area, city, rating, reviews_count, years_experience, is_available, verification_status, categories(id, name, slug)")
+        .select("user_id, category_id, callout_fee, starting_price, service_area, city, rating, reviews_count, years_experience, is_available, verification_status, categories(id, name, slug)")
         .eq("user_id", workerId)
         .eq("verification_status", "approved")
         .maybeSingle();
@@ -94,7 +94,7 @@ function BookPage() {
     queryFn: async () =>
       (await supabase
         .from("worker_professions")
-        .select("id, category_id, service_description, starting_price, is_primary, categories(name)")
+        .select("id, category_id, service_description, starting_price, callout_fee, daily_rate, is_primary, categories(name)")
         .eq("user_id", workerId)
         .eq("verification_status", "approved")
         .order("is_primary", { ascending: false })
@@ -234,7 +234,7 @@ function BookPage() {
 
 
       const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
-      const estimated = (w.callout_fee ?? 0) + (w.hourly_rate ?? 0);
+      const estimated = (selectedProf?.callout_fee ?? w.callout_fee ?? 0) + (selectedProf?.starting_price ?? w.starting_price ?? 0);
       const currentSubmissionId = submissionId.current ?? crypto.randomUUID();
       submissionId.current = currentSubmissionId;
 
@@ -377,7 +377,17 @@ function BookPage() {
             <span className="inline-flex items-center gap-1"><MapPin className="size-3" />{w.service_area ?? w.city ?? "Ghana"}</span>
             <span>{w.years_experience ?? 0}y exp</span>
           </div>
-          <p className="mt-1 text-xs">From <span className="font-semibold text-primary">GH₵{w.starting_price ?? 0}</span> · Call-out GH₵{w.callout_fee ?? 0} · GH₵{w.hourly_rate ?? 0}/hr</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px]">
+            <span className="rounded-full bg-primary-soft px-2 py-0.5 font-semibold text-primary">
+              From GH₵{selectedProf?.starting_price ?? w.starting_price ?? 0}
+            </span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+              Call-out GH₵{selectedProf?.callout_fee ?? w.callout_fee ?? 0}
+            </span>
+            <span className="rounded-full bg-muted px-2 py-0.5 text-muted-foreground">
+              Daily GH₵{selectedProf?.daily_rate ?? "—"}
+            </span>
+          </div>
         </div>
       </div>
     </div>

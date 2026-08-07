@@ -84,11 +84,14 @@ function ProfilePage() {
     if (error) return toast.error(error.message);
     toast.success("Identity details saved and locked");
     await loadIdentity(user.id);
+    // Display name is derived from the legal identity, so refresh it too.
+    const { data: p } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
+    setName(p?.full_name ?? "");
   };
 
   const save = async () => {
-    // Legal identity fields are intentionally not part of this update.
-    const { error } = await supabase.from("profiles").update({ full_name, phone, address }).eq("id", user.id);
+    // Legal identity and the derived display name are intentionally not part of this update.
+    const { error } = await supabase.from("profiles").update({ phone, address }).eq("id", user.id);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
   };
@@ -172,7 +175,11 @@ function ProfilePage() {
         </div>
 
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3 shadow-card">
-          <Field label="Display name"><input value={full_name} onChange={e=>setName(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
+          <ReadOnly label="Display name" value={full_name || "—"} />
+          <p className="text-[11px] text-muted-foreground">
+            Your display name is generated from your legal identity. Contact Support if a correction is required.
+          </p>
+
 
           <Field label="Phone"><input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
           <Field label="Address"><input value={address} onChange={e=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>

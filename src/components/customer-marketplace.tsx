@@ -95,7 +95,7 @@ export function CustomerMarketplaceSection() {
         .order("is_featured", { ascending: false })
         .order("rating", { ascending: false })
         .limit(5);
-      const rows = (data ?? []).filter((w: any) => w.user_id !== user?.id).slice(0, 4);
+      const rows = (data ?? []).filter((w: any) => w.user_id !== user?.id).slice(0, 3);
       const ids = rows.map((w: any) => w.user_id);
       const map = new Map<string, any>();
       if (ids.length) {

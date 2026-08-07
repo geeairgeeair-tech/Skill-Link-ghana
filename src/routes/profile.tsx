@@ -87,8 +87,8 @@ function ProfilePage() {
   };
 
   const save = async () => {
-    // Legal identity fields are intentionally not part of this update.
-    const { error } = await supabase.from("profiles").update({ full_name, phone, address }).eq("id", user.id);
+    // Legal identity and the derived display name are intentionally not part of this update.
+    const { error } = await supabase.from("profiles").update({ phone, address }).eq("id", user.id);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
   };

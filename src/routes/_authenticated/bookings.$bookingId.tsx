@@ -21,6 +21,7 @@ import { ReturnJobPanel } from "@/components/return-job-panel";
 import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
+import { BookingTimeline } from "@/components/booking-timeline";
 import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";

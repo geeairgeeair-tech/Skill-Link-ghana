@@ -513,27 +513,8 @@ function BookingDetail() {
 
         {/* Timeline */}
         <section className="rounded-2xl bg-card border border-border p-4">
-          <h3 className="font-display font-bold text-sm mb-3">Timeline</h3>
-          <ol className="relative space-y-3">
-            {timeline.map((step, i) => {
-              const done = !!step.at;
-              const Icon = step.Icon;
-              return (
-                <li key={i} className="flex items-start gap-3">
-                  <span className={`size-7 shrink-0 grid place-items-center rounded-full ${done ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-                    <Icon className="size-3.5" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm font-semibold ${done ? "" : "text-muted-foreground"}`}>{step.label}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {step.actor}
-                      {done ? ` · ${new Date(step.at!).toLocaleString()}` : " · pending"}
-                    </p>
-                  </div>
-                </li>
-              );
-            })}
-          </ol>
+          <h3 className="font-display font-bold text-sm mb-3">Booking Timeline</h3>
+          <BookingTimeline booking={b} />
         </section>
 
         <WorkProgressPanel booking={b} userId={user!.id} isWorker={isWorker} />

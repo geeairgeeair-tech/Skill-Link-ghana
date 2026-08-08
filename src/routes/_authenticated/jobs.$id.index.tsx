@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
 import { LocationMap } from "@/components/location-map";
 
-export const Route = createFileRoute("/_authenticated/jobs/$id")({
+export const Route = createFileRoute("/_authenticated/jobs/$id/")({
   component: JobDetail,
 });
 

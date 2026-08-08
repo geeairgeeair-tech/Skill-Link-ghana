@@ -265,35 +265,8 @@ function BookingDetail() {
   const workerName = data.worker?.full_name ?? "Worker";
   const rankLabel = professionRankLabel(data.professionRank);
 
-  const timeline = status === "disputed" || b.disputed_at
-    ? [
-        { label: "Booking created", at: b.created_at, actor: customerName, Icon: Calendar },
-        { label: "Worker accepted", at: b.accepted_at, actor: workerName, Icon: CheckCircle2 },
-        { label: "Work started", at: b.started_at, actor: workerName, Icon: PlayCircle },
-        { label: "Dispute opened", at: b.disputed_at, actor: customerName, Icon: Gavel },
-        { label: "Admin joined", at: b.admin_review_requested_at, actor: "Admin", Icon: Scale },
-        { label: "Resolution", at: b.admin_resolved_at, actor: "Admin", Icon: ShieldCheck },
-        { label: "Closed", at: status === "closed" ? b.updated_at : null, actor: "System", Icon: Flag },
-      ]
-    : [
-        { label: "Booking created", at: b.created_at, actor: customerName, Icon: Calendar },
-        { label: "Worker accepted", at: b.accepted_at, actor: workerName, Icon: CheckCircle2 },
-        { label: "Worker on the way", at: b.on_the_way_at, actor: workerName, Icon: Truck },
-        { label: "Worker arrived", at: b.arrived_at, actor: workerName, Icon: MapPin },
-        { label: "Work started", at: b.started_at, actor: workerName, Icon: PlayCircle },
-        { label: "Worker marked complete", at: b.worker_completed_at, actor: workerName, Icon: Flag },
-        { label: "Customer confirmed", at: b.customer_confirmed_at, actor: customerName, Icon: UserCheck },
-        { label: "Completed", at: status === "completed" || status === "closed" ? (b.payment_confirmed_at ?? b.customer_confirmed_at) : null, actor: "System", Icon: CheckCircle2 },
-      ];
 
-  if (status === "cancelled") {
-    timeline.push({
-      label: `Cancelled by ${b.cancelled_by_role === "worker" ? "Professional" : "Customer"}${cancelLabel ? ` — ${cancelLabel}` : ""}`,
-      at: b.cancelled_at ?? b.updated_at,
-      actor: b.cancelled_by_role === "worker" ? workerName : customerName,
-      Icon: XCircle,
-    });
-  }
+
 
   const availabilityLabel =
     data.workerStatus === "busy" ? "Currently busy"

@@ -136,7 +136,7 @@ export function BookingTimeline({ booking: b }: { booking: any }) {
         if (i <= reachedIndex) state = s.done ? "done" : "skipped";
         else if (i === currentIndex) state = "current";
         else state = "future";
-        return <Node key={s.key} step={s} state={state} />;
+        return <Node key={s.key} step={s} state={state} isLast={i === steps.length - 1} />;
       })}
     </TimelineShell>
   );

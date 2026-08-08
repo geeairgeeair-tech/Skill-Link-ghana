@@ -146,7 +146,7 @@ function TimelineShell({ children }: { children: React.ReactNode }) {
   return <ol className="relative space-y-0">{children}</ol>;
 }
 
-function Node({ step, state }: { step: Step; state: StepState }) {
+function Node({ step, state, isLast = false }: { step: Step; state: StepState; isLast?: boolean }) {
   const { Icon } = step;
   const indicator =
     state === "done"
@@ -159,9 +159,8 @@ function Node({ step, state }: { step: Step; state: StepState }) {
   const lineColor = state === "done" ? "bg-success/30" : "bg-border";
 
   return (
-    <li className="relative flex gap-3 pb-4 last:pb-0">
-      <span className={`absolute left-4 top-8 bottom-0 w-0.5 ${lineColor} last:hidden`} aria-hidden
-        style={{ display: undefined }} />
+    <li className={`relative flex items-start gap-3 ${isLast ? "pb-0" : "pb-4"}`}>
+      {!isLast && <span className={`absolute left-4 top-8 bottom-0 w-0.5 ${lineColor}`} aria-hidden />}
       <span className={`relative z-10 size-8 shrink-0 grid place-items-center rounded-full ${indicator}`}>
         {state === "done" ? <CheckCircle2 className="size-4" /> : <Icon className="size-4" />}
       </span>
@@ -174,7 +173,7 @@ function Node({ step, state }: { step: Step; state: StepState }) {
       }`}>
         <div className="flex items-start justify-between gap-2">
           <p className={`text-sm font-semibold leading-tight ${
-            state === "future" ? "text-muted-foreground" : state === "skipped" ? "text-muted-foreground" : ""
+            state === "future" || state === "skipped" ? "text-muted-foreground" : ""
           }`}>
             {step.label}
           </p>

@@ -45,7 +45,6 @@ function EditJobPage() {
       .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id")
       .eq("id", id).maybeSingle()).data,
   });
-  // Exact location is private: only the owner/admin/assigned pro can read it.
 
   // Exact location is private: only the owner/admin/assigned pro can read it.
   const { data: priv } = useQuery({

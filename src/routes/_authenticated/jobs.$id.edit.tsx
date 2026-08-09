@@ -4,15 +4,20 @@ import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
 import { z } from "zod";
+import { Camera, Loader2, X } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { isJobEditable } from "@/lib/job-editable";
 
 
+
+type MediaItem = { path: string; type: "image" | "video"; previewUrl?: string };
+
 export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({
   component: EditJobPage,
 });
+
 
 const schema = z.object({
   title: z.string().trim().min(4, "Title must be at least 4 characters").max(120),
@@ -37,14 +42,59 @@ function EditJobPage() {
   const { user } = useAuth();
   const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
-
+  const [media, setMedia] = useState<MediaItem[] | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id")
+      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id, media")
       .eq("id", id).maybeSingle()).data,
   });
+
+  // Load existing photos (private bucket → signed preview URLs).
+  useEffect(() => {
+    if (!job || media !== null) return;
+    const existing = Array.isArray((job as any).media) ? (job as any).media : [];
+    const items: MediaItem[] = existing
+      .map((m: any) => (typeof m === "string" ? { path: m, type: "image" } : m))
+      .filter((m: any) => m && typeof m.path === "string")
+      .map((m: any) => ({ path: m.path, type: m.type === "video" ? "video" : "image" }));
+    setMedia(items);
+    if (!items.length) return;
+    supabase.storage.from("job-media").createSignedUrls(items.map((i) => i.path), 60 * 60)
+      .then(({ data }) => {
+        if (!data) return;
+        setMedia((prev) => (prev ?? []).map((it) => {
+          const hit = data.find((d: any) => d.path === it.path);
+          return hit?.signedUrl ? { ...it, previewUrl: hit.signedUrl } : it;
+        }));
+      });
+  }, [job, media]);
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files || !user) return;
+    const current = media ?? [];
+    if (current.length + files.length > 6) return toast.error("Maximum 6 files per job");
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const isVideo = file.type.startsWith("video/");
+        const isImage = file.type.startsWith("image/");
+        if (!isVideo && !isImage) { toast.error(`${file.name}: only images or short videos`); continue; }
+        if (file.size > 25 * 1024 * 1024) { toast.error(`${file.name}: max 25 MB`); continue; }
+        const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const previewUrl = URL.createObjectURL(file);
+        const { error } = await supabase.storage.from("job-media").upload(path, file, { contentType: file.type });
+        if (error) { toast.error(`${file.name}: ${error.message}`); continue; }
+        setMedia((m) => [...(m ?? []), { path, type: isVideo ? "video" : "image", previewUrl }]);
+      }
+    } finally { setUploading(false); }
+  };
+
+  const removeMedia = (path: string) => setMedia((m) => (m ?? []).filter((x) => x.path !== path));
+
 
   // Exact location is private: only the owner/admin/assigned pro can read it.
   const { data: priv } = useQuery({
@@ -121,7 +171,9 @@ function EditJobPage() {
       _area: parsed.data.area ?? null,
       _landmark: parsed.data.landmark ?? null,
       _location_instructions: parsed.data.location_instructions ?? null,
+      _media: (media ?? []).map((m) => ({ path: m.path, type: m.type })),
     } as any);
+
     setBusy(false);
     if (error) {
       console.error("[customer_update_job_request]", error);
@@ -174,9 +226,40 @@ function EditJobPage() {
             <option value="emergency">Emergency</option>
           </select>
         </F>
-        <button type="submit" disabled={busy} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
+        <div>
+          <span className="text-xs font-semibold mb-1.5 block">Photos &amp; videos</span>
+          <p className="text-[11px] text-muted-foreground mb-2">Up to 6 files. Removing a photo here removes it from the job when you save.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(media ?? []).map((m) => (
+              <div key={m.path} className="relative aspect-square rounded-xl overflow-hidden bg-muted">
+                {m.previewUrl ? (
+                  m.type === "image"
+                    ? <img src={m.previewUrl} alt="Job photo" className="size-full object-cover" />
+                    : <video src={m.previewUrl} className="size-full object-cover" muted />
+                ) : (
+                  <div className="size-full grid place-items-center"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+                )}
+                <button type="button" onClick={() => removeMedia(m.path)} aria-label="Remove photo"
+                  className="absolute top-1 right-1 size-6 grid place-items-center rounded-full bg-black/60 text-white">
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+            {(media ?? []).length < 6 && (
+              <label className="aspect-square rounded-xl border-2 border-dashed border-border grid place-items-center cursor-pointer bg-card hover:bg-muted">
+                {uploading
+                  ? <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  : <div className="flex flex-col items-center gap-1 text-muted-foreground"><Camera className="size-5" /><span className="text-[10px]">Add</span></div>}
+                <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={(e) => onFiles(e.target.files)} />
+              </label>
+            )}
+          </div>
+        </div>
+
+        <button type="submit" disabled={busy || uploading} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
           {busy ? "Saving…" : "Save changes"}
         </button>
+
       </form>
 
 

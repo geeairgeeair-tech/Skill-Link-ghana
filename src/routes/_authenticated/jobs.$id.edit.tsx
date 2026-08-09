@@ -83,12 +83,13 @@ function EditJobPage() {
 
   if (!job) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (user && (job as any).customer_id !== user.id) return <div className="p-8 text-center">You can't edit this job.</div>;
-  if (!isJobEditable((job as any).status, bookingStatus))
+  if (!isJobEditable((job as any).status))
     return (
       <div className="p-8 text-center">
-        This job can no longer be edited — the professional is already on the way.
+        This job can no longer be edited — a professional has already been accepted.
       </div>
     );
+
 
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 

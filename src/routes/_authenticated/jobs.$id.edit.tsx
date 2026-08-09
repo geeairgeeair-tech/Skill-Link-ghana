@@ -45,14 +45,8 @@ function EditJobPage() {
       .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id")
       .eq("id", id).maybeSingle()).data,
   });
-  const bookingId = (job as any)?.booking_id as string | null | undefined;
-  const { data: bookingStatus } = useQuery({
-    queryKey: ["job-edit-booking-status", bookingId],
-    enabled: !!bookingId,
-    queryFn: async () =>
-      ((await supabase.from("bookings").select("status").eq("id", bookingId!).maybeSingle()).data as any)
-        ?.status as string | null,
-  });
+  // Exact location is private: only the owner/admin/assigned pro can read it.
+
   // Exact location is private: only the owner/admin/assigned pro can read it.
   const { data: priv } = useQuery({
     queryKey: ["job-edit-private", id],

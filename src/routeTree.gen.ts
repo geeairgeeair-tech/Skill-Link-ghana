@@ -36,6 +36,7 @@ import { Route as AuthenticatedWorkerDashboardRouteImport } from './routes/_auth
 import { Route as AuthenticatedWorkerApplicationsRouteImport } from './routes/_authenticated/worker.applications'
 import { Route as AuthenticatedJobsNewRouteImport } from './routes/_authenticated/jobs.new'
 import { Route as AuthenticatedJobsMineRouteImport } from './routes/_authenticated/jobs.mine'
+import { Route as AuthenticatedJobsIdRouteImport } from './routes/_authenticated/jobs.$id'
 import { Route as AuthenticatedChatBookingIdRouteImport } from './routes/_authenticated/chat.$bookingId'
 import { Route as AuthenticatedBookingsBookingIdRouteImport } from './routes/_authenticated/bookings.$bookingId'
 import { Route as AuthenticatedBookWorkerIdRouteImport } from './routes/_authenticated/book.$workerId'
@@ -196,6 +197,11 @@ const AuthenticatedJobsMineRoute = AuthenticatedJobsMineRouteImport.update({
   path: '/jobs/mine',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedJobsIdRoute = AuthenticatedJobsIdRouteImport.update({
+  id: '/jobs/$id',
+  path: '/jobs/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedChatBookingIdRoute =
   AuthenticatedChatBookingIdRouteImport.update({
     id: '/chat/$bookingId',
@@ -239,9 +245,9 @@ const AuthenticatedAdminBookingsRoute =
   } as any)
 const AuthenticatedJobsIdIndexRoute =
   AuthenticatedJobsIdIndexRouteImport.update({
-    id: '/jobs/$id/',
-    path: '/jobs/$id/',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedJobsIdRoute,
   } as any)
 const AuthenticatedAdminUsersIndexRoute =
   AuthenticatedAdminUsersIndexRouteImport.update({
@@ -262,15 +268,15 @@ const AuthenticatedWorkerInvoiceBookingIdRoute =
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedJobsIdEditRoute = AuthenticatedJobsIdEditRouteImport.update({
-  id: '/jobs/$id/edit',
-  path: '/jobs/$id/edit',
-  getParentRoute: () => AuthenticatedRouteRoute,
+  id: '/edit',
+  path: '/edit',
+  getParentRoute: () => AuthenticatedJobsIdRoute,
 } as any)
 const AuthenticatedJobsIdApplyRoute =
   AuthenticatedJobsIdApplyRouteImport.update({
-    id: '/jobs/$id/apply',
-    path: '/jobs/$id/apply',
-    getParentRoute: () => AuthenticatedRouteRoute,
+    id: '/apply',
+    path: '/apply',
+    getParentRoute: () => AuthenticatedJobsIdRoute,
   } as any)
 const AuthenticatedAdminUsersUserIdRoute =
   AuthenticatedAdminUsersUserIdRouteImport.update({
@@ -305,6 +311,7 @@ export interface FileRoutesByFullPath {
   '/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/bookings/$bookingId': typeof AuthenticatedBookingsBookingIdRoute
   '/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
+  '/jobs/$id': typeof AuthenticatedJobsIdRouteWithChildren
   '/jobs/mine': typeof AuthenticatedJobsMineRoute
   '/jobs/new': typeof AuthenticatedJobsNewRoute
   '/worker/applications': typeof AuthenticatedWorkerApplicationsRoute
@@ -391,6 +398,7 @@ export interface FileRoutesById {
   '/_authenticated/book/$workerId': typeof AuthenticatedBookWorkerIdRoute
   '/_authenticated/bookings/$bookingId': typeof AuthenticatedBookingsBookingIdRoute
   '/_authenticated/chat/$bookingId': typeof AuthenticatedChatBookingIdRoute
+  '/_authenticated/jobs/$id': typeof AuthenticatedJobsIdRouteWithChildren
   '/_authenticated/jobs/mine': typeof AuthenticatedJobsMineRoute
   '/_authenticated/jobs/new': typeof AuthenticatedJobsNewRoute
   '/_authenticated/worker/applications': typeof AuthenticatedWorkerApplicationsRoute
@@ -436,6 +444,7 @@ export interface FileRouteTypes {
     | '/book/$workerId'
     | '/bookings/$bookingId'
     | '/chat/$bookingId'
+    | '/jobs/$id'
     | '/jobs/mine'
     | '/jobs/new'
     | '/worker/applications'
@@ -521,6 +530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/book/$workerId'
     | '/_authenticated/bookings/$bookingId'
     | '/_authenticated/chat/$bookingId'
+    | '/_authenticated/jobs/$id'
     | '/_authenticated/jobs/mine'
     | '/_authenticated/jobs/new'
     | '/_authenticated/worker/applications'
@@ -748,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedJobsMineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/jobs/$id': {
+      id: '/_authenticated/jobs/$id'
+      path: '/jobs/$id'
+      fullPath: '/jobs/$id'
+      preLoaderRoute: typeof AuthenticatedJobsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/chat/$bookingId': {
       id: '/_authenticated/chat/$bookingId'
       path: '/chat/$bookingId'
@@ -799,10 +816,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/jobs/$id/': {
       id: '/_authenticated/jobs/$id/'
-      path: '/jobs/$id'
+      path: '/'
       fullPath: '/jobs/$id/'
       preLoaderRoute: typeof AuthenticatedJobsIdIndexRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedJobsIdRoute
     }
     '/_authenticated/admin/users/': {
       id: '/_authenticated/admin/users/'
@@ -827,17 +844,17 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/jobs/$id/edit': {
       id: '/_authenticated/jobs/$id/edit'
-      path: '/jobs/$id/edit'
+      path: '/edit'
       fullPath: '/jobs/$id/edit'
       preLoaderRoute: typeof AuthenticatedJobsIdEditRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedJobsIdRoute
     }
     '/_authenticated/jobs/$id/apply': {
       id: '/_authenticated/jobs/$id/apply'
-      path: '/jobs/$id/apply'
+      path: '/apply'
       fullPath: '/jobs/$id/apply'
       preLoaderRoute: typeof AuthenticatedJobsIdApplyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+      parentRoute: typeof AuthenticatedJobsIdRoute
     }
     '/_authenticated/admin/users/$userId': {
       id: '/_authenticated/admin/users/$userId'
@@ -895,6 +912,21 @@ const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
 const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
+interface AuthenticatedJobsIdRouteChildren {
+  AuthenticatedJobsIdApplyRoute: typeof AuthenticatedJobsIdApplyRoute
+  AuthenticatedJobsIdEditRoute: typeof AuthenticatedJobsIdEditRoute
+  AuthenticatedJobsIdIndexRoute: typeof AuthenticatedJobsIdIndexRoute
+}
+
+const AuthenticatedJobsIdRouteChildren: AuthenticatedJobsIdRouteChildren = {
+  AuthenticatedJobsIdApplyRoute: AuthenticatedJobsIdApplyRoute,
+  AuthenticatedJobsIdEditRoute: AuthenticatedJobsIdEditRoute,
+  AuthenticatedJobsIdIndexRoute: AuthenticatedJobsIdIndexRoute,
+}
+
+const AuthenticatedJobsIdRouteWithChildren =
+  AuthenticatedJobsIdRoute._addFileChildren(AuthenticatedJobsIdRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedHireRoute: typeof AuthenticatedHireRoute
@@ -903,6 +935,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookWorkerIdRoute: typeof AuthenticatedBookWorkerIdRoute
   AuthenticatedBookingsBookingIdRoute: typeof AuthenticatedBookingsBookingIdRoute
   AuthenticatedChatBookingIdRoute: typeof AuthenticatedChatBookingIdRoute
+  AuthenticatedJobsIdRoute: typeof AuthenticatedJobsIdRouteWithChildren
   AuthenticatedJobsMineRoute: typeof AuthenticatedJobsMineRoute
   AuthenticatedJobsNewRoute: typeof AuthenticatedJobsNewRoute
   AuthenticatedWorkerApplicationsRoute: typeof AuthenticatedWorkerApplicationsRoute
@@ -916,10 +949,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedWorkerSubscriptionRoute: typeof AuthenticatedWorkerSubscriptionRoute
   AuthenticatedBookingsIndexRoute: typeof AuthenticatedBookingsIndexRoute
   AuthenticatedJobsIndexRoute: typeof AuthenticatedJobsIndexRoute
-  AuthenticatedJobsIdApplyRoute: typeof AuthenticatedJobsIdApplyRoute
-  AuthenticatedJobsIdEditRoute: typeof AuthenticatedJobsIdEditRoute
   AuthenticatedWorkerInvoiceBookingIdRoute: typeof AuthenticatedWorkerInvoiceBookingIdRoute
-  AuthenticatedJobsIdIndexRoute: typeof AuthenticatedJobsIdIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -930,6 +960,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookWorkerIdRoute: AuthenticatedBookWorkerIdRoute,
   AuthenticatedBookingsBookingIdRoute: AuthenticatedBookingsBookingIdRoute,
   AuthenticatedChatBookingIdRoute: AuthenticatedChatBookingIdRoute,
+  AuthenticatedJobsIdRoute: AuthenticatedJobsIdRouteWithChildren,
   AuthenticatedJobsMineRoute: AuthenticatedJobsMineRoute,
   AuthenticatedJobsNewRoute: AuthenticatedJobsNewRoute,
   AuthenticatedWorkerApplicationsRoute: AuthenticatedWorkerApplicationsRoute,
@@ -943,11 +974,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedWorkerSubscriptionRoute: AuthenticatedWorkerSubscriptionRoute,
   AuthenticatedBookingsIndexRoute: AuthenticatedBookingsIndexRoute,
   AuthenticatedJobsIndexRoute: AuthenticatedJobsIndexRoute,
-  AuthenticatedJobsIdApplyRoute: AuthenticatedJobsIdApplyRoute,
-  AuthenticatedJobsIdEditRoute: AuthenticatedJobsIdEditRoute,
   AuthenticatedWorkerInvoiceBookingIdRoute:
     AuthenticatedWorkerInvoiceBookingIdRoute,
-  AuthenticatedJobsIdIndexRoute: AuthenticatedJobsIdIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -967,13 +995,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

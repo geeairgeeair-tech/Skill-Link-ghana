@@ -1317,6 +1317,7 @@ export type Database = {
           _job_id: string
           _landmark: string
           _location_instructions: string
+          _media?: Json
           _preferred_at: string
           _region: string
           _service_area: string

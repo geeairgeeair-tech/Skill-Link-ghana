@@ -107,7 +107,7 @@ function MyJobPosts() {
         ) : (jobs ?? []).map((j: any) => {
           const media: any[] = Array.isArray(j.media) ? j.media : [];
           const firstImg = media.find(m => m.type === "image");
-          const canEdit = isJobEditable(j.status, j.booking_id ? bookingStatuses?.[j.booking_id] : null);
+          const canEdit = isJobEditable(j.status);
           const canCancel = j.status === "open" || j.status === "assigned";
           return (
             <div key={j.id} className="rounded-2xl bg-card border border-border p-3 shadow-card">

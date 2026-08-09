@@ -39,14 +39,59 @@ function EditJobPage() {
   const { user } = useAuth();
   const [form, setForm] = useState<any>(null);
   const [busy, setBusy] = useState(false);
-
+  const [media, setMedia] = useState<MediaItem[] | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id")
+      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id, media")
       .eq("id", id).maybeSingle()).data,
   });
+
+  // Load existing photos (private bucket → signed preview URLs).
+  useEffect(() => {
+    if (!job || media !== null) return;
+    const existing = Array.isArray((job as any).media) ? (job as any).media : [];
+    const items: MediaItem[] = existing
+      .map((m: any) => (typeof m === "string" ? { path: m, type: "image" } : m))
+      .filter((m: any) => m && typeof m.path === "string")
+      .map((m: any) => ({ path: m.path, type: m.type === "video" ? "video" : "image" }));
+    setMedia(items);
+    if (!items.length) return;
+    supabase.storage.from("job-media").createSignedUrls(items.map((i) => i.path), 60 * 60)
+      .then(({ data }) => {
+        if (!data) return;
+        setMedia((prev) => (prev ?? []).map((it) => {
+          const hit = data.find((d: any) => d.path === it.path);
+          return hit?.signedUrl ? { ...it, previewUrl: hit.signedUrl } : it;
+        }));
+      });
+  }, [job, media]);
+
+  const onFiles = async (files: FileList | null) => {
+    if (!files || !user) return;
+    const current = media ?? [];
+    if (current.length + files.length > 6) return toast.error("Maximum 6 files per job");
+    setUploading(true);
+    try {
+      for (const file of Array.from(files)) {
+        const isVideo = file.type.startsWith("video/");
+        const isImage = file.type.startsWith("image/");
+        if (!isVideo && !isImage) { toast.error(`${file.name}: only images or short videos`); continue; }
+        if (file.size > 25 * 1024 * 1024) { toast.error(`${file.name}: max 25 MB`); continue; }
+        const ext = file.name.split(".").pop() || (isVideo ? "mp4" : "jpg");
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const previewUrl = URL.createObjectURL(file);
+        const { error } = await supabase.storage.from("job-media").upload(path, file, { contentType: file.type });
+        if (error) { toast.error(`${file.name}: ${error.message}`); continue; }
+        setMedia((m) => [...(m ?? []), { path, type: isVideo ? "video" : "image", previewUrl }]);
+      }
+    } finally { setUploading(false); }
+  };
+
+  const removeMedia = (path: string) => setMedia((m) => (m ?? []).filter((x) => x.path !== path));
+
 
   // Exact location is private: only the owner/admin/assigned pro can read it.
   const { data: priv } = useQuery({

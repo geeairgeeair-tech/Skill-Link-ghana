@@ -171,7 +171,9 @@ function EditJobPage() {
       _area: parsed.data.area ?? null,
       _landmark: parsed.data.landmark ?? null,
       _location_instructions: parsed.data.location_instructions ?? null,
+      _media: (media ?? []).map((m) => ({ path: m.path, type: m.type })),
     } as any);
+
     setBusy(false);
     if (error) {
       console.error("[customer_update_job_request]", error);

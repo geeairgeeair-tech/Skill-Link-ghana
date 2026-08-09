@@ -12,9 +12,12 @@ import { isJobEditable } from "@/lib/job-editable";
 
 
 
+type MediaItem = { path: string; type: "image" | "video"; previewUrl?: string };
+
 export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({
   component: EditJobPage,
 });
+
 
 const schema = z.object({
   title: z.string().trim().min(4, "Title must be at least 4 characters").max(120),

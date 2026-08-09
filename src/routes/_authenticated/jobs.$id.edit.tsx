@@ -226,9 +226,40 @@ function EditJobPage() {
             <option value="emergency">Emergency</option>
           </select>
         </F>
-        <button type="submit" disabled={busy} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
+        <div>
+          <span className="text-xs font-semibold mb-1.5 block">Photos &amp; videos</span>
+          <p className="text-[11px] text-muted-foreground mb-2">Up to 6 files. Removing a photo here removes it from the job when you save.</p>
+          <div className="grid grid-cols-3 gap-2">
+            {(media ?? []).map((m) => (
+              <div key={m.path} className="relative aspect-square rounded-xl overflow-hidden bg-muted">
+                {m.previewUrl ? (
+                  m.type === "image"
+                    ? <img src={m.previewUrl} alt="Job photo" className="size-full object-cover" />
+                    : <video src={m.previewUrl} className="size-full object-cover" muted />
+                ) : (
+                  <div className="size-full grid place-items-center"><Loader2 className="size-4 animate-spin text-muted-foreground" /></div>
+                )}
+                <button type="button" onClick={() => removeMedia(m.path)} aria-label="Remove photo"
+                  className="absolute top-1 right-1 size-6 grid place-items-center rounded-full bg-black/60 text-white">
+                  <X className="size-3" />
+                </button>
+              </div>
+            ))}
+            {(media ?? []).length < 6 && (
+              <label className="aspect-square rounded-xl border-2 border-dashed border-border grid place-items-center cursor-pointer bg-card hover:bg-muted">
+                {uploading
+                  ? <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  : <div className="flex flex-col items-center gap-1 text-muted-foreground"><Camera className="size-5" /><span className="text-[10px]">Add</span></div>}
+                <input type="file" multiple accept="image/*,video/*" className="hidden" onChange={(e) => onFiles(e.target.files)} />
+              </label>
+            )}
+          </div>
+        </div>
+
+        <button type="submit" disabled={busy || uploading} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
           {busy ? "Saving…" : "Save changes"}
         </button>
+
       </form>
 
 

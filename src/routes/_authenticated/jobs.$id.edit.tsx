@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 
 import { toast } from "sonner";
 import { z } from "zod";
+import { Camera, Loader2, X } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { isJobEditable } from "@/lib/job-editable";
+
 
 
 export const Route = createFileRoute("/_authenticated/jobs/$id/edit")({

@@ -9,6 +9,7 @@ import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText, U
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { SignedImage } from "./jobs.index";
 import { LocationMap } from "@/components/location-map";
 
@@ -31,6 +32,7 @@ function SignedMedia({ path, type }: { path: string; type: "image"|"video" }) {
 function JobDetail() {
   const { id } = Route.useParams();
   const { user, role } = useAuth();
+  const eligibility = useWorkerEligibility();
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
@@ -88,7 +90,6 @@ function JobDetail() {
   const isPendingOrRejected = role === "worker" && !!workerProfile && workerProfile.verification_status !== "approved";
   const isOwner = user?.id === (job as any).customer_id;
   const jobCategoryName = (job as any).categories?.name ?? "this category";
-  const categoryMatches = isVerifiedWorker && workerProfile?.category_id === (job as any).category_id;
 
   // Limited preview for pending/rejected workers who don't own the post
   if (isPendingOrRejected && !isOwner) {
@@ -185,9 +186,7 @@ function JobDetail() {
             jobStatus={(job as any).status}
             jobBudget={(job as any).budget}
             jobCategoryName={jobCategoryName}
-            isVerified={isVerifiedWorker}
-            verificationStatus={workerProfile?.verification_status ?? null}
-            categoryMatches={!!categoryMatches}
+            blockedReason={eligibility.blockedReason((job as any).status, (job as any).category_id ?? null, jobCategoryName)}
             myApp={myApp ?? null}
           />
         )}
@@ -198,11 +197,10 @@ function JobDetail() {
 }
 
 function WorkerApplySection({
-  jobId, jobStatus, jobBudget, jobCategoryName,
-  isVerified, verificationStatus, categoryMatches, myApp,
+  jobId, jobStatus, jobBudget, jobCategoryName, blockedReason, myApp,
 }: {
   jobId: string; jobStatus: string; jobBudget: number | null; jobCategoryName: string;
-  isVerified: boolean; verificationStatus: string | null; categoryMatches: boolean;
+  blockedReason: string | null;
   myApp: { id: string; status: string; quoted_price: number } | null;
 }) {
   const qc = useQueryClient();
@@ -212,12 +210,6 @@ function WorkerApplySection({
   const [message, setMessage] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-
-  const blockedReason =
-    jobStatus !== "open" ? "This job is no longer open."
-    : !isVerified ? `Only verified workers can apply. Your account is ${verificationStatus ?? "not verified"}.`
-    : !categoryMatches ? `Only verified workers in the ${jobCategoryName} category can apply to this job.`
-    : null;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -6,6 +6,7 @@ import { z } from "zod";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 
 export const Route = createFileRoute("/_authenticated/jobs/$id/apply")({
   component: ApplyPage,
@@ -29,12 +30,7 @@ function ApplyPage() {
       .select("id, title, budget, status, customer_id, category_id, categories(name)").eq("id", id).maybeSingle()).data,
   });
 
-  const { data: workerProfile } = useQuery({
-    queryKey: ["worker-profile-self", user?.id],
-    enabled: !!user,
-    queryFn: async () => (await supabase.from("worker_profiles")
-      .select("verification_status, category_id, categories(name)").eq("user_id", user!.id).maybeSingle()).data,
-  });
+  const eligibility = useWorkerEligibility();
 
   const { data: existing } = useQuery({
     queryKey: ["my-application-for-job", id, user?.id],
@@ -55,19 +51,14 @@ function ApplyPage() {
     setMessage(existing.message ?? "");
   }
 
-  if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (isLoading || eligibility.loading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
   const jobCatName = (job as any).categories?.name ?? "this category";
-  const isApproved = workerProfile?.verification_status === "approved";
-  const categoryMatches = isApproved && workerProfile?.category_id === (job as any).category_id;
-  const gateReason = !isApproved
-    ? `Your account is ${workerProfile?.verification_status ?? "not verified"}. Only approved workers can apply.`
-    : !categoryMatches
-      ? `Only verified workers in the ${jobCatName} category can apply to this job.`
-      : (job as any).status !== "open"
-        ? "This job is no longer open."
-        : null;
+  const gateReason = existing
+    ? null
+    : eligibility.blockedReason((job as any).status, (job as any).category_id ?? null, jobCatName);
+
 
   if (gateReason) {
     return (

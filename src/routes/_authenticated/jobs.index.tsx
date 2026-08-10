@@ -5,6 +5,7 @@ import { Plus, MapPin, Image as ImageIcon, Video, Zap, AlertTriangle, ListChecks
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 
 export const Route = createFileRoute("/_authenticated/jobs/")({
   component: JobsBoard,
@@ -233,7 +234,7 @@ function JobsBoard() {
           const firstImg = media.find(m => m.type === "image");
           const vidCount = media.filter(m => m.type === "video").length;
           const imgCount = media.filter(m => m.type === "image").length;
-          const inMyCategory = role === "worker" && isVerifiedWorker && workerCategoryId === j.category_id;
+          const inMyCategory = role === "worker" && eligibility.matchesCategory(j.category_id);
           const count = appCounts?.get(j.id) ?? 0;
           return (
             <Link key={j.id} to="/jobs/$id" params={{ id: j.id }} className="block rounded-2xl bg-card border border-border p-3 shadow-card hover:shadow-elevated">

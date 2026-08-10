@@ -45,10 +45,10 @@ function JobsBoard() {
       .eq("user_id", user!.id).maybeSingle()).data,
   });
 
+  const eligibility = useWorkerEligibility();
   const isVerifiedWorker = role === "worker" && workerProfile?.verification_status === "approved";
   const isPendingOrRejected = role === "worker" && !!workerProfile && workerProfile.verification_status !== "approved";
-  const workerCategoryId = workerProfile?.category_id;
-  const workerCategoryName = (workerProfile as any)?.categories?.name;
+  const workerCategoryName = eligibility.categoryNames[0] ?? (workerProfile as any)?.categories?.name;
 
   const { data: myAppliedIds } = useQuery({
     queryKey: ["my-application-job-ids", user?.id],

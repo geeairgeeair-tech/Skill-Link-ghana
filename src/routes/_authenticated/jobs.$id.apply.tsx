@@ -6,6 +6,7 @@ import { z } from "zod";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 
 export const Route = createFileRoute("/_authenticated/jobs/$id/apply")({
   component: ApplyPage,

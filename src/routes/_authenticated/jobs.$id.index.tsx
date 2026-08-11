@@ -58,7 +58,7 @@ function JobDetail() {
   // Worker verification status + category (gates Apply)
   const { data: workerProfile } = useQuery({
     queryKey: ["worker-profile-self", user?.id],
-    enabled: !!user && role === "worker",
+    enabled: !!user,
     queryFn: async () => (await supabase.from("worker_profiles")
       .select("verification_status, category_id, categories(name)").eq("user_id", user!.id).maybeSingle()).data,
   });
@@ -66,7 +66,7 @@ function JobDetail() {
   // Existing application by this worker for this job
   const { data: myApp } = useQuery({
     queryKey: ["my-application-for-job", id, user?.id],
-    enabled: !!user && role === "worker",
+    enabled: !!user,
     queryFn: async () => (await supabase.from("job_applications")
       .select("id, status, quoted_price").eq("job_id", id).eq("worker_id", user!.id).maybeSingle()).data,
   });
@@ -87,7 +87,7 @@ function JobDetail() {
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
   const cust = (job as any).profiles;
   const isVerifiedWorker = workerProfile?.verification_status === "approved";
-  const isPendingOrRejected = role === "worker" && !!workerProfile && workerProfile.verification_status !== "approved";
+  const isPendingOrRejected = !!workerProfile && workerProfile.verification_status !== "approved";
   const isOwner = user?.id === (job as any).customer_id;
   const jobCategoryName = (job as any).categories?.name ?? "this category";
 
@@ -180,7 +180,7 @@ function JobDetail() {
 
         {isOwner && <ApplicantsPanel jobId={id} jobStatus={(job as any).status} />}
 
-        {role === "worker" && !isOwner && (
+        {eligibility.isWorker && !isOwner && (
           <WorkerApplySection
             jobId={id}
             jobStatus={(job as any).status}

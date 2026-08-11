@@ -40,20 +40,21 @@ function JobsBoard() {
 
   const { data: workerProfile } = useQuery({
     queryKey: ["worker-profile-self", user?.id],
-    enabled: !!user && role === "worker",
+    enabled: !!user,
     queryFn: async () => (await supabase.from("worker_profiles")
       .select("category_id, service_area, city, verification_status, categories(name)")
       .eq("user_id", user!.id).maybeSingle()).data,
   });
 
   const eligibility = useWorkerEligibility();
-  const isVerifiedWorker = role === "worker" && workerProfile?.verification_status === "approved";
-  const isPendingOrRejected = role === "worker" && !!workerProfile && workerProfile.verification_status !== "approved";
+  const isWorkerUser = eligibility.isWorker;
+  const isVerifiedWorker = workerProfile?.verification_status === "approved";
+  const isPendingOrRejected = !!workerProfile && workerProfile.verification_status !== "approved";
   const workerCategoryName = eligibility.categoryNames[0] ?? (workerProfile as any)?.categories?.name;
 
   const { data: myAppliedIds } = useQuery({
     queryKey: ["my-application-job-ids", user?.id],
-    enabled: !!user && role === "worker",
+    enabled: !!user,
     queryFn: async () => {
       const { data } = await supabase.from("job_applications").select("job_id").eq("worker_id", user!.id);
       return new Set((data ?? []).map((r: any) => r.job_id));
@@ -124,7 +125,7 @@ function JobsBoard() {
           <div>
             <h1 className="font-display text-2xl font-bold">Job board</h1>
             <p className="text-sm opacity-80">
-              {role === "worker"
+              {isWorkerUser
                 ? (isVerifiedWorker
                     ? `Browse all open jobs. Apply to ${workerCategoryName ?? "your category"} jobs.`
                     : "Get verified to apply for jobs.")
@@ -234,7 +235,7 @@ function JobsBoard() {
           const firstImg = media.find(m => m.type === "image");
           const vidCount = media.filter(m => m.type === "video").length;
           const imgCount = media.filter(m => m.type === "image").length;
-          const inMyCategory = role === "worker" && eligibility.matchesCategory(j.category_id);
+          const inMyCategory = eligibility.matchesCategory(j.category_id);
           const count = appCounts?.get(j.id) ?? 0;
           return (
             <Link key={j.id} to="/jobs/$id" params={{ id: j.id }} className="block rounded-2xl bg-card border border-border p-3 shadow-card hover:shadow-elevated">
@@ -250,7 +251,7 @@ function JobsBoard() {
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {j.urgency === "urgent" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-gold text-gold-foreground inline-flex items-center gap-0.5"><Zap className="size-2.5"/>Urgent</span>}
                     {j.urgency === "emergency" && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground inline-flex items-center gap-0.5"><AlertTriangle className="size-2.5"/>Emergency</span>}
-                    {role === "worker" && myAppliedIds?.has(j.id) && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success">Applied</span>}
+                    {isWorkerUser && myAppliedIds?.has(j.id) && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success">Applied</span>}
                     {inMyCategory && !myAppliedIds?.has(j.id) && <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">Match</span>}
                     <p className="font-semibold truncate">{j.title}</p>
                   </div>

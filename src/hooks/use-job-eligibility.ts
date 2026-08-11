@@ -10,8 +10,12 @@ import { useAuth } from "@/hooks/use-auth";
  * category works automatically — not just the pro's original/primary one.
  */
 export function useWorkerEligibility() {
-  const { user, role } = useAuth();
-  const enabled = !!user && role === "worker";
+  const { user } = useAuth();
+  // NOTE: do NOT gate on the `user_roles` role here. Some professionals were
+  // never granted the `worker` role row (legacy onboarding), yet they have a
+  // fully approved worker_profiles / worker_professions record. Presence of a
+  // professional record is the real source of truth.
+  const enabled = !!user;
 
   const { data, isLoading } = useQuery({
     queryKey: ["worker-eligibility", user?.id],
@@ -67,7 +71,7 @@ export function useWorkerEligibility() {
 
   return {
     loading: enabled && isLoading,
-    isWorker: role === "worker",
+    isWorker: !!wp || profs.length > 0,
     isVerified,
     verificationStatus: wp?.verification_status ?? null,
     isBusy,

@@ -167,6 +167,19 @@ function BookingDetail() {
     },
   });
 
+  // Exact service address is never selectable from the bookings table.
+  // The RPC returns it only to the customer, an admin, or the assigned
+  // professional while the booking is actively in progress.
+  const { data: exact } = useQuery({
+    queryKey: ["booking-exact-address", bookingId, user?.id],
+    enabled: !!user && !!data?.booking,
+    queryFn: async () => {
+      const { data: rows } = await supabase.rpc("get_booking_address", { _booking_id: bookingId });
+      return ((rows as any) ?? [])[0] ?? null;
+    },
+  });
+
+
   // Live updates for the whole booking lifecycle: status, estimates,
   // return jobs, reviews and messages. One channel, cleaned up on unmount.
   useEffect(() => {

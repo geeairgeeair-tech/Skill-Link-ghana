@@ -1326,6 +1326,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_booking_address: {
+        Args: { _booking_id: string }
+        Returns: {
+          address: string
+          latitude: number
+          longitude: number
+        }[]
+      }
       get_job_request_address: { Args: { _id: string }; Returns: string }
       get_job_request_private: {
         Args: { _id: string }

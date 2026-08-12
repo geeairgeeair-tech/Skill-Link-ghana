@@ -237,7 +237,7 @@ function JobsPage() {
 
                 {b.final_amount != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>You reported {fmtGHS(b.final_amount)}</p>}
                 {b.amount_paid != null && <p className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="size-3"/>Paid {fmtGHS(b.amount_paid)}</p>}
-                {b.status !== "pending" && !declined && b.address && <p className="text-foreground/80">📍 {b.address}</p>}
+                {b.service_area && <p className="text-foreground/80">📍 {b.service_area}</p>}
               </div>
 
               {declined && declineLabel && (

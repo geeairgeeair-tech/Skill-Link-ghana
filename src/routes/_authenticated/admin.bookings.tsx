@@ -32,7 +32,7 @@ function AdminBookingsPage() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select("id, customer_id, worker_id, category_id, description, scheduled_at, estimated_cost, estimated_amount, final_amount, amount_paid, status, dispute_reason, dispute_details, disputed_at, admin_resolution_note, admin_resolved_at, completion_note, final_amount_reason, final_amount_note, worker_completed_at, created_at, categories(name)")
+        .select("id, customer_id, worker_id, category_id, description, service_area, scheduled_at, estimated_cost, estimated_amount, final_amount, amount_paid, status, dispute_reason, dispute_details, disputed_at, admin_resolution_note, admin_resolved_at, completion_note, final_amount_reason, final_amount_note, worker_completed_at, created_at, categories(name)")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
@@ -120,7 +120,7 @@ function AdminBookingsPage() {
                   <p className="font-semibold text-sm truncate">{b.customer?.full_name ?? "Customer"} → {b.worker?.full_name ?? "Worker"}</p>
                   <span className="text-[10px] uppercase font-bold text-muted-foreground shrink-0">{String(b.status).replace(/_/g, " ")}</span>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{b.categories?.name ?? "—"} · {b.address ?? "No location"}</p>
+                <p className="text-xs text-muted-foreground truncate">{b.categories?.name ?? "—"} · {b.service_area ?? "No location"}</p>
                 <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground flex-wrap">
                   <span>Scheduled {b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"}</span>
                   <span>{b.estimated_cost ? `GH₵${b.estimated_cost}` : "No amount"}</span>
@@ -141,7 +141,8 @@ function AdminBookingsPage() {
                     <Info label="Service category" value={b.categories?.name ?? "—"} />
                     <Info label="Booking status" value={String(b.status).replace(/_/g, " ")} />
                     <Info label="Scheduled date and time" value={b.scheduled_at ? new Date(b.scheduled_at).toLocaleString() : "—"} />
-                    <Info label="Location / service area" value={b.address ?? "—"} />
+                    <Info label="General service area" value={b.service_area ?? "—"} />
+                    <AdminExactAddress bookingId={b.id} />
                     <Info label="Estimated amount" value={b.estimated_amount ? `GH₵${b.estimated_amount}` : b.estimated_cost ? `GH₵${b.estimated_cost}` : "—"} />
                     <Info label="Worker final amount" value={b.final_amount ? `GH₵${b.final_amount}` : "—"} />
                     {b.final_amount != null && b.estimated_amount != null && Number(b.final_amount) !== Number(b.estimated_amount) && (

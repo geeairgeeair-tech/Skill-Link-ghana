@@ -422,7 +422,7 @@ function BookingDetail() {
               </>
             )}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
-            {b.address && showAddress && <p className="text-foreground/80">📍 Exact service address: {b.address}</p>}
+            {showAddress && <p className="text-foreground/80">📍 Exact service address: {exactAddress}</p>}
             {b.completion_note && <p className="italic">Worker note: "{b.completion_note}"</p>}
           </div>
           {b.job_application_id && (
@@ -436,7 +436,7 @@ function BookingDetail() {
         {(showAddress || b.service_area) && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
             <h3 className="font-display font-bold text-sm">Location</h3>
-            <LocationMap area={b.service_area ?? b.address ?? "Accra"} height={180} />
+            <LocationMap area={b.service_area ?? exactAddress ?? "Accra"} height={180} />
           </section>
         )}
 

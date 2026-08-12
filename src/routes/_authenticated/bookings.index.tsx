@@ -87,7 +87,7 @@ function BookingsPage() {
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.worker_id).filter(Boolean)));
       let profMap: Record<string, any> = {};
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids as string[]);
         (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
       }
       return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.worker_id] ?? null }));

@@ -77,9 +77,8 @@ function JobsPage() {
     queryKey: ["worker-jobs", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: rows, error: qErr } = await supabase
-        .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name)`).returns<any[]>()
+      const { data: rows, error: qErr } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name)`)
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
       if (qErr) throw qErr;

@@ -79,9 +79,8 @@ function BookingsPage() {
     placeholderData: (prev: any) => prev,
     queryFn: async () => {
 
-      const { data: rows, error } = await supabase
-        .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name), reviews(id, rating, comment)`).returns<any[]>()
+      const { data: rows, error } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name), reviews(id, rating, comment)`)
         .eq("customer_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;

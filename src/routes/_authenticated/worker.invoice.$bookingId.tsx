@@ -21,9 +21,8 @@ function InvoicePage() {
     queryKey: ["worker-invoice", bookingId],
     enabled: !!user,
     queryFn: async () => {
-      const { data: b } = await supabase
-        .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name)`).returns<any[]>()
+      const { data: b } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name)`)
         .eq("id", bookingId)
         .maybeSingle();
       if (!b) return null;

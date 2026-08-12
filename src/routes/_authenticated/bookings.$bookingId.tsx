@@ -121,9 +121,8 @@ function BookingDetail() {
     queryKey: ["booking-detail", bookingId, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: b, error } = await supabase
-        .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`).returns<any[]>()
+      const { data: b, error } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`)
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;

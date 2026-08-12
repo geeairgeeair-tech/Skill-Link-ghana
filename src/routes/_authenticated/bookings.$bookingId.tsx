@@ -23,6 +23,7 @@ import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booki
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { BookingTimeline } from "@/components/booking-timeline";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";
 import { useAppRole } from "@/hooks/use-app-role";
@@ -120,9 +121,8 @@ function BookingDetail() {
     queryKey: ["booking-detail", bookingId, user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: b, error } = await supabase
-        .from("bookings")
-        .select("*, categories(id, name, return_eligible)")
+      const { data: b, error } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`)
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;
@@ -165,6 +165,19 @@ function BookingDetail() {
       };
     },
   });
+
+  // Exact service address is never selectable from the bookings table.
+  // The RPC returns it only to the customer, an admin, or the assigned
+  // professional while the booking is actively in progress.
+  const { data: exact } = useQuery({
+    queryKey: ["booking-exact-address", bookingId, user?.id],
+    enabled: !!user && !!data?.booking,
+    queryFn: async () => {
+      const { data: rows } = await supabase.rpc("get_booking_address", { _booking_id: bookingId });
+      return ((rows as any) ?? [])[0] ?? null;
+    },
+  });
+
 
   // Live updates for the whole booking lifecycle: status, estimates,
   // return jobs, reviews and messages. One channel, cleaned up on unmount.
@@ -236,16 +249,22 @@ function BookingDetail() {
     && !(isWorker && status === "pending");
   const cancelLabel = cancelReasonLabel(b.cancelled_by_role, b.cancel_reason_code);
 
+  // Exact location comes from the privacy-scoped RPC only.
+  const exactAddress: string | null = (exact as any)?.address ?? null;
+  const exactLat = (exact as any)?.latitude ?? null;
+  const exactLng = (exact as any)?.longitude ?? null;
+
   const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
   const destination =
-    b.latitude != null && b.longitude != null
-      ? `${b.latitude},${b.longitude}`
-      : [b.address, b.service_area].filter(Boolean).join(", ");
+    exactLat != null && exactLng != null
+      ? `${exactLat},${exactLng}`
+      : [exactAddress, b.service_area].filter(Boolean).join(", ");
   const navUrl = navAllowed && destination
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`
     : null;
 
-  const showAddress = isCustomer || isAdmin || ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","completed","disputed","closed"].includes(status);
+  const showAddress = !!exactAddress;
+
   const progressPhotos: string[] = Array.from(new Set(Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : []));
   const completionPhotos: string[] = Array.from(new Set(Array.isArray(b.completion_photos) ? b.completion_photos.filter((p: any) => typeof p === "string") : []));
 
@@ -403,7 +422,7 @@ function BookingDetail() {
               </>
             )}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
-            {b.address && showAddress && <p className="text-foreground/80">📍 Exact service address: {b.address}</p>}
+            {showAddress && <p className="text-foreground/80">📍 Exact service address: {exactAddress}</p>}
             {b.completion_note && <p className="italic">Worker note: "{b.completion_note}"</p>}
           </div>
           {b.job_application_id && (
@@ -417,7 +436,7 @@ function BookingDetail() {
         {(showAddress || b.service_area) && (
           <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
             <h3 className="font-display font-bold text-sm">Location</h3>
-            <LocationMap area={b.service_area ?? b.address ?? "Accra"} height={180} />
+            <LocationMap area={b.service_area ?? exactAddress ?? "Accra"} height={180} />
           </section>
         )}
 

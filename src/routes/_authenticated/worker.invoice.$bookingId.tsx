@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Printer } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/worker/invoice/$bookingId")({
@@ -20,9 +21,8 @@ function InvoicePage() {
     queryKey: ["worker-invoice", bookingId],
     enabled: !!user,
     queryFn: async () => {
-      const { data: b } = await supabase
-        .from("bookings")
-        .select("*, categories(name)")
+      const { data: b } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name)`)
         .eq("id", bookingId)
         .maybeSingle();
       if (!b) return null;

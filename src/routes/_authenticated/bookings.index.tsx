@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -78,16 +79,15 @@ function BookingsPage() {
     placeholderData: (prev: any) => prev,
     queryFn: async () => {
 
-      const { data: rows, error } = await supabase
-        .from("bookings")
-        .select("*, categories(name), reviews(id, rating, comment)")
+      const { data: rows, error } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name), reviews(id, rating, comment)`)
         .eq("customer_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.worker_id).filter(Boolean)));
       let profMap: Record<string, any> = {};
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids as string[]);
         (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
       }
       return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.worker_id] ?? null }));

@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
@@ -76,16 +77,15 @@ function JobsPage() {
     queryKey: ["worker-jobs", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: rows, error: qErr } = await supabase
-        .from("bookings")
-        .select("*, categories(name)")
+      const { data: rows, error: qErr } = await (supabase.from("bookings") as any)
+        .select(`${BOOKING_COLUMNS}, categories(name)`)
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
       if (qErr) throw qErr;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
       let profMap: Record<string, any> = {};
       if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids);
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids as string[]);
         (profs ?? []).forEach((p: any) => { profMap[p.id] = p; });
       }
       return (rows ?? []).map((r: any) => ({ ...r, profiles: profMap[r.customer_id] ?? null }));
@@ -237,7 +237,7 @@ function JobsPage() {
 
                 {b.final_amount != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>You reported {fmtGHS(b.final_amount)}</p>}
                 {b.amount_paid != null && <p className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="size-3"/>Paid {fmtGHS(b.amount_paid)}</p>}
-                {b.status !== "pending" && !declined && b.address && <p className="text-foreground/80">📍 {b.address}</p>}
+                {b.service_area && <p className="text-foreground/80">📍 {b.service_area}</p>}
               </div>
 
               {declined && declineLabel && (

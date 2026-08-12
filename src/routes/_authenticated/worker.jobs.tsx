@@ -79,7 +79,7 @@ function JobsPage() {
     queryFn: async () => {
       const { data: rows, error: qErr } = await supabase
         .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name)`)
+        .select(`${BOOKING_COLUMNS}, categories(name)`).returns<any[]>()
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
       if (qErr) throw qErr;

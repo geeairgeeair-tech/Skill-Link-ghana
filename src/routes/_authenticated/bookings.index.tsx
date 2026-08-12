@@ -81,7 +81,7 @@ function BookingsPage() {
 
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name), reviews(id, rating, comment)`)
+        .select(`${BOOKING_COLUMNS}, categories(name), reviews(id, rating, comment)`).returns<any[]>()
         .eq("customer_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;

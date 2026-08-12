@@ -23,7 +23,7 @@ function InvoicePage() {
     queryFn: async () => {
       const { data: b } = await supabase
         .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(name)`)
+        .select(`${BOOKING_COLUMNS}, categories(name)`).returns<any[]>()
         .eq("id", bookingId)
         .maybeSingle();
       if (!b) return null;

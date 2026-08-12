@@ -123,7 +123,7 @@ function BookingDetail() {
     queryFn: async () => {
       const { data: b, error } = await supabase
         .from("bookings")
-        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`)
+        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`).returns<any[]>()
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;

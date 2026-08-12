@@ -222,3 +222,30 @@ function DisputePanel({ booking, onResolved }: { booking: any; onResolved: () =>
     </div>
   );
 }
+// Admins may retrieve the retained exact service address on demand
+// (support, dispute, safety or legal purposes). Fetched through the
+// privacy-scoped RPC, never from the bookings table.
+function AdminExactAddress({ bookingId }: { bookingId: string }) {
+  const [show, setShow] = useState(false);
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-exact-address", bookingId],
+    enabled: show,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_booking_address", { _booking_id: bookingId });
+      return ((data as any) ?? [])[0] ?? null;
+    },
+  });
+  if (!show) {
+    return (
+      <button onClick={() => setShow(true)} className="text-[11px] font-semibold text-primary">
+        Reveal exact service address →
+      </button>
+    );
+  }
+  return (
+    <div className="text-xs">
+      <span className="text-muted-foreground">Exact service address: </span>
+      {isLoading ? "Loading…" : (data?.address ?? "—")}
+    </div>
+  );
+}

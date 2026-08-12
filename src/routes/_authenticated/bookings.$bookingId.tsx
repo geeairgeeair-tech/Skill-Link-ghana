@@ -249,16 +249,22 @@ function BookingDetail() {
     && !(isWorker && status === "pending");
   const cancelLabel = cancelReasonLabel(b.cancelled_by_role, b.cancel_reason_code);
 
+  // Exact location comes from the privacy-scoped RPC only.
+  const exactAddress: string | null = (exact as any)?.address ?? null;
+  const exactLat = (exact as any)?.latitude ?? null;
+  const exactLng = (exact as any)?.longitude ?? null;
+
   const navAllowed = isWorker && ["accepted","on_the_way","arrived","in_progress","worker_on_the_way","work_started"].includes(status);
   const destination =
-    b.latitude != null && b.longitude != null
-      ? `${b.latitude},${b.longitude}`
-      : [b.address, b.service_area].filter(Boolean).join(", ");
+    exactLat != null && exactLng != null
+      ? `${exactLat},${exactLng}`
+      : [exactAddress, b.service_area].filter(Boolean).join(", ");
   const navUrl = navAllowed && destination
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`
     : null;
 
-  const showAddress = isCustomer || isAdmin || ["accepted","on_the_way","arrived","in_progress","awaiting_customer_confirmation","worker_marked_complete","completed","disputed","closed"].includes(status);
+  const showAddress = !!exactAddress;
+
   const progressPhotos: string[] = Array.from(new Set(Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : []));
   const completionPhotos: string[] = Array.from(new Set(Array.isArray(b.completion_photos) ? b.completion_photos.filter((p: any) => typeof p === "string") : []));
 

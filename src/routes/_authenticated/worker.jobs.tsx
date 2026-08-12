@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
@@ -78,7 +79,7 @@ function JobsPage() {
     queryFn: async () => {
       const { data: rows, error: qErr } = await supabase
         .from("bookings")
-        .select("*, categories(name)")
+        .select(`${BOOKING_COLUMNS}, categories(name)`)
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
       if (qErr) throw qErr;

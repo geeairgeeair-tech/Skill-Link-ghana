@@ -23,6 +23,7 @@ import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booki
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { BookingTimeline } from "@/components/booking-timeline";
 import { supabase } from "@/integrations/supabase/client";
+import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
 import { useAuth } from "@/hooks/use-auth";
 import { useAppRole } from "@/hooks/use-app-role";
@@ -122,7 +123,7 @@ function BookingDetail() {
     queryFn: async () => {
       const { data: b, error } = await supabase
         .from("bookings")
-        .select("*, categories(id, name, return_eligible)")
+        .select(`${BOOKING_COLUMNS}, categories(id, name, return_eligible)`)
         .eq("id", bookingId)
         .maybeSingle();
       if (error) throw error;

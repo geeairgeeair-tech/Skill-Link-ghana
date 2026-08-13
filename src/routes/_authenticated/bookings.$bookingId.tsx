@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   MapPin, Calendar, Wallet, MessageCircle, User, BadgeCheck, Phone,
-  CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ShieldCheck,
+  CheckCircle2, XCircle, AlertTriangle, Clock, ArrowRight, ArrowUp, ShieldCheck,
   Navigation, LifeBuoy, Gavel, Image as ImageIcon, Truck, Flag, PlayCircle,
   UserCheck, Scale, Home as HomeIcon,
   Smartphone,
@@ -55,6 +55,12 @@ function professionRankLabel(rank: number | null): string | null {
   if (rank == null) return null;
   return rank === 1 ? "Primary profession" : rank === 2 ? "Second profession" : rank === 3 ? "Third profession" : `Profession ${rank}`;
 }
+
+const scrollToTop = () => {
+  if (typeof window !== "undefined") {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+};
 
 function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`animate-pulse rounded-xl bg-muted ${className}`} />;
@@ -413,21 +419,6 @@ function BookingDetail() {
               </button>
             </>
           )}
-          {canCancel && (
-            <button
-              disabled={busy !== null}
-              onClick={() => setShowCancel(true)}
-              className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
-            >
-              <XCircle className="size-4" /> Cancel booking
-            </button>
-          )}
-          {navUrl && (
-            <a href={navUrl} target="_blank" rel="noopener noreferrer"
-              className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">
-              <Navigation className="size-4"/> Navigate
-            </a>
-          )}
           {canChat && (
             <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
               <MessageCircle className="size-4"/> {ended ? "View chat" : "Open chat"}
@@ -502,6 +493,12 @@ function BookingDetail() {
           <section className="rounded-2xl bg-card border border-border p-4 space-y-2">
             <h3 className="font-display font-bold text-sm">Location</h3>
             <LocationMap area={b.service_area ?? exactAddress ?? "Accra"} height={180} />
+            {navUrl && (
+              <a href={navUrl} target="_blank" rel="noopener noreferrer"
+                className="mt-2 w-full rounded-xl bg-muted py-2.5 text-sm font-semibold inline-flex items-center justify-center gap-1.5">
+                <Navigation className="size-4"/> Open Navigation
+              </a>
+            )}
           </section>
         )}
 
@@ -638,6 +635,28 @@ function BookingDetail() {
             </a>
           </div>
         </section>
+
+        {/* Back to top */}
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-muted"
+        >
+          <ArrowUp className="size-4"/> Back to top
+        </button>
+
+        {/* Cancel booking — separated at bottom */}
+        {canCancel && (
+          <div className="flex justify-end pt-2">
+            <button
+              disabled={busy !== null}
+              onClick={() => setShowCancel(true)}
+              className="px-4 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+            >
+              <XCircle className="size-4"/> Cancel booking
+            </button>
+          </div>
+        )}
       </main>
 
       {showComplete && (

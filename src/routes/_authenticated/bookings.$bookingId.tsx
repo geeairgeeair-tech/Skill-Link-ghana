@@ -649,15 +649,6 @@ function BookingDetail() {
           </div>
         </section>
 
-        {/* Back to top */}
-        <button
-          type="button"
-          onClick={scrollToTop}
-          className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-muted"
-        >
-          <ArrowUp className="size-4"/> Back to top
-        </button>
-
         {/* Cancel booking — separated at bottom */}
         {canCancel && (
           <div className="flex justify-end pt-2">
@@ -670,6 +661,15 @@ function BookingDetail() {
             </button>
           </div>
         )}
+
+        {/* Back to top */}
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="w-full rounded-xl border border-border bg-card py-3 text-sm font-semibold inline-flex items-center justify-center gap-1.5 hover:bg-muted"
+        >
+          <ArrowUp className="size-4"/> Back to top
+        </button>
       </main>
 
       {showComplete && (

@@ -27,6 +27,16 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const { data: estimates = [] } = useEstimates(bookingId);
   const approved = estimates.find((e) => e.status === "approved") ?? null;
 
+  // When no estimate was approved, the customer's original budget is the baseline.
+  const { data: budget = null } = useQuery({
+    queryKey: ["booking-budget", bookingId],
+    queryFn: async () => {
+      const { data } = await supabase.from("bookings").select("budget").eq("id", bookingId).maybeSingle();
+      const b = Number((data as any)?.budget ?? 0);
+      return b > 0 ? b : null;
+    },
+  });
+
   const [amount, setAmount] = useState<string>(approved ? String(approved.total) : "");
   const [reason, setReason] = useState<string>("");
   const [other, setOther] = useState("");
@@ -34,9 +44,11 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const baseline = approved ? Number(approved.total) : budget;
+  const baselineLabel = approved ? "Approved estimate" : "Customer budget";
   const final = Number(amount || 0);
-  const diff = approved ? final - Number(approved.total) : 0;
-  const needsReason = !!approved && final > 0 && diff !== 0;
+  const diff = baseline != null ? final - baseline : 0;
+  const needsReason = baseline != null && final > 0 && diff !== 0;
   const options = diff > 0 ? HIGHER : LOWER;
 
   const submit = async () => {

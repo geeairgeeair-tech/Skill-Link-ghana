@@ -1199,6 +1199,15 @@ export type Database = {
           years_experience: number
         }[]
       }
+      admin_log_action: {
+        Args: {
+          _action: string
+          _details?: Json
+          _target_type?: string
+          _target_user_id?: string
+        }
+        Returns: string
+      }
       admin_reject_profession: {
         Args: { _profession_id: string; _reason: string }
         Returns: undefined

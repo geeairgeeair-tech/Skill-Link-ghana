@@ -125,7 +125,7 @@ export function BookingTimeline({ booking: b }: { booking: any }) {
     );
   }
 
-  const currentIndex = reachedIndex + 1 <= 10 ? reachedIndex + 1 : -1; // -1 = all done
+  const currentIndex = reachedIndex + 1 < steps.length ? reachedIndex + 1 : -1; // -1 = all done
 
   return (
     <TimelineShell>

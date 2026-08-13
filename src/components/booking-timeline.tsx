@@ -13,7 +13,6 @@ import {
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useEstimates, type EstimateRow } from "@/components/booking-estimate";
 
 /* ---- pure relative-time formatter (no hooks, safe inside loops) ---- */

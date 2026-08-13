@@ -41,16 +41,33 @@ type Props = {
 };
 
 
-export function ImageUpload({ bucket, userId, prefix = "img", label, hint, multiple, value, onChange, max = 8 }: Props) {
+export function ImageUpload({ bucket, userId, prefix = "img", label, hint, multiple, value, onChange, max = 8, returnPath = false }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [previews, setPreviews] = useState<Record<string, string>>({});
+
+  // Stored paths (sensitive files) are shown with a short-lived signed URL.
+  useEffect(() => {
+    if (!returnPath) return;
+    let cancelled = false;
+    (async () => {
+      const next: Record<string, string> = {};
+      for (const p of value) {
+        if (/^https?:\/\//.test(p)) continue;
+        const { data } = await supabase.storage.from(bucket).createSignedUrl(p, 300);
+        if (data?.signedUrl) next[p] = data.signedUrl;
+      }
+      if (!cancelled) setPreviews((prev) => ({ ...prev, ...next }));
+    })();
+    return () => { cancelled = true; };
+  }, [returnPath, bucket, value.join("|")]);
 
   const handle = async (files: FileList) => {
     setBusy(true);
     try {
       const picked = Array.from(files).slice(0, Math.max(0, max - value.length));
       const urls: string[] = [];
-      for (const f of picked) urls.push(await uploadImage(bucket, userId, f, prefix));
+      for (const f of picked) urls.push(await uploadImage(bucket, userId, f, prefix, returnPath));
       onChange(multiple ? [...value, ...urls] : urls.slice(0, 1));
       toast.success("Uploaded");
     } catch (e: any) {
@@ -66,8 +83,8 @@ export function ImageUpload({ bucket, userId, prefix = "img", label, hint, multi
       <p className="text-[11px] font-semibold mb-1 text-muted-foreground uppercase tracking-wide">{label}</p>
       <div className="flex flex-wrap gap-2">
         {value.map((url) => (
-          <div key={url} className="relative size-20 rounded-xl overflow-hidden border border-border">
-            <img src={url} alt={label} className="size-full object-cover" />
+          <div key={url} className="relative size-20 rounded-xl overflow-hidden border border-border bg-muted">
+            <img src={/^https?:\/\//.test(url) ? url : previews[url]} alt={label} className="size-full object-cover" />
             <button
               type="button"
               onClick={() => onChange(value.filter((u) => u !== url))}
@@ -78,6 +95,7 @@ export function ImageUpload({ bucket, userId, prefix = "img", label, hint, multi
             </button>
           </div>
         ))}
+
         {value.length < (multiple ? max : 1) && (
           <button
             type="button"

@@ -394,18 +394,77 @@ function BookingDetail() {
           )}
         </section>
 
+        {/* Action bar */}
+        <section className="flex flex-wrap gap-2 pt-1">
+          {isWorker && status === "pending" && (
+            <>
+              <button
+                disabled={busy !== null}
+                onClick={() => call("worker_accept_booking")}
+                className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+              >
+                <CheckCircle2 className="size-4" /> Accept request
+              </button>
+              <button
+                onClick={() => setShowDecline(true)}
+                className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1"
+              >
+                <XCircle className="size-4" /> Decline
+              </button>
+            </>
+          )}
+          {canCancel && (
+            <button
+              disabled={busy !== null}
+              onClick={() => setShowCancel(true)}
+              className="px-3 py-2.5 rounded-xl border border-destructive/40 text-destructive text-sm font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+            >
+              <XCircle className="size-4" /> Cancel booking
+            </button>
+          )}
+          {navUrl && (
+            <a href={navUrl} target="_blank" rel="noopener noreferrer"
+              className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold inline-flex items-center gap-1">
+              <Navigation className="size-4"/> Navigate
+            </a>
+          )}
+          {canChat && (
+            <Link to="/chat/$bookingId" params={{ bookingId: b.id }} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
+              <MessageCircle className="size-4"/> {ended ? "View chat" : "Open chat"}
+            </Link>
+          )}
+          {canOnTheWay && (
+            <button disabled={busy !== null} onClick={() => call("worker_mark_on_the_way")} className="px-3 py-2.5 rounded-xl bg-gold text-gold-foreground text-sm font-semibold disabled:opacity-50">
+              I'm on the way
+            </button>
+          )}
+          {canArrived && (
+            <button disabled={busy !== null} onClick={() => call("worker_mark_arrived")} className="px-3 py-2.5 rounded-xl bg-gold text-gold-foreground text-sm font-semibold disabled:opacity-50">
+              I've Arrived
+            </button>
+          )}
+          {canStart && (
+            <button disabled={busy !== null} onClick={() => call("worker_start_booking")} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50">
+              Start Job
+            </button>
+          )}
+          {canComplete && (
+            <button onClick={() => setShowComplete(true)} className="px-3 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center gap-1">
+              Complete job <ArrowRight className="size-3.5"/>
+            </button>
+          )}
+          {isCustomer && ["awaiting_customer_confirmation","worker_marked_complete"].includes(status) && (
+            <button onClick={() => setShowConfirm(true)} className="px-3 py-2.5 rounded-xl bg-success text-success-foreground text-sm font-semibold">
+              Confirm & Review
+            </button>
+          )}
+          {isAdmin && (
+            <Link to="/admin/bookings" className="px-3 py-2.5 rounded-xl bg-muted text-sm font-semibold">Admin bookings</Link>
+          )}
+        </section>
 
         {/* Estimate */}
         <EstimateSection
-          bookingId={b.id}
-          isWorker={isWorker}
-          isCustomer={isCustomer}
-          canSubmit={isWorker && ["accepted", "on_the_way", "arrived"].includes(status)}
-          finalAmount={b.final_amount}
-          varianceReason={b.final_amount_reason}
-          varianceNote={b.final_amount_note}
-          customerBudget={b.budget ?? b.estimated_cost ?? null}
-        />
 
 
 

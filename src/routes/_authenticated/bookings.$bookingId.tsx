@@ -465,9 +465,15 @@ function BookingDetail() {
 
         {/* Estimate */}
         <EstimateSection
-
-
-
+          bookingId={b.id}
+          isWorker={isWorker}
+          isCustomer={isCustomer}
+          canSubmit={isWorker && ["accepted", "on_the_way", "arrived"].includes(status)}
+          finalAmount={b.final_amount}
+          varianceReason={b.final_amount_reason}
+          varianceNote={b.final_amount_note}
+          customerBudget={b.budget ?? b.estimated_cost ?? null}
+        />
 
         {/* Job info */}
         <section className="rounded-2xl bg-card border border-border p-4 space-y-2">

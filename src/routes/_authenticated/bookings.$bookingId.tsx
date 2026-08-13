@@ -194,9 +194,11 @@ function BookingDetail() {
   useEffect(() => {
     const refreshBooking = () => {
       qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+      qc.invalidateQueries({ queryKey: ["booking-exact-address", bookingId] });
       qc.invalidateQueries({ queryKey: ["worker-jobs"] });
       qc.invalidateQueries({ queryKey: ["my-bookings"] });
     };
+
     const ch = uniqueChannel(`booking-detail:${bookingId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         refreshBooking)

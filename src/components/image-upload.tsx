@@ -7,14 +7,20 @@ const TEN_YEARS = 60 * 60 * 24 * 365 * 10;
 const MAX_BYTES = 8 * 1024 * 1024;
 const ACCEPT = ["image/jpeg", "image/png", "image/webp"];
 
-/** Uploads an image to a private bucket under `${userId}/` and returns a long-lived signed URL. */
-export async function uploadImage(bucket: string, userId: string, file: File, prefix = "img") {
+/**
+ * Uploads an image to a private bucket under `${userId}/`.
+ * Returns the storage path when `returnPath` is set (preferred for sensitive
+ * files such as identity documents — a long-lived signed URL is a bearer
+ * credential and must never be persisted), otherwise a long-lived signed URL.
+ */
+export async function uploadImage(bucket: string, userId: string, file: File, prefix = "img", returnPath = false) {
   if (!ACCEPT.includes(file.type)) throw new Error("Use a JPG, PNG or WebP image");
   if (file.size > MAX_BYTES) throw new Error("Image must be under 8MB");
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const path = `${userId}/${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
   const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: file.type, upsert: true });
   if (error) throw error;
+  if (returnPath) return path;
   const { data, error: sErr } = await supabase.storage.from(bucket).createSignedUrl(path, TEN_YEARS);
   if (sErr) throw sErr;
   return data.signedUrl;
@@ -30,7 +36,10 @@ type Props = {
   value: string[];
   onChange: (urls: string[]) => void;
   max?: number;
+  /** Store storage paths instead of signed URLs (sensitive files). */
+  returnPath?: boolean;
 };
+
 
 export function ImageUpload({ bucket, userId, prefix = "img", label, hint, multiple, value, onChange, max = 8 }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);

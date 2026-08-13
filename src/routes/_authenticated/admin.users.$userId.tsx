@@ -58,8 +58,14 @@ function AdminUserDetailPage() {
 
   const loadDocs = async () => {
     if (!data) return;
-    const sign = async (path?: string | null) =>
-      path ? (await supabase.storage.from("job-media").createSignedUrl(path, 600)).data?.signedUrl : undefined;
+    // Identity documents live in the private `worker-docs` bucket. New uploads store
+    // a storage path and are signed on demand for a short window; legacy rows may
+    // still hold a full URL.
+    const sign = async (ref?: string | null) => {
+      if (!ref) return undefined;
+      if (/^https?:\/\//.test(ref)) return ref;
+      return (await supabase.storage.from("worker-docs").createSignedUrl(ref, 300)).data?.signedUrl;
+    };
     const [card, selfie] = await Promise.all([sign(data.ghana_card_url), sign(data.selfie_url)]);
     setDocs({ card, selfie });
   };

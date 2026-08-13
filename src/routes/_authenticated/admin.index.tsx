@@ -150,10 +150,13 @@ function AdminPage() {
 
   const signedUrl = async (path: string | null) => {
     if (!path) return null;
-    // Documents live in job-media bucket if uploaded; fallback to public URL.
-    const res = await supabase.storage.from("job-media").createSignedUrl(path, 60 * 10);
+    // Identity documents live in the private `worker-docs` bucket and are signed
+    // on demand for a short window only.
+    if (/^https?:\/\//.test(path)) return path;
+    const res = await supabase.storage.from("worker-docs").createSignedUrl(path, 300);
     return res.data?.signedUrl ?? null;
   };
+
 
   if (role !== "admin") {
     return <AppShell><div className="p-8 text-center"><p>Admin access required.</p></div></AppShell>;

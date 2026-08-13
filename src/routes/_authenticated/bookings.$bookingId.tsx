@@ -479,7 +479,7 @@ function BookingDetail() {
           )}
         </section>
 
-        <BookingReview bookingId={bookingId} />
+        
 
 
         {/* Status callouts */}

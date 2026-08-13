@@ -176,13 +176,17 @@ function BookingDetail() {
   // The RPC returns it only to the customer, an admin, or the assigned
   // professional while the booking is actively in progress.
   const { data: exact } = useQuery({
-    queryKey: ["booking-exact-address", bookingId, user?.id],
+    // Status is part of the key: authorisation changes with the booking
+    // lifecycle (e.g. pending -> accepted), so a denied result must never be
+    // reused once the assigned professional becomes authorised.
+    queryKey: ["booking-exact-address", bookingId, user?.id, data?.booking?.status],
     enabled: !!user && !!data?.booking,
     queryFn: async () => {
       const { data: rows } = await supabase.rpc("get_booking_address", { _booking_id: bookingId });
       return ((rows as any) ?? [])[0] ?? null;
     },
   });
+
 
 
   // Live updates for the whole booking lifecycle: status, estimates,

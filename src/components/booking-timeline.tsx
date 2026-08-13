@@ -86,7 +86,6 @@ export function BookingTimeline({ booking: b }: { booking: any }) {
     },
     { key: "work_completed", label: "Work Completed", Icon: Flag, at: b.worker_completed_at ?? null, done: !!b.worker_completed_at },
     { key: "customer_confirmed", label: "Customer Confirmed", Icon: UserCheck, at: customerConfirmedAt, done: !!customerConfirmedAt },
-    { key: "leave_review", label: "Leave Review", Icon: Star, at: review?.created_at ?? null, done: !!review?.created_at },
   ];
 
   const status: string = b.status ?? "";

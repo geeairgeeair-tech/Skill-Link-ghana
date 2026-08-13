@@ -1404,6 +1404,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       list_busy_workers: {
         Args: never
         Returns: {
@@ -1584,7 +1585,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "customer" | "worker" | "admin"
+      app_role: "customer" | "worker" | "admin" | "super_admin"
       booking_status:
         | "pending"
         | "accepted"
@@ -1741,7 +1742,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "worker", "admin"],
+      app_role: ["customer", "worker", "admin", "super_admin"],
       booking_status: [
         "pending",
         "accepted",

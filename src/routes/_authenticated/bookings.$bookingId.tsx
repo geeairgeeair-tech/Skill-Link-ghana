@@ -486,7 +486,12 @@ function BookingDetail() {
               </>
             )}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
-            {showAddress && <p className="text-foreground/80">📍 Exact service address: {exactAddress}</p>}
+            {showAddress && (
+              <div className="mt-1 rounded-xl border border-border bg-muted/50 p-3">
+                <p className="text-[10px] uppercase font-bold tracking-wide text-muted-foreground">Exact service address</p>
+                <p className="text-sm font-bold text-foreground break-words">📍 {exactAddress}</p>
+              </div>
+            )}
             {b.completion_note && <p className="italic">Worker note: "{b.completion_note}"</p>}
           </div>
           {b.job_application_id && (

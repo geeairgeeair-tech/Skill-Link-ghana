@@ -104,7 +104,7 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
         {needsReason && (
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Why is the final amount {diff > 0 ? "higher" : "lower"}? (required)
+              Why is the final amount {diff > 0 ? "higher" : "lower"} than the {baselineLabel.toLowerCase()}? (required)
             </p>
             {options.map((r) => (
               <label key={r} className="flex items-center gap-2 text-sm">

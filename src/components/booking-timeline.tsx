@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import {
   Calendar,
   CheckCircle2,
@@ -10,11 +9,9 @@ import {
   Image as ImageIcon,
   Flag,
   UserCheck,
-  Star,
   XCircle,
   type LucideIcon,
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useEstimates, type EstimateRow } from "@/components/booking-estimate";
 
 /* ---- pure relative-time formatter (no hooks, safe inside loops) ---- */
@@ -49,17 +46,6 @@ type Step = {
 
 export function BookingTimeline({ booking: b }: { booking: any }) {
   const { data: estimates = [] } = useEstimates(b.id);
-  const { data: review } = useQuery({
-    queryKey: ["booking-review", b.id],
-    queryFn: async () =>
-      (await supabase
-        .from("reviews")
-        .select("rating, comment, created_at")
-        .eq("booking_id", b.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()).data ?? null,
-  });
 
   const progressPhotos: string[] = Array.from(
     new Set(Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : [])
@@ -87,7 +73,6 @@ export function BookingTimeline({ booking: b }: { booking: any }) {
     },
     { key: "work_completed", label: "Work Completed", Icon: Flag, at: b.worker_completed_at ?? null, done: !!b.worker_completed_at },
     { key: "customer_confirmed", label: "Customer Confirmed", Icon: UserCheck, at: customerConfirmedAt, done: !!customerConfirmedAt },
-    { key: "leave_review", label: "Leave Review", Icon: Star, at: review?.created_at ?? null, done: !!review?.created_at },
   ];
 
   const status: string = b.status ?? "";
@@ -127,7 +112,7 @@ export function BookingTimeline({ booking: b }: { booking: any }) {
     );
   }
 
-  const currentIndex = reachedIndex + 1 <= 10 ? reachedIndex + 1 : -1; // -1 = all done
+  const currentIndex = reachedIndex + 1 < steps.length ? reachedIndex + 1 : -1; // -1 = all done
 
   return (
     <TimelineShell>

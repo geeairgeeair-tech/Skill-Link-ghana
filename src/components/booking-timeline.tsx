@@ -10,7 +10,6 @@ import {
   Image as ImageIcon,
   Flag,
   UserCheck,
-  Star,
   XCircle,
   type LucideIcon,
 } from "lucide-react";

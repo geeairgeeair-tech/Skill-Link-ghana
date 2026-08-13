@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtGHS, useEstimates } from "@/components/booking-estimate";
 
@@ -26,6 +27,16 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const { data: estimates = [] } = useEstimates(bookingId);
   const approved = estimates.find((e) => e.status === "approved") ?? null;
 
+  // When no estimate was approved, the customer's original budget is the baseline.
+  const { data: budget = null } = useQuery({
+    queryKey: ["booking-budget", bookingId],
+    queryFn: async () => {
+      const { data } = await supabase.from("bookings").select("budget").eq("id", bookingId).maybeSingle();
+      const b = Number((data as any)?.budget ?? 0);
+      return b > 0 ? b : null;
+    },
+  });
+
   const [amount, setAmount] = useState<string>(approved ? String(approved.total) : "");
   const [reason, setReason] = useState<string>("");
   const [other, setOther] = useState("");
@@ -33,9 +44,11 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const baseline = approved ? Number(approved.total) : budget;
+  const baselineLabel = approved ? "Approved estimate" : "Customer budget";
   const final = Number(amount || 0);
-  const diff = approved ? final - Number(approved.total) : 0;
-  const needsReason = !!approved && final > 0 && diff !== 0;
+  const diff = baseline != null ? final - baseline : 0;
+  const needsReason = baseline != null && final > 0 && diff !== 0;
   const options = diff > 0 ? HIGHER : LOWER;
 
   const submit = async () => {
@@ -65,9 +78,9 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
       <div className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-display font-bold">Complete job</h3>
 
-        {approved && (
+        {baseline != null && (
           <div className="rounded-xl bg-muted/60 p-3 text-sm space-y-1">
-            <div className="flex justify-between"><span>Approved estimate</span><span className="font-semibold">{fmtGHS(approved.total)}</span></div>
+            <div className="flex justify-between"><span>{baselineLabel}</span><span className="font-semibold">{fmtGHS(baseline)}</span></div>
             {final > 0 && (
               <>
                 <div className="flex justify-between"><span>Final amount</span><span className="font-semibold">{fmtGHS(final)}</span></div>
@@ -91,7 +104,7 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
         {needsReason && (
           <div className="space-y-1.5">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              Why is the final amount {diff > 0 ? "higher" : "lower"}? (required)
+              Why is the final amount {diff > 0 ? "higher" : "lower"} than the {baselineLabel.toLowerCase()}? (required)
             </p>
             {options.map((r) => (
               <label key={r} className="flex items-center gap-2 text-sm">

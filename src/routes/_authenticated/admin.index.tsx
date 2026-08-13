@@ -134,10 +134,9 @@ function AdminPage() {
         .eq("user_id", id);
       if (error) return toast.error(error.message);
       if (user?.id) {
-        await supabase.from("admin_audit_logs").insert({
-          admin_id: user.id,
-          action: status === "approved" ? "worker_approved" : "worker_suspended",
-          target_user_id: id, target_type: "worker", details: { status },
+        await supabase.rpc("admin_log_action", {
+          _action: status === "approved" ? "worker_approved" : "worker_suspended",
+          _target_type: "worker", _target_user_id: id, _details: { status },
         });
       }
     }

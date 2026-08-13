@@ -32,8 +32,8 @@ function AdminUserDetailPage() {
 
   const logAction = async (action: string, details: any = {}) => {
     if (!user?.id) return;
-    await supabase.from("admin_audit_logs").insert({
-      admin_id: user.id, action, target_user_id: userId, target_type: "user", details,
+    await supabase.rpc("admin_log_action", {
+      _action: action, _target_type: "user", _target_user_id: userId, _details: details,
     });
   };
 

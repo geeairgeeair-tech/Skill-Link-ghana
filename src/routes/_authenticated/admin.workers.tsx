@@ -53,8 +53,8 @@ function AdminWorkersPage() {
         .eq("user_id", id);
       if (error) return toast.error(error.message);
       if (user?.id) {
-        await supabase.from("admin_audit_logs").insert({
-          admin_id: user.id, action: `worker_${next}`, target_user_id: id, target_type: "worker", details: { status: next },
+        await supabase.rpc("admin_log_action", {
+          _action: `worker_${next}`, _target_type: "worker", _target_user_id: id, _details: { status: next },
         });
       }
     }

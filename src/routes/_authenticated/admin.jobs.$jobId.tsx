@@ -85,11 +85,10 @@ function AdminJobDetail() {
     const { error } = await supabase.from("job_requests").update({ status: next as any }).eq("id", jobId);
     if (error) { setBusy(false); return toast.error(error.message); }
     if (user?.id) {
-      await supabase.from("admin_audit_logs").insert({
-        admin_id: user.id,
-        action: `job_${next}`,
-        target_type: "job_request",
-        details: { job_id: jobId, status: next },
+      await supabase.rpc("admin_log_action", {
+        _action: `job_${next}`,
+        _target_type: "job_request",
+        _details: { job_id: jobId, status: next },
       });
     }
     toast.success(`Job ${label.toLowerCase()}d`);

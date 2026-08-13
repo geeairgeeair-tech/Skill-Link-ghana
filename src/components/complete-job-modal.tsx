@@ -78,9 +78,9 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
       <div className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-display font-bold">Complete job</h3>
 
-        {approved && (
+        {baseline != null && (
           <div className="rounded-xl bg-muted/60 p-3 text-sm space-y-1">
-            <div className="flex justify-between"><span>Approved estimate</span><span className="font-semibold">{fmtGHS(approved.total)}</span></div>
+            <div className="flex justify-between"><span>{baselineLabel}</span><span className="font-semibold">{fmtGHS(baseline)}</span></div>
             {final > 0 && (
               <>
                 <div className="flex justify-between"><span>Final amount</span><span className="font-semibold">{fmtGHS(final)}</span></div>

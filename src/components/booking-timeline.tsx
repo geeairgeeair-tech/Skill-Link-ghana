@@ -46,17 +46,6 @@ type Step = {
 
 export function BookingTimeline({ booking: b }: { booking: any }) {
   const { data: estimates = [] } = useEstimates(b.id);
-  const { data: review } = useQuery({
-    queryKey: ["booking-review", b.id],
-    queryFn: async () =>
-      (await supabase
-        .from("reviews")
-        .select("rating, comment, created_at")
-        .eq("booking_id", b.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle()).data ?? null,
-  });
 
   const progressPhotos: string[] = Array.from(
     new Set(Array.isArray(b.progress_photos) ? b.progress_photos.filter((p: any) => typeof p === "string") : [])

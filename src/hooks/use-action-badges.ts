@@ -59,12 +59,14 @@ export function useProfessionalActionCount() {
     queryKey: key,
     enabled,
     queryFn: async () => {
-      const [{ data: bookings }, { data: returns }, { data: apps }] = await Promise.all([
+      // NOTE: pending job applications are intentionally NOT counted — applying
+      // is not an outstanding action for the professional. Only real work
+      // (bookings created once selected) and return requests count.
+      const [{ data: bookings }, { data: returns }] = await Promise.all([
         supabase.from("bookings").select("id, status").eq("worker_id", user!.id).in("status", PRO_ACTION_STATUSES as any),
         supabase.from("return_requests").select("id").eq("worker_id", user!.id).in("status", ["pending", "info_requested"]),
-        supabase.from("job_applications").select("id").eq("worker_id", user!.id).eq("status", "pending"),
       ]);
-      return (bookings?.length ?? 0) + (returns?.length ?? 0) + (apps?.length ?? 0);
+      return (bookings?.length ?? 0) + (returns?.length ?? 0);
     },
   });
 

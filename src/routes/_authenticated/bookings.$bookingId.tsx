@@ -176,7 +176,10 @@ function BookingDetail() {
   // The RPC returns it only to the customer, an admin, or the assigned
   // professional while the booking is actively in progress.
   const { data: exact } = useQuery({
-    queryKey: ["booking-exact-address", bookingId, user?.id],
+    // Status is part of the key: authorisation changes with the booking
+    // lifecycle (e.g. pending -> accepted), so a denied result must never be
+    // reused once the assigned professional becomes authorised.
+    queryKey: ["booking-exact-address", bookingId, user?.id, data?.booking?.status],
     enabled: !!user && !!data?.booking,
     queryFn: async () => {
       const { data: rows } = await supabase.rpc("get_booking_address", { _booking_id: bookingId });
@@ -185,14 +188,17 @@ function BookingDetail() {
   });
 
 
+
   // Live updates for the whole booking lifecycle: status, estimates,
   // return jobs, reviews and messages. One channel, cleaned up on unmount.
   useEffect(() => {
     const refreshBooking = () => {
       qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+      qc.invalidateQueries({ queryKey: ["booking-exact-address", bookingId] });
       qc.invalidateQueries({ queryKey: ["worker-jobs"] });
       qc.invalidateQueries({ queryKey: ["my-bookings"] });
     };
+
     const ch = uniqueChannel(`booking-detail:${bookingId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `id=eq.${bookingId}` },
         refreshBooking)
@@ -281,6 +287,8 @@ function BookingDetail() {
     if (error) return toast.error(error.message);
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+    qc.invalidateQueries({ queryKey: ["booking-exact-address", bookingId] });
+
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
     qc.invalidateQueries({ queryKey: ["worker-bookings"] });
@@ -478,7 +486,12 @@ function BookingDetail() {
               </>
             )}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
-            {showAddress && <p className="text-foreground/80">📍 Exact service address: {exactAddress}</p>}
+            {showAddress && (
+              <div className="mt-1 rounded-xl border border-border bg-muted/50 p-3">
+                <p className="text-[10px] uppercase font-bold tracking-wide text-muted-foreground">Exact service address</p>
+                <p className="text-sm font-bold text-foreground break-words">📍 {exactAddress}</p>
+              </div>
+            )}
             {b.completion_note && <p className="italic">Worker note: "{b.completion_note}"</p>}
           </div>
           {b.job_application_id && (

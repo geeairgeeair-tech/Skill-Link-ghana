@@ -287,6 +287,8 @@ function BookingDetail() {
     if (error) return toast.error(error.message);
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["booking-detail", bookingId] });
+    qc.invalidateQueries({ queryKey: ["booking-exact-address", bookingId] });
+
     qc.invalidateQueries({ queryKey: ["worker-jobs"] });
     qc.invalidateQueries({ queryKey: ["my-bookings"] });
     qc.invalidateQueries({ queryKey: ["worker-bookings"] });

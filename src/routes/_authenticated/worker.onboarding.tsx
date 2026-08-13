@@ -221,11 +221,11 @@ function Onboarding() {
           )}
           {user && (
             <>
-              <ImageUpload bucket="worker-docs" userId={user.id} prefix="ghana-card"
+              <ImageUpload bucket="worker-docs" userId={user.id} prefix="ghana-card" returnPath
                 label={docsOnFile.card ? "Replace Ghana Card photo" : "Ghana Card photo"}
                 hint="Clear photo of the front of your card. Only Skill Link admins can view it."
                 value={ghanaCard} onChange={setGhanaCard} />
-              <ImageUpload bucket="worker-docs" userId={user.id} prefix="selfie"
+              <ImageUpload bucket="worker-docs" userId={user.id} prefix="selfie" returnPath
                 label={docsOnFile.selfie ? "Replace selfie" : "Selfie holding your card"}
                 hint="Face clearly visible next to your Ghana Card."
                 value={selfie} onChange={setSelfie} />

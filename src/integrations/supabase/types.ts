@@ -448,6 +448,7 @@ export type Database = {
           preferred_at: string | null
           region: string | null
           service_area: string | null
+          service_area_id: string | null
           status: Database["public"]["Enums"]["job_request_status"]
           title: string
           updated_at: string
@@ -476,6 +477,7 @@ export type Database = {
           preferred_at?: string | null
           region?: string | null
           service_area?: string | null
+          service_area_id?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title: string
           updated_at?: string
@@ -504,6 +506,7 @@ export type Database = {
           preferred_at?: string | null
           region?: string | null
           service_area?: string | null
+          service_area_id?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
           title?: string
           updated_at?: string
@@ -536,6 +539,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_requests_service_area_id_fkey"
+            columns: ["service_area_id"]
+            isOneToOne: false
+            referencedRelation: "service_areas"
             referencedColumns: ["id"]
           },
         ]
@@ -785,6 +795,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      service_areas: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          launch_zone: string
+          name: string
+          region: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          launch_zone: string
+          name: string
+          region?: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          launch_zone?: string
+          name?: string
+          region?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       support_tickets: {
         Row: {
@@ -1097,6 +1143,41 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worker_service_areas: {
+        Row: {
+          created_at: string
+          id: string
+          is_primary: boolean
+          service_area_id: string
+          updated_at: string
+          worker_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          service_area_id: string
+          updated_at?: string
+          worker_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          service_area_id?: string
+          updated_at?: string
+          worker_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worker_service_areas_service_area_id_fkey"
+            columns: ["service_area_id"]
+            isOneToOne: false
+            referencedRelation: "service_areas"
             referencedColumns: ["id"]
           },
         ]

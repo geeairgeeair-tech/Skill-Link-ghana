@@ -117,15 +117,20 @@ function WorkerProfilePage() {
 
   const status = String(wp.verification_status ?? proStatus);
 
+  // Availability note only — legacy location columns are never written from this page.
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("worker_profiles").update({ ...form } as any).eq("user_id", user.id);
+    const { error } = await supabase
+      .from("worker_profiles")
+      .update({ unavailable_note: form.unavailable_note } as any)
+      .eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
+
 
   // General service areas only — this never touches verification or professions.
   const saveCoverage = async () => {

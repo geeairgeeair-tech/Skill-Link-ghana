@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ImageUpload } from "@/components/image-upload";
+import { ServiceAreaPicker } from "@/components/service-area-picker";
+import { fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
 
 export const Route = createFileRoute("/_authenticated/worker/onboarding")({
   head: () => ({ meta: [{ title: "Worker setup — Skill Link" }] }),

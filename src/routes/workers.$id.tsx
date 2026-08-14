@@ -55,6 +55,27 @@ function WorkerDetail() {
     },
   });
 
+  // Non-sensitive coverage summary only — no addresses, no coordinates.
+  const coverageQ = useQuery({
+    queryKey: ["worker-coverage", id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("worker_service_areas")
+        .select("is_primary, service_areas(name, launch_zone, sort_order)")
+        .eq("worker_id", id);
+      if (error) throw error;
+      const rows = (data ?? []) as any[];
+      return {
+        primary: rows.find((r) => r.is_primary)?.service_areas?.name ?? null,
+        others: rows
+          .filter((r) => !r.is_primary && r.service_areas)
+          .map((r) => r.service_areas.name)
+          .sort((a: string, b: string) => a.localeCompare(b)),
+      };
+    },
+  });
+
   const professionsQ = useQuery({
     queryKey: ["worker-professions", id],
     enabled: !!user,
@@ -314,6 +335,19 @@ function WorkerDetail() {
               <PriceRow label="Starting price" value={`GH₵${w.starting_price ?? 0}`} />
               <PriceRow label="Call-out fee" value={`GH₵${w.callout_fee ?? 0}`} />
             </div>
+          </Section>
+        )}
+
+        {coverageQ.data?.primary && (
+          <Section title="General service areas">
+            <p className="text-sm font-semibold inline-flex items-center gap-1">
+              <MapPin className="size-4 text-primary" /> Primary: {coverageQ.data.primary}
+            </p>
+            {coverageQ.data.others.length > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Also serves: {coverageQ.data.others.join(", ")}
+              </p>
+            )}
           </Section>
         )}
 

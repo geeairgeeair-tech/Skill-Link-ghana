@@ -121,8 +121,18 @@ function Onboarding() {
       _ghana_card_url: ghanaCard[0] ?? null,
       _selfie_url: selfie[0] ?? null,
     });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message || "Could not submit verification. Please try again.");
+    }
+    // Canonical general service areas — stored separately, never affects verification status.
+    try {
+      await saveWorkerServiceAreas(user.id, coverage.primaryId, coverage.additionalIds);
+    } catch (e: any) {
+      setLoading(false);
+      return toast.error(e?.message ?? "Could not save your service areas");
+    }
     setLoading(false);
-    if (error) return toast.error(error.message || "Could not submit verification. Please try again.");
     toast.success("Documents submitted — pending admin verification.");
     navigate({ to: "/worker/dashboard" });
   };

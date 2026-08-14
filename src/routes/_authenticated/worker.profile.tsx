@@ -31,12 +31,21 @@ function WorkerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
   const [savingAreas, setSavingAreas] = useState(false);
+  const [editingAreas, setEditingAreas] = useState(false);
+
+  const { data: allAreas } = useQuery({
+    queryKey: ["service-areas-active"],
+    staleTime: 10 * 60_000,
+    queryFn: fetchActiveServiceAreas,
+  });
+  const areaName = (id: string) => allAreas?.find((a) => a.id === id)?.name ?? "";
 
   const { data: coverage, isLoading: coverageLoading } = useQuery({
     queryKey: ["my-service-areas", user?.id],
     enabled: !!user,
     queryFn: () => fetchWorkerCoverage(user!.id),
   });
+
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],

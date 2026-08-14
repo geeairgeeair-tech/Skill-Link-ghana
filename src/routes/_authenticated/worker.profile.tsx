@@ -75,6 +75,10 @@ function WorkerProfilePage() {
   }, [user?.id]);
 
   useEffect(() => {
+    if (coverage) setDraftCoverage(coverage);
+  }, [coverage]);
+
+  useEffect(() => {
     if (!wp) return;
     setForm({
       city: wp.city ?? "",

@@ -211,11 +211,17 @@ function WorkerProfilePage() {
             </button>
           </div>
           {!wp.is_available && (
-            <Field label="Note for customers (optional)">
-              <input value={form.unavailable_note} onChange={(e) => setForm({ ...form, unavailable_note: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="Back on Monday" />
-            </Field>
+            <>
+              <Field label="Note for customers (optional)">
+                <input value={form.unavailable_note} onChange={(e) => setForm({ ...form, unavailable_note: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="Back on Monday" />
+              </Field>
+              <button onClick={save} disabled={saving} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50">
+                {saving ? "Saving…" : "Save note"}
+              </button>
+            </>
           )}
         </Section>
+
 
         <Section title="Profile photo">
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}

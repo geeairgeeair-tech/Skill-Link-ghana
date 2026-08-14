@@ -57,6 +57,7 @@ function Onboarding() {
       setLockedDob(acctDob);
       const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
       setAvatarUrl(prof?.avatar_url ?? null);
+      try { setCoverage(await fetchWorkerCoverage(user.id)); } catch { /* coverage is optional to load */ }
       if (acctDob) setForm((f) => ({ ...f, date_of_birth: acctDob }));
       if (data) {
         setStatus((data as any).verification_status ?? null);

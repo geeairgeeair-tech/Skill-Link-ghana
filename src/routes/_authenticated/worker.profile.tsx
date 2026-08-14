@@ -7,7 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ServiceAreaPicker } from "@/components/service-area-picker";
-import { fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
+import { fetchActiveServiceAreas, fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/page-skeleton";

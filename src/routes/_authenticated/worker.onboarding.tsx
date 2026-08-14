@@ -100,6 +100,7 @@ function Onboarding() {
     if (!selfie[0] && !docsOnFile.selfie) return toast.error("Upload a selfie holding your Ghana Card");
     if (!form.ghana_card_number.trim() && !docsOnFile.number) return toast.error("Enter your Ghana Card number");
     if (!commit) return toast.error("Please accept the professional commitment");
+    if (!coverage.primaryId) return toast.error("Choose your primary service area");
 
     setLoading(true);
     // Saved through a security-definer RPC: the owner cannot write the restricted

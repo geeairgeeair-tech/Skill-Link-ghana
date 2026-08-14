@@ -101,3 +101,21 @@ export async function saveWorkerServiceAreas(
     .eq("service_area_id", primaryId);
   if (primaryErr) throw primaryErr;
 }
+
+/**
+ * Canonical PRIMARY service-area name per professional. Used for compact
+ * marketplace cards, which show only the primary area.
+ */
+export async function fetchPrimaryAreaNames(workerIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!workerIds.length) return map;
+  const { data } = await supabase
+    .from("worker_service_areas")
+    .select("worker_id, service_areas(name)")
+    .in("worker_id", workerIds)
+    .eq("is_primary", true);
+  (data ?? []).forEach((r: any) => {
+    if (r.service_areas?.name) map.set(r.worker_id, r.service_areas.name);
+  });
+  return map;
+}

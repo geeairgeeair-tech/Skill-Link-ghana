@@ -9,9 +9,10 @@ import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
+import { fetchWorkerCoverage } from "@/lib/service-areas";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  Wallet, Star, Layers, RotateCcw, UserCog,
+  Wallet, Star, Layers, RotateCcw, UserCog, MapPin,
 } from "lucide-react";
 
 
@@ -28,6 +29,13 @@ const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"
 function WorkerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
+
+  const { data: coverage, isLoading: coverageLoading } = useQuery({
+    queryKey: ["my-service-areas", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchWorkerCoverage(user!.id),
+  });
+  const hasCoverage = !!coverage?.primaryId;
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],

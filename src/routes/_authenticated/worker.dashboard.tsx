@@ -184,6 +184,18 @@ function WorkerDashboard() {
           </div>
         )}
 
+        {wp && !coverageLoading && !hasCoverage && (
+          <Link to="/worker/profile" className="block rounded-2xl bg-warning/15 border border-warning/30 p-4">
+            <div className="flex items-center gap-3">
+              <MapPin className="size-5" />
+              <div>
+                <p className="font-bold">Set your service areas</p>
+                <p className="text-xs text-muted-foreground">Tell customers where you work — 1 primary area plus up to 7 more.</p>
+              </div>
+            </div>
+          </Link>
+        )}
+
         {!wp && (
           <Link to="/worker/onboarding" className="block rounded-2xl bg-gold text-gold-foreground p-4 shadow-elevated">
             <div className="flex items-center gap-3">

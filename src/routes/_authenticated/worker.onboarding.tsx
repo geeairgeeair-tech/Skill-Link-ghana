@@ -31,6 +31,7 @@ function Onboarding() {
   const [commit, setCommit] = useState(false);
   const [docsOnFile, setDocsOnFile] = useState({ card: false, selfie: false, number: false });
   const [status, setStatus] = useState<string | null>(null);
+  const [coverage, setCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
 
   const [loading, setLoading] = useState(false);
 

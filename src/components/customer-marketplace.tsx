@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, Search, PlusSquare, Calendar } from "lucide-react";
+import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
@@ -105,13 +106,14 @@ export function CustomerMarketplaceSection() {
           .in("id", ids);
         (profs ?? []).forEach((p: any) => map.set(p.id, p));
       }
+      const primaryAreas = await fetchPrimaryAreaNames(ids);
       return rows.map((w: any) => ({
         user_id: w.user_id,
         full_name: map.get(w.user_id)?.full_name ?? "Pro",
         avatar_url: map.get(w.user_id)?.avatar_url ?? null,
         category_name: w.categories?.name ?? null,
         city: w.city,
-        service_area: w.service_area,
+        service_area: primaryAreas.get(w.user_id) ?? w.service_area,
         rating: w.rating,
         reviews_count: w.reviews_count,
         starting_price: w.starting_price,

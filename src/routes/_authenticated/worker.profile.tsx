@@ -7,7 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ServiceAreaPicker } from "@/components/service-area-picker";
-import { fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
+import { fetchActiveServiceAreas, fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/page-skeleton";
@@ -31,12 +31,21 @@ function WorkerProfilePage() {
   const [saving, setSaving] = useState(false);
   const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
   const [savingAreas, setSavingAreas] = useState(false);
+  const [editingAreas, setEditingAreas] = useState(false);
+
+  const { data: allAreas } = useQuery({
+    queryKey: ["service-areas-active"],
+    staleTime: 10 * 60_000,
+    queryFn: fetchActiveServiceAreas,
+  });
+  const areaName = (id: string) => allAreas?.find((a) => a.id === id)?.name ?? "";
 
   const { data: coverage, isLoading: coverageLoading } = useQuery({
     queryKey: ["my-service-areas", user?.id],
     enabled: !!user,
     queryFn: () => fetchWorkerCoverage(user!.id),
   });
+
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
@@ -108,15 +117,20 @@ function WorkerProfilePage() {
 
   const status = String(wp.verification_status ?? proStatus);
 
+  // Availability note only — legacy location columns are never written from this page.
   const save = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from("worker_profiles").update({ ...form } as any).eq("user_id", user.id);
+    const { error } = await supabase
+      .from("worker_profiles")
+      .update({ unavailable_note: form.unavailable_note } as any)
+      .eq("user_id", user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
+
 
   // General service areas only — this never touches verification or professions.
   const saveCoverage = async () => {
@@ -125,8 +139,10 @@ function WorkerProfilePage() {
     try {
       await saveWorkerServiceAreas(user.id, draftCoverage.primaryId, draftCoverage.additionalIds);
       toast.success("Service areas updated");
+      setEditingAreas(false);
       qc.invalidateQueries({ queryKey: ["my-service-areas"] });
       qc.invalidateQueries({ queryKey: ["worker-coverage"] });
+
     } catch (e: any) {
       toast.error(e?.message ?? "Could not save your service areas");
     } finally {
@@ -195,11 +211,17 @@ function WorkerProfilePage() {
             </button>
           </div>
           {!wp.is_available && (
-            <Field label="Note for customers (optional)">
-              <input value={form.unavailable_note} onChange={(e) => setForm({ ...form, unavailable_note: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="Back on Monday" />
-            </Field>
+            <>
+              <Field label="Note for customers (optional)">
+                <input value={form.unavailable_note} onChange={(e) => setForm({ ...form, unavailable_note: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="Back on Monday" />
+              </Field>
+              <button onClick={save} disabled={saving} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50">
+                {saving ? "Saving…" : "Save note"}
+              </button>
+            </>
           )}
         </Section>
+
 
         <Section title="Profile photo">
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
@@ -208,44 +230,55 @@ function WorkerProfilePage() {
         <Section title="General service areas">
           {coverageLoading ? (
             <p className="text-xs text-muted-foreground">Loading…</p>
+          ) : editingAreas ? (
+            <>
+              <ServiceAreaPicker value={draftCoverage} onChange={setDraftCoverage} />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setDraftCoverage(coverage ?? { primaryId: null, additionalIds: [] }); setEditingAreas(false); }}
+                  className="flex-1 rounded-xl border border-input bg-card py-3 font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={saveCoverage}
+                  disabled={savingAreas || !draftCoverage.primaryId}
+                  className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+                >
+                  {savingAreas ? "Saving…" : "Save service areas"}
+                </button>
+              </div>
+            </>
+          ) : coverage?.primaryId ? (
+            <>
+              <div className="space-y-1 text-sm">
+                <p><span className="text-muted-foreground">Primary service area: </span><span className="font-semibold">{areaName(coverage.primaryId)}</span></p>
+                {coverage.additionalIds.length > 0 && (
+                  <p><span className="text-muted-foreground">Also serves: </span>{coverage.additionalIds.map(areaName).filter(Boolean).join(", ")}</p>
+                )}
+              </div>
+              <button
+                onClick={() => { setDraftCoverage(coverage); setEditingAreas(true); }}
+                className="w-full rounded-xl border border-input bg-card py-3 font-semibold"
+              >
+                Edit service areas
+              </button>
+            </>
           ) : (
             <>
-              {!coverage?.primaryId && (
-                <div className="rounded-xl border border-warning/40 bg-warning/15 p-3 text-sm">
-                  <p className="font-semibold">Set your service areas</p>
-                  <p className="text-xs text-muted-foreground">
-                    Choose where you mainly work so customers know your coverage. Your existing location details stay as they are.
-                  </p>
-                </div>
-              )}
-              <ServiceAreaPicker value={draftCoverage} onChange={setDraftCoverage} />
+              <p className="text-xs text-muted-foreground">
+                Choose where you mainly work so customers know your coverage.
+              </p>
               <button
-                onClick={saveCoverage}
-                disabled={savingAreas || !draftCoverage.primaryId}
-                className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+                onClick={() => setEditingAreas(true)}
+                className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold"
               >
-                {savingAreas ? "Saving…" : "Save service areas"}
+                Set your service areas
               </button>
             </>
           )}
         </Section>
 
-        <Section title="Location & service area">
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="City">
-              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-            <Field label="Service area">
-              <input value={form.service_area} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-            </Field>
-          </div>
-          <button onClick={save} disabled={saving} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50">
-            {saving ? "Saving…" : "Save changes"}
-          </button>
-          <p className="text-[11px] text-muted-foreground">
-            Bio, experience, prices, portfolio and strengths are now set per profession in <Link to="/worker/professions" className="text-primary font-semibold">My professions</Link>.
-          </p>
-        </Section>
 
 
         <Section title="Verification documents">

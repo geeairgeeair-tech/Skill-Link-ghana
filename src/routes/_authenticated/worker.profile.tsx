@@ -118,6 +118,22 @@ function WorkerProfilePage() {
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
 
+  // General service areas only — this never touches verification or professions.
+  const saveCoverage = async () => {
+    if (!user || !draftCoverage.primaryId) return;
+    setSavingAreas(true);
+    try {
+      await saveWorkerServiceAreas(user.id, draftCoverage.primaryId, draftCoverage.additionalIds);
+      toast.success("Service areas updated");
+      qc.invalidateQueries({ queryKey: ["my-service-areas"] });
+      qc.invalidateQueries({ queryKey: ["worker-coverage"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save your service areas");
+    } finally {
+      setSavingAreas(false);
+    }
+  };
+
 
 
 

@@ -29,6 +29,14 @@ function WorkerProfilePage() {
     city: "", service_area: "", unavailable_note: "",
   });
   const [saving, setSaving] = useState(false);
+  const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
+  const [savingAreas, setSavingAreas] = useState(false);
+
+  const { data: coverage, isLoading: coverageLoading } = useQuery({
+    queryKey: ["my-service-areas", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchWorkerCoverage(user!.id),
+  });
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],

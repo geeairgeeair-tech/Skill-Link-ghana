@@ -181,6 +181,10 @@ function Onboarding() {
           </Field>
         </Section>
 
+        <Section title="Service areas">
+          <ServiceAreaPicker value={coverage} onChange={setCoverage} />
+        </Section>
+
         <Section title="Pricing">
           <div className="grid grid-cols-3 gap-2">
             <Field label="Call-out (GH₵)">

@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
 import { ImageUpload } from "@/components/image-upload";
+import { ServiceAreaPicker } from "@/components/service-area-picker";
+import { fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
 
 export const Route = createFileRoute("/_authenticated/worker/onboarding")({
   head: () => ({ meta: [{ title: "Worker setup — Skill Link" }] }),
@@ -29,6 +31,7 @@ function Onboarding() {
   const [commit, setCommit] = useState(false);
   const [docsOnFile, setDocsOnFile] = useState({ card: false, selfie: false, number: false });
   const [status, setStatus] = useState<string | null>(null);
+  const [coverage, setCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
 
   const [loading, setLoading] = useState(false);
 
@@ -54,6 +57,7 @@ function Onboarding() {
       setLockedDob(acctDob);
       const { data: prof } = await supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle();
       setAvatarUrl(prof?.avatar_url ?? null);
+      try { setCoverage(await fetchWorkerCoverage(user.id)); } catch { /* coverage is optional to load */ }
       if (acctDob) setForm((f) => ({ ...f, date_of_birth: acctDob }));
       if (data) {
         setStatus((data as any).verification_status ?? null);
@@ -96,6 +100,7 @@ function Onboarding() {
     if (!selfie[0] && !docsOnFile.selfie) return toast.error("Upload a selfie holding your Ghana Card");
     if (!form.ghana_card_number.trim() && !docsOnFile.number) return toast.error("Enter your Ghana Card number");
     if (!commit) return toast.error("Please accept the professional commitment");
+    if (!coverage.primaryId) return toast.error("Choose your primary service area");
 
     setLoading(true);
     // Saved through a security-definer RPC: the owner cannot write the restricted
@@ -116,8 +121,18 @@ function Onboarding() {
       _ghana_card_url: ghanaCard[0] ?? null,
       _selfie_url: selfie[0] ?? null,
     });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message || "Could not submit verification. Please try again.");
+    }
+    // Canonical general service areas — stored separately, never affects verification status.
+    try {
+      await saveWorkerServiceAreas(user.id, coverage.primaryId, coverage.additionalIds);
+    } catch (e: any) {
+      setLoading(false);
+      return toast.error(e?.message ?? "Could not save your service areas");
+    }
     setLoading(false);
-    if (error) return toast.error(error.message || "Could not submit verification. Please try again.");
     toast.success("Documents submitted — pending admin verification.");
     navigate({ to: "/worker/dashboard" });
   };
@@ -164,6 +179,10 @@ function Onboarding() {
           <Field label="Service area">
             <input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
           </Field>
+        </Section>
+
+        <Section title="Service areas">
+          <ServiceAreaPicker value={coverage} onChange={setCoverage} />
         </Section>
 
         <Section title="Pricing">

@@ -6,6 +6,8 @@ import { BadgeCheck, ShieldAlert, Clock, Layers, LifeBuoy, Star, Wallet, LogOut 
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { AvatarUpload } from "@/components/avatar-upload";
+import { ServiceAreaPicker } from "@/components/service-area-picker";
+import { fetchWorkerCoverage, saveWorkerServiceAreas, type WorkerCoverage } from "@/lib/service-areas";
 
 import { supabase } from "@/integrations/supabase/client";
 import { PageSkeleton } from "@/components/page-skeleton";
@@ -27,6 +29,14 @@ function WorkerProfilePage() {
     city: "", service_area: "", unavailable_note: "",
   });
   const [saving, setSaving] = useState(false);
+  const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
+  const [savingAreas, setSavingAreas] = useState(false);
+
+  const { data: coverage, isLoading: coverageLoading } = useQuery({
+    queryKey: ["my-service-areas", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchWorkerCoverage(user!.id),
+  });
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
@@ -63,6 +73,10 @@ function WorkerProfilePage() {
     if (!user) return;
     supabase.from("profiles").select("avatar_url").eq("id", user.id).maybeSingle().then(({ data }) => setAvatarUrl(data?.avatar_url ?? null));
   }, [user?.id]);
+
+  useEffect(() => {
+    if (coverage) setDraftCoverage(coverage);
+  }, [coverage]);
 
   useEffect(() => {
     if (!wp) return;
@@ -102,6 +116,22 @@ function WorkerProfilePage() {
     if (error) return toast.error(error.message);
     toast.success("Profile updated");
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
+  };
+
+  // General service areas only — this never touches verification or professions.
+  const saveCoverage = async () => {
+    if (!user || !draftCoverage.primaryId) return;
+    setSavingAreas(true);
+    try {
+      await saveWorkerServiceAreas(user.id, draftCoverage.primaryId, draftCoverage.additionalIds);
+      toast.success("Service areas updated");
+      qc.invalidateQueries({ queryKey: ["my-service-areas"] });
+      qc.invalidateQueries({ queryKey: ["worker-coverage"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not save your service areas");
+    } finally {
+      setSavingAreas(false);
+    }
   };
 
 
@@ -173,6 +203,31 @@ function WorkerProfilePage() {
 
         <Section title="Profile photo">
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
+        </Section>
+
+        <Section title="General service areas">
+          {coverageLoading ? (
+            <p className="text-xs text-muted-foreground">Loading…</p>
+          ) : (
+            <>
+              {!coverage?.primaryId && (
+                <div className="rounded-xl border border-warning/40 bg-warning/15 p-3 text-sm">
+                  <p className="font-semibold">Set your service areas</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose where you mainly work so customers know your coverage. Your existing location details stay as they are.
+                  </p>
+                </div>
+              )}
+              <ServiceAreaPicker value={draftCoverage} onChange={setDraftCoverage} />
+              <button
+                onClick={saveCoverage}
+                disabled={savingAreas || !draftCoverage.primaryId}
+                className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+              >
+                {savingAreas ? "Saving…" : "Save service areas"}
+              </button>
+            </>
+          )}
         </Section>
 
         <Section title="Location & service area">

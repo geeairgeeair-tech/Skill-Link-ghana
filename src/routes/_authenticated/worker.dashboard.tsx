@@ -9,9 +9,10 @@ import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
+import { fetchWorkerCoverage } from "@/lib/service-areas";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  Wallet, Star, Layers, RotateCcw, UserCog,
+  Wallet, Star, Layers, RotateCcw, UserCog, MapPin,
 } from "lucide-react";
 
 
@@ -28,6 +29,13 @@ const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"
 function WorkerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
+
+  const { data: coverage, isLoading: coverageLoading } = useQuery({
+    queryKey: ["my-service-areas", user?.id],
+    enabled: !!user,
+    queryFn: () => fetchWorkerCoverage(user!.id),
+  });
+  const hasCoverage = !!coverage?.primaryId;
 
   const { data: wp, isLoading: wpLoading } = useQuery({
     queryKey: ["my-worker-profile", user?.id],
@@ -182,6 +190,18 @@ function WorkerDashboard() {
           <div className="rounded-2xl bg-success/15 border border-success/30 p-3 text-sm font-semibold inline-flex items-center gap-2">
             <BadgeCheck className="size-4 text-success" /> Your account is verified.
           </div>
+        )}
+
+        {wp && !coverageLoading && !hasCoverage && (
+          <Link to="/worker/profile" className="block rounded-2xl bg-warning/15 border border-warning/30 p-4">
+            <div className="flex items-center gap-3">
+              <MapPin className="size-5" />
+              <div>
+                <p className="font-bold">Set your service areas</p>
+                <p className="text-xs text-muted-foreground">Tell customers where you work — 1 primary area plus up to 7 more.</p>
+              </div>
+            </div>
+          </Link>
         )}
 
         {!wp && (

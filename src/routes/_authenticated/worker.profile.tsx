@@ -139,8 +139,10 @@ function WorkerProfilePage() {
     try {
       await saveWorkerServiceAreas(user.id, draftCoverage.primaryId, draftCoverage.additionalIds);
       toast.success("Service areas updated");
+      setEditingAreas(false);
       qc.invalidateQueries({ queryKey: ["my-service-areas"] });
       qc.invalidateQueries({ queryKey: ["worker-coverage"] });
+
     } catch (e: any) {
       toast.error(e?.message ?? "Could not save your service areas");
     } finally {

@@ -175,6 +175,31 @@ function WorkerProfilePage() {
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
         </Section>
 
+        <Section title="General service areas">
+          {coverageLoading ? (
+            <p className="text-xs text-muted-foreground">Loading…</p>
+          ) : (
+            <>
+              {!coverage?.primaryId && (
+                <div className="rounded-xl border border-warning/40 bg-warning/15 p-3 text-sm">
+                  <p className="font-semibold">Set your service areas</p>
+                  <p className="text-xs text-muted-foreground">
+                    Choose where you mainly work so customers know your coverage. Your existing location details stay as they are.
+                  </p>
+                </div>
+              )}
+              <ServiceAreaPicker value={draftCoverage} onChange={setDraftCoverage} />
+              <button
+                onClick={saveCoverage}
+                disabled={savingAreas || !draftCoverage.primaryId}
+                className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+              >
+                {savingAreas ? "Saving…" : "Save service areas"}
+              </button>
+            </>
+          )}
+        </Section>
+
         <Section title="Location & service area">
           <div className="grid grid-cols-2 gap-2">
             <Field label="City">

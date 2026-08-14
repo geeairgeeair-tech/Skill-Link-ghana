@@ -249,7 +249,7 @@ function WorkerDetail() {
               )}
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
                 <StarRating value={Number(w.rating ?? 0)} count={w.reviews_count ?? 0} />
-                <span className="inline-flex items-center gap-1"><MapPin className="size-3" />{w.service_area ?? w.city ?? "Ghana"}</span>
+                <span className="inline-flex items-center gap-1"><MapPin className="size-3" />{coverageQ.data?.primary ?? w.service_area ?? w.city ?? "Ghana"}</span>
               </div>
             </div>
           </div>
@@ -341,7 +341,7 @@ function WorkerDetail() {
         {coverageQ.data?.primary && (
           <Section title="General service areas">
             <p className="text-sm font-semibold inline-flex items-center gap-1">
-              <MapPin className="size-4 text-primary" /> Primary: {coverageQ.data.primary}
+              <MapPin className="size-4 text-primary" /> Primary service area: {coverageQ.data.primary}
             </p>
             {coverageQ.data.others.length > 0 && (
               <p className="mt-1 text-xs text-muted-foreground">

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { Search, SlidersHorizontal, X, ShieldCheck } from "lucide-react";
+import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
@@ -111,6 +112,7 @@ function WorkersPage() {
       const ids = rows.map((w: any) => w.user_id);
       const profilesMap = new Map<string, { full_name: string | null; avatar_url: string | null }>();
       const professionsMap = new Map<string, string[]>();
+      let primaryAreas = new Map<string, string>();
       if (ids.length) {
         const [{ data: profs }, { data: wprofs }] = await Promise.all([
           supabase.from("profiles").select("id, full_name, avatar_url").in("id", ids),
@@ -122,6 +124,7 @@ function WorkersPage() {
             .order("is_primary", { ascending: false }),
         ]);
         (profs ?? []).forEach((p: any) => profilesMap.set(p.id, { full_name: p.full_name, avatar_url: p.avatar_url }));
+        primaryAreas = await fetchPrimaryAreaNames(ids);
         (wprofs ?? []).forEach((p: any) => {
           const name = p.categories?.name;
           if (!name) return;
@@ -141,7 +144,7 @@ function WorkersPage() {
           professions: all.filter((n) => n !== primary).slice(0, 2),
           all_professions: primary ? Array.from(new Set([primary, ...all])) : all,
           city: w.city,
-          service_area: w.service_area,
+          service_area: primaryAreas.get(w.user_id) ?? w.service_area,
           rating: w.rating,
           reviews_count: w.reviews_count,
           starting_price: w.starting_price,

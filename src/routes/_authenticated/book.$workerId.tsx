@@ -107,12 +107,13 @@ function BookPage() {
 
   // Canonical areas this professional actually covers (primary + additional).
   const { data: coverage } = useQuery({
-    queryKey: ["worker-coverage", workerId],
+    queryKey: ["worker-coverage-ids", workerId],
     queryFn: () => fetchWorkerCoverage(workerId),
   });
   const coverageIds: string[] | null = coverage
-    ? [coverage.primaryId, ...coverage.additionalIds].filter(Boolean) as string[]
+    ? ([coverage.primaryId, ...(coverage.additionalIds ?? [])].filter(Boolean) as string[])
     : null;
+
 
   const profList: any[] = professions ?? [];
 

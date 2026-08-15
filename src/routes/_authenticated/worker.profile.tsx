@@ -142,6 +142,8 @@ function WorkerProfilePage() {
       setEditingAreas(false);
       qc.invalidateQueries({ queryKey: ["my-service-areas"] });
       qc.invalidateQueries({ queryKey: ["worker-coverage"] });
+      qc.invalidateQueries({ queryKey: ["worker-coverage-ids"] });
+
 
     } catch (e: any) {
       toast.error(e?.message ?? "Could not save your service areas");

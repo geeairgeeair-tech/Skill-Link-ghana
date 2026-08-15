@@ -105,7 +105,17 @@ function BookPage() {
       ).data ?? [],
   });
 
+  // Canonical areas this professional actually covers (primary + additional).
+  const { data: coverage } = useQuery({
+    queryKey: ["worker-coverage", workerId],
+    queryFn: () => fetchWorkerCoverage(workerId),
+  });
+  const coverageIds: string[] | null = coverage
+    ? [coverage.primaryId, ...coverage.additionalIds].filter(Boolean) as string[]
+    : null;
+
   const profList: any[] = professions ?? [];
+
   // One approved profession → preselect automatically.
   useEffect(() => {
     if (!profId && profList.length === 1) setProfId(profList[0].id);

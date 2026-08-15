@@ -6,6 +6,8 @@ import { BadgeCheck, MapPin, Star, Camera, Locate, ChevronLeft, CheckCircle2, Lo
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "@/lib/image-compress";
+import { ServiceAreaSelect } from "@/components/service-area-select";
+import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { useAuth } from "@/hooks/use-auth";
 
 
@@ -37,6 +39,7 @@ function BookPage() {
   const [description, setDescription] = useState("");
   const [address, setAddress] = useState("");
   const [area, setArea] = useState("");
+  const [areaId, setAreaId] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [budget, setBudget] = useState("");
@@ -185,7 +188,7 @@ function BookPage() {
     const ar = area.trim();
     if (desc.length < 10) next.description = "Please describe the job before continuing.";
     if (addr.length < 5 || PLACEHOLDERS.includes(addr.toLowerCase())) next.address = "Enter the exact service address.";
-    if (ar.length < 3 || PLACEHOLDERS.includes(ar.toLowerCase())) next.area = "Enter the general service area.";
+    if (!areaId || ar.length < 2) next.area = "Select the general service area this professional covers.";
     if (!date) next.date = "Choose a preferred date.";
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -248,6 +251,7 @@ function BookPage() {
         _description: description.trim(),
         _address: address.trim(),
         _service_area: area.trim(),
+        _service_area_id: areaId,
         _scheduled_at: scheduledAt,
         _estimated_cost: estimated,
         _budget: budget ? Number(budget) : null,
@@ -405,8 +409,8 @@ function BookPage() {
           <div className="rounded-2xl bg-card border border-border p-4 space-y-2 text-sm">
             <Row label="Service">{w.categories?.name}</Row>
             <Row label="Description">{description}</Row>
-            <Row label="Address">{address}</Row>
-            <Row label="Area">{area}</Row>
+            <Row label="General service area">{area}</Row>
+            <Row label="Exact service address">{address}</Row>
             <Row label="Profession">{selectedProf?.categories?.name ?? w.categories?.name ?? "Service"}</Row>
             <Row label="Date & time">{date} {time || "09:00"}</Row>
 
@@ -535,14 +539,31 @@ function BookPage() {
         </Field>
 
 
-        <Field label="Service address">
-          <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />
-          {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
+        <Field label="General service area">
+          {coverageIds && coverageIds.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-border p-3 text-xs text-muted-foreground">
+              This professional has not set their service areas yet.
+            </p>
+          ) : (
+            <ServiceAreaSelect
+              value={areaId}
+              allowedIds={coverageIds ?? []}
+              invalid={!!errors.area}
+              emptyMessage="This professional does not currently serve that area."
+              notServedMessage="This Professional does not currently serve that area."
+              onChange={(id, a) => {
+                setAreaId(id);
+                setArea(a?.name ?? "");
+                setErrors((p) => ({ ...p, area: "" }));
+              }}
+            />
+          )}
+          {errors.area && <p className="text-xs text-destructive mt-1">{errors.area}</p>}
         </Field>
 
-        <Field label="General service area">
-          <input required value={area} onChange={(e)=>{setArea(e.target.value); setErrors((p)=>({...p, area: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.area ? "border-destructive" : "border-input"}`} placeholder="e.g. East Legon, Accra" />
-          {errors.area && <p className="text-xs text-destructive mt-1">{errors.area}</p>}
+        <Field label="Exact service address">
+          <input required value={address} onChange={(e)=>{setAddress(e.target.value); setErrors((p)=>({...p, address: ""}));}} className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.address ? "border-destructive" : "border-input"}`} placeholder="e.g. House #12, East Legon" />
+          {errors.address && <p className="text-xs text-destructive mt-1">{errors.address}</p>}
         </Field>
 
 

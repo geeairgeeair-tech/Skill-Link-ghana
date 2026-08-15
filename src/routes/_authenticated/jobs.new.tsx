@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { ServiceAreaSelect } from "@/components/service-area-select";
 
 export const Route = createFileRoute("/_authenticated/jobs/new")({
   component: NewJobPage,
@@ -18,6 +19,7 @@ const schema = z.object({
   city: z.string().trim().min(2, "City is required").max(60),
   address: z.string().trim().min(3, "Address is required").max(200),
   service_area: z.string().trim().max(120).optional(),
+  service_area_id: z.string().uuid("Select your general service area"),
   budget: z.number().int().min(0).max(1_000_000).optional(),
   category_id: z.string().uuid("Select a service category"),
   urgency: z.enum(["normal", "urgent", "emergency"]),
@@ -32,7 +34,7 @@ function NewJobPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [form, setForm] = useState({
-    title: "", description: "", city: "Accra", address: "", service_area: "",
+    title: "", description: "", city: "Accra", address: "", service_area: "", service_area_id: "",
     budget: "" as string, category_id: "", urgency: "normal" as "normal"|"urgent"|"emergency",
     preferred_date: "", preferred_time: "",
     lat: undefined as number | undefined, lng: undefined as number | undefined,
@@ -107,6 +109,7 @@ function NewJobPage() {
       city: form.city,
       address: form.address,
       service_area: form.service_area || undefined,
+      service_area_id: form.service_area_id || undefined,
       budget: form.budget ? Number(form.budget) : undefined,
       category_id: form.category_id || undefined,
       urgency: form.urgency,
@@ -222,15 +225,16 @@ function NewJobPage() {
         </Card>
 
         <Card title="Location">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="City">
-              <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required />
-            </Field>
-            <Field label="Service area (optional)">
-              <input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" placeholder="East Legon" />
-            </Field>
-          </div>
-          <Field label="Full address">
+          <Field label="General service area">
+            <ServiceAreaSelect
+              value={form.service_area_id || null}
+              onChange={(id, a) => setForm({ ...form, service_area_id: id ?? "", service_area: a?.name ?? "" })}
+            />
+          </Field>
+          <Field label="City">
+            <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required />
+          </Field>
+          <Field label="Exact service address">
             <input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" placeholder="House / street / landmark" required />
           </Field>
           <button type="button" onClick={useCurrentLocation} disabled={locBusy} className="w-full h-11 rounded-xl bg-primary-soft text-primary font-semibold inline-flex items-center justify-center gap-2 disabled:opacity-60">
@@ -300,7 +304,7 @@ function NewJobPage() {
               <Row k="Urgency" v={form.urgency} className="capitalize" />
               <Row k="City" v={form.city} />
               <Row k="Address" v={form.address} />
-              {form.service_area && <Row k="Area" v={form.service_area} />}
+              {form.service_area && <Row k="General service area" v={form.service_area} />}
               {form.lat && <Row k="GPS" v={`${form.lat.toFixed(5)}, ${form.lng!.toFixed(5)}`} />}
               {form.preferred_date && <Row k="Preferred" v={`${form.preferred_date}${form.preferred_time ? " · " + form.preferred_time : ""}`} />}
               {form.budget && <Row k="Budget" v={`GH₵${form.budget}`} />}

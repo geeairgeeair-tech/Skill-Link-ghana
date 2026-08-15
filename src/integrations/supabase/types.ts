@@ -166,6 +166,7 @@ export type Database = {
           return_count: number
           scheduled_at: string | null
           service_area: string | null
+          service_area_id: string | null
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"]
           submission_id: string | null
@@ -225,6 +226,7 @@ export type Database = {
           return_count?: number
           scheduled_at?: string | null
           service_area?: string | null
+          service_area_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           submission_id?: string | null
@@ -284,6 +286,7 @@ export type Database = {
           return_count?: number
           scheduled_at?: string | null
           service_area?: string | null
+          service_area_id?: string | null
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           submission_id?: string | null
@@ -313,6 +316,13 @@ export type Database = {
             columns: ["job_application_id"]
             isOneToOne: false
             referencedRelation: "job_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_service_area_id_fkey"
+            columns: ["service_area_id"]
+            isOneToOne: false
+            referencedRelation: "service_areas"
             referencedColumns: ["id"]
           },
           {
@@ -1366,6 +1376,7 @@ export type Database = {
           _photos?: Json
           _scheduled_at: string
           _service_area: string
+          _service_area_id?: string
           _submission_id: string
           _urgency: string
           _worker_id: string

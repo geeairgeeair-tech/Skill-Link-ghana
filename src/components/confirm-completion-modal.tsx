@@ -46,7 +46,8 @@ export function ConfirmCompletionModal({ booking, onClose, onDone }: { booking: 
         <h3 className="font-display font-bold text-lg">Confirm completion</h3>
         <p className="text-xs text-muted-foreground mt-1">{booking.profiles?.full_name ?? booking.worker?.full_name ?? "Your pro"} · {booking.categories?.name ?? ""}</p>
         <div className="mt-3 rounded-xl bg-muted/50 p-3 text-xs space-y-1">
-          {(booking.estimated_amount ?? booking.estimated_cost) != null && <p>Original estimate: <span className="font-semibold">{fmt(Number(booking.estimated_amount ?? booking.estimated_cost))}</span></p>}
+          {booking.budget != null && <p>Customer budget: <span className="font-semibold">{fmt(Number(booking.budget))}</span></p>}
+          {acceptedEstimate != null && <p>Accepted estimate: <span className="font-semibold">{fmt(acceptedEstimate)}</span></p>}
           <p>Worker reported: <span className="font-semibold">{fmt(Number(booking.final_amount ?? 0))}</span></p>
           {booking.completion_note && <p className="italic mt-1">"{booking.completion_note}"</p>}
         </div>

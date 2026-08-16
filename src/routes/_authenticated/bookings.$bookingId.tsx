@@ -15,6 +15,7 @@ import { BookingMedia } from "@/components/booking-media";
 import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
+import { useAcceptedEstimate } from "@/lib/accepted-estimates";
 import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";

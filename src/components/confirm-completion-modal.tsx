@@ -2,10 +2,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcceptedEstimate } from "@/lib/accepted-estimates";
 
 const fmt = (n: number) => `GH₵${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function ConfirmCompletionModal({ booking, onClose, onDone }: { booking: any; onClose: () => void; onDone: () => void }) {
+  const acceptedEstimate = useAcceptedEstimate(booking?.id);
   const [amountPaid, setAmountPaid] = useState(String(booking.final_amount ?? ""));
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");

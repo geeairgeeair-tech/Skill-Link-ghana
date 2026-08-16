@@ -94,6 +94,8 @@ function BookingsPage() {
     },
   });
 
+  const { data: acceptedEstimates } = useAcceptedEstimates((data ?? []).map((b: any) => b.id));
+
   const counts = TABS.reduce((acc, t) => {
     acc[t.key] = (data ?? []).filter((b: any) => matchesTab(b.status, t.key)).length;
     return acc;

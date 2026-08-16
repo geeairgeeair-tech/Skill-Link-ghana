@@ -15,6 +15,7 @@ import { BookingMedia } from "@/components/booking-media";
 import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
+import { useAcceptedEstimate } from "@/lib/accepted-estimates";
 import { CompleteJobModal } from "@/components/complete-job-modal";
 import { WorkProgressPanel } from "@/components/work-progress-panel";
 import { ReturnJobPanel } from "@/components/return-job-panel";
@@ -224,6 +225,7 @@ function BookingDetail() {
     return () => { supabase.removeChannel(ch); };
   }, [bookingId, qc]);
 
+  const acceptedEstimate = useAcceptedEstimate(bookingId);
 
   if (isLoading) return <BookingSkeleton />;
   if (error) {
@@ -383,7 +385,7 @@ function BookingDetail() {
           <h3 className="font-display font-bold text-sm mb-3 inline-flex items-center gap-1"><Wallet className="size-4"/> Amounts</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
             <Amount label="Customer budget" value={fmtGHS(b.budget ?? b.estimated_cost)} />
-            <Amount label="Accepted estimate" value={fmtGHS(b.estimated_amount)} />
+            {acceptedEstimate != null && <Amount label="Accepted estimate" value={fmtGHS(acceptedEstimate)} />}
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAcceptedEstimates } from "@/lib/accepted-estimates";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
@@ -103,6 +104,8 @@ function JobsPage() {
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, qc]);
+
+  const { data: acceptedEstimates } = useAcceptedEstimates((data ?? []).map((b: any) => b.id));
 
   const counts = useMemo(() => {
     const c: Record<TabKey, number> = { pending: 0, recent: 0, active: 0, completed: 0, cancelled: 0 };
@@ -233,7 +236,7 @@ function JobsPage() {
                 {b.scheduled_at && <p className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date(b.scheduled_at).toLocaleString()}</p>}
                 {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>{b.service_area}</p>}
                 {(b.budget ?? b.estimated_cost) != null && <p className="inline-flex items-center gap-1 font-semibold text-primary"><Wallet className="size-3"/>Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
-                {(b.estimated_amount ?? b.budget) != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Estimate {fmtGHS(b.estimated_amount ?? b.budget)}</p>}
+                {acceptedEstimates?.[b.id] != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Accepted Estimate {fmtGHS(acceptedEstimates[b.id])}</p>}
 
                 {b.final_amount != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>You reported {fmtGHS(b.final_amount)}</p>}
                 {b.amount_paid != null && <p className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="size-3"/>Paid {fmtGHS(b.amount_paid)}</p>}

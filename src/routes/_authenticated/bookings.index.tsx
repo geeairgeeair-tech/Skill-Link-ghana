@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAcceptedEstimates } from "@/lib/accepted-estimates";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";

@@ -225,6 +225,7 @@ function BookingDetail() {
     return () => { supabase.removeChannel(ch); };
   }, [bookingId, qc]);
 
+  const acceptedEstimate = useAcceptedEstimate(bookingId);
 
   if (isLoading) return <BookingSkeleton />;
   if (error) {

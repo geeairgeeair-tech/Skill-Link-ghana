@@ -124,7 +124,7 @@ function BookingDetail() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, isPending, error } = useQuery({
     queryKey: ["booking-detail", bookingId, user?.id],
     enabled: !!user,
     queryFn: async () => {

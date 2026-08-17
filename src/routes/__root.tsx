@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "sonner";
+import { AlertTriangle, CheckCircle2, Info, Loader2, XCircle } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -123,14 +124,35 @@ function RootComponent() {
       <Outlet />
       <Toaster
         position="top-center"
-        richColors
         closeButton
         duration={10000}
+        gap={10}
+        offset={16}
+        icons={{
+          success: <CheckCircle2 className="size-5 text-success" />,
+          error: <XCircle className="size-5 text-destructive" />,
+          warning: <AlertTriangle className="size-5 text-warning" />,
+          info: <Info className="size-5 text-primary" />,
+          loading: <Loader2 className="size-5 animate-spin text-primary" />,
+        }}
         toastOptions={{
-          className:
-            "rounded-2xl border border-border bg-card text-foreground shadow-elevated font-sans",
+          unstyled: true,
+          classNames: {
+            toast: "sl-toast",
+            title: "sl-toast-title",
+            description: "sl-toast-description",
+            icon: "sl-toast-icon",
+            actionButton: "sl-toast-action",
+            cancelButton: "sl-toast-cancel",
+            closeButton: "sl-toast-close",
+            success: "sl-toast-success",
+            error: "sl-toast-error",
+            warning: "sl-toast-warning",
+            info: "sl-toast-info",
+          },
         }}
       />
+
 
     </QueryClientProvider>
   );

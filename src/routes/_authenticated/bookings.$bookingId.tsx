@@ -227,7 +227,7 @@ function BookingDetail() {
 
   const acceptedEstimate = useAcceptedEstimate(bookingId);
 
-  if (isLoading) return <BookingSkeleton />;
+  if (isLoading || isPending) return <BookingSkeleton />;
   if (error) {
     const msg = (error as any)?.message ?? "";
     const denied = /permission|policy|denied/i.test(msg);
@@ -240,7 +240,7 @@ function BookingDetail() {
       />
     );
   }
-  if (!data || !data.booking) {
+  if (data === null || !data.booking) {
     return <ErrorState title="Booking not found" message="This booking may have been deleted, or you don't have access to it." />;
   }
 

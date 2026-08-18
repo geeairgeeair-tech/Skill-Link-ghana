@@ -65,12 +65,25 @@ export function useWorkerEligibility() {
   const isBusy = publicStatus === "busy";
   const isUnavailable = publicStatus === "unavailable" || wp?.is_available === false;
 
+  /** Canonical service areas the pro covers (primary + additional count equally). */
+  const areaIds = new Set<string>(data?.areaIds ?? []);
+  /** Legacy jobs (NULL canonical area) are never blocked by area matching. */
+  const coversArea = (jobAreaId: string | null | undefined) => !jobAreaId || areaIds.has(jobAreaId);
+
   /** Returns null when the pro may apply, otherwise a human reason. */
-  const blockedReason = (jobStatus: string, jobCategoryId: string | null, jobCategoryName?: string) => {
+  const blockedReason = (
+    jobStatus: string,
+    jobCategoryId: string | null,
+    jobCategoryName?: string,
+    jobAreaId?: string | null,
+    jobAreaName?: string | null,
+  ) => {
     if (!isVerified) return `Only verified professionals can apply. Your account is ${wp?.verification_status ?? "not verified"}.`;
     if (jobStatus !== "open") return "This job is no longer open.";
     if (jobCategoryId && !categoryIds.has(jobCategoryId))
       return `This job is in the ${jobCategoryName ?? "selected"} category. You can only apply to jobs in your verified professions${categoryNames.length ? ` (${categoryNames.join(", ")})` : ""}.`;
+    if (!coversArea(jobAreaId))
+      return `This job is in ${jobAreaName ?? "an area"} which is outside your service areas. Update your service areas to cover it.`;
     if (isUnavailable) return "You're marked Unavailable. Switch to Available to apply for jobs.";
     if (isBusy) return "You have an active booking. Finish it before applying to new jobs.";
     return null;
@@ -78,6 +91,10 @@ export function useWorkerEligibility() {
 
   const matchesCategory = (jobCategoryId: string | null) =>
     isVerified && !!jobCategoryId && categoryIds.has(jobCategoryId);
+
+  /** Full match: profession + canonical service area. */
+  const matchesJob = (jobCategoryId: string | null, jobAreaId?: string | null) =>
+    matchesCategory(jobCategoryId) && coversArea(jobAreaId);
 
   return {
     loading: enabled && isLoading,
@@ -88,7 +105,11 @@ export function useWorkerEligibility() {
     isUnavailable,
     categoryIds,
     categoryNames,
+    areaIds,
+    coversArea,
     matchesCategory,
+    matchesJob,
     blockedReason,
   };
+
 }

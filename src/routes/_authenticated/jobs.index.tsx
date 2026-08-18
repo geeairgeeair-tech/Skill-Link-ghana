@@ -65,7 +65,7 @@ function JobsBoard() {
     queryKey: ["job-requests-all", category, urgency, minBudget, maxBudget, preferredFrom, sort, locationQ],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, service_area, status, urgency, preferred_at, media, created_at, customer_id, category_id, categories(name, slug), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, media, created_at, customer_id, category_id, categories(name, slug), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status", "open")
         .limit(100);
       if (category) {
@@ -89,6 +89,7 @@ function JobsBoard() {
       if (needle) {
         rows = rows.filter((j: any) =>
           (j.city ?? "").toLowerCase().includes(needle) ||
+          (j.service_areas?.name ?? "").toLowerCase().includes(needle) ||
           (j.service_area ?? "").toLowerCase().includes(needle)
         );
       }

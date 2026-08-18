@@ -103,7 +103,7 @@ function JobDetail() {
             <p className="text-xs uppercase font-bold text-primary tracking-wide">{jobCategoryName}</p>
             <h1 className="font-display text-xl font-bold mt-1">{(job as any).title}</h1>
             <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
-              <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_area ?? (job as any).city ?? "Ghana"}</span>
+              <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_areas?.name ?? (job as any).service_area ?? (job as any).city ?? "Ghana"}</span>
               {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
               {(job as any).urgency && (job as any).urgency !== "normal" && <span className="uppercase text-[10px] font-bold">{(job as any).urgency}</span>}
             </div>
@@ -134,7 +134,7 @@ function JobDetail() {
           </div>
           <h1 className="font-display text-xl font-bold mt-1">{(job as any).title}</h1>
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
-            <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_area ?? (job as any).city ?? cust?.city ?? "Ghana"}</span>
+            <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_areas?.name ?? (job as any).service_area ?? (job as any).city ?? cust?.city ?? "Ghana"}</span>
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
             {(job as any).preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date((job as any).preferred_at).toLocaleString()}</span>}
           </div>
@@ -163,7 +163,7 @@ function JobDetail() {
 
         <section className="rounded-2xl bg-card border border-border p-4">
           <h3 className="font-display font-bold mb-2 text-sm">Location</h3>
-          <LocationMap area={(job as any).service_area ?? (job as any).city ?? cust?.city} height={160} />
+          <LocationMap area={(job as any).service_areas?.name ?? (job as any).service_area ?? (job as any).city ?? cust?.city} height={160} />
         </section>
 
         <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
@@ -186,7 +186,13 @@ function JobDetail() {
             jobStatus={(job as any).status}
             jobBudget={(job as any).budget}
             jobCategoryName={jobCategoryName}
-            blockedReason={eligibility.blockedReason((job as any).status, (job as any).category_id ?? null, jobCategoryName)}
+            blockedReason={eligibility.blockedReason(
+              (job as any).status,
+              (job as any).category_id ?? null,
+              jobCategoryName,
+              (job as any).service_area_id ?? null,
+              (job as any).service_areas?.name ?? null,
+            )}
             myApp={myApp ?? null}
           />
         )}

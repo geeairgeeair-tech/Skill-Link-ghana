@@ -236,7 +236,9 @@ function JobsBoard() {
           const firstImg = media.find(m => m.type === "image");
           const vidCount = media.filter(m => m.type === "video").length;
           const imgCount = media.filter(m => m.type === "image").length;
-          const inMyCategory = eligibility.matchesCategory(j.category_id);
+          // Match = verified profession match AND canonical service-area coverage
+          // (legacy jobs without a canonical area keep the old category-only rule).
+          const inMyCategory = eligibility.matchesJob(j.category_id, j.service_area_id);
           const count = appCounts?.get(j.id) ?? 0;
           return (
             <Link key={j.id} to="/jobs/$id" params={{ id: j.id }} className="block rounded-2xl bg-card border border-border p-3 shadow-card hover:shadow-elevated">
@@ -259,7 +261,7 @@ function JobsBoard() {
                   <p className="text-xs text-muted-foreground">{j.categories?.name ?? "General"}</p>
                   <p className="text-sm mt-1 line-clamp-2 text-muted-foreground">{j.description}</p>
                   <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                    <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{j.service_area ?? j.city ?? j.profiles?.city ?? "Ghana"}</span>
+                    <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{j.service_areas?.name ?? j.service_area ?? j.city ?? j.profiles?.city ?? "Ghana"}</span>
                     {j.budget ? <span className="font-semibold text-primary">GH₵{j.budget}</span> : null}
                     {j.preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date(j.preferred_at).toLocaleDateString()}</span>}
                     <span className="inline-flex items-center gap-1"><Clock className="size-3"/>{timeAgo(j.created_at)}</span>

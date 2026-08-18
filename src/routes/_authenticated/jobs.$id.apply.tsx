@@ -27,7 +27,7 @@ function ApplyPage() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request-brief", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, budget, status, customer_id, category_id, categories(name)").eq("id", id).maybeSingle()).data,
+      .select("id, title, budget, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)").eq("id", id).maybeSingle()).data,
   });
 
   const eligibility = useWorkerEligibility();
@@ -57,7 +57,13 @@ function ApplyPage() {
   const jobCatName = (job as any).categories?.name ?? "this category";
   const gateReason = existing
     ? null
-    : eligibility.blockedReason((job as any).status, (job as any).category_id ?? null, jobCatName);
+    : eligibility.blockedReason(
+        (job as any).status,
+        (job as any).category_id ?? null,
+        jobCatName,
+        (job as any).service_area_id ?? null,
+        (job as any).service_areas?.name ?? null,
+      );
 
 
   if (gateReason) {

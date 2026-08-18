@@ -22,7 +22,7 @@ export function useWorkerEligibility() {
     enabled,
     staleTime: 30_000,
     queryFn: async () => {
-      const [{ data: wp }, { data: profs }, { data: status }] = await Promise.all([
+      const [{ data: wp }, { data: profs }, { data: status }, { data: areas }] = await Promise.all([
         supabase
           .from("worker_profiles")
           .select("verification_status, is_available, category_id, categories(name)")
@@ -33,10 +33,20 @@ export function useWorkerEligibility() {
           .select("category_id, verification_status, is_primary, categories(name)")
           .eq("user_id", user!.id),
         supabase.rpc("get_worker_public_status", { _worker_id: user!.id }),
+        supabase
+          .from("worker_service_areas")
+          .select("service_area_id")
+          .eq("worker_id", user!.id),
       ]);
-      return { wp: wp ?? null, profs: profs ?? [], publicStatus: (status as any as string) ?? null };
+      return {
+        wp: wp ?? null,
+        profs: profs ?? [],
+        publicStatus: (status as any as string) ?? null,
+        areaIds: (areas ?? []).map((a) => a.service_area_id),
+      };
     },
   });
+
 
   const wp: any = data?.wp ?? null;
   const profs: any[] = data?.profs ?? [];
@@ -55,12 +65,25 @@ export function useWorkerEligibility() {
   const isBusy = publicStatus === "busy";
   const isUnavailable = publicStatus === "unavailable" || wp?.is_available === false;
 
+  /** Canonical service areas the pro covers (primary + additional count equally). */
+  const areaIds = new Set<string>(data?.areaIds ?? []);
+  /** Legacy jobs (NULL canonical area) are never blocked by area matching. */
+  const coversArea = (jobAreaId: string | null | undefined) => !jobAreaId || areaIds.has(jobAreaId);
+
   /** Returns null when the pro may apply, otherwise a human reason. */
-  const blockedReason = (jobStatus: string, jobCategoryId: string | null, jobCategoryName?: string) => {
+  const blockedReason = (
+    jobStatus: string,
+    jobCategoryId: string | null,
+    jobCategoryName?: string,
+    jobAreaId?: string | null,
+    jobAreaName?: string | null,
+  ) => {
     if (!isVerified) return `Only verified professionals can apply. Your account is ${wp?.verification_status ?? "not verified"}.`;
     if (jobStatus !== "open") return "This job is no longer open.";
     if (jobCategoryId && !categoryIds.has(jobCategoryId))
       return `This job is in the ${jobCategoryName ?? "selected"} category. You can only apply to jobs in your verified professions${categoryNames.length ? ` (${categoryNames.join(", ")})` : ""}.`;
+    if (!coversArea(jobAreaId))
+      return `This job is in ${jobAreaName ?? "an area"} which is outside your service areas. Update your service areas to cover it.`;
     if (isUnavailable) return "You're marked Unavailable. Switch to Available to apply for jobs.";
     if (isBusy) return "You have an active booking. Finish it before applying to new jobs.";
     return null;
@@ -68,6 +91,10 @@ export function useWorkerEligibility() {
 
   const matchesCategory = (jobCategoryId: string | null) =>
     isVerified && !!jobCategoryId && categoryIds.has(jobCategoryId);
+
+  /** Full match: profession + canonical service area. */
+  const matchesJob = (jobCategoryId: string | null, jobAreaId?: string | null) =>
+    matchesCategory(jobCategoryId) && coversArea(jobAreaId);
 
   return {
     loading: enabled && isLoading,
@@ -78,7 +105,11 @@ export function useWorkerEligibility() {
     isUnavailable,
     categoryIds,
     categoryNames,
+    areaIds,
+    coversArea,
     matchesCategory,
+    matchesJob,
     blockedReason,
   };
+
 }

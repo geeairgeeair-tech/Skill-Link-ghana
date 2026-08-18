@@ -22,7 +22,7 @@ export function useWorkerEligibility() {
     enabled,
     staleTime: 30_000,
     queryFn: async () => {
-      const [{ data: wp }, { data: profs }, { data: status }] = await Promise.all([
+      const [{ data: wp }, { data: profs }, { data: status }, { data: areas }] = await Promise.all([
         supabase
           .from("worker_profiles")
           .select("verification_status, is_available, category_id, categories(name)")
@@ -33,10 +33,20 @@ export function useWorkerEligibility() {
           .select("category_id, verification_status, is_primary, categories(name)")
           .eq("user_id", user!.id),
         supabase.rpc("get_worker_public_status", { _worker_id: user!.id }),
+        supabase
+          .from("worker_service_areas")
+          .select("service_area_id")
+          .eq("worker_id", user!.id),
       ]);
-      return { wp: wp ?? null, profs: profs ?? [], publicStatus: (status as any as string) ?? null };
+      return {
+        wp: wp ?? null,
+        profs: profs ?? [],
+        publicStatus: (status as any as string) ?? null,
+        areaIds: (areas ?? []).map((a) => a.service_area_id),
+      };
     },
   });
+
 
   const wp: any = data?.wp ?? null;
   const profs: any[] = data?.profs ?? [];

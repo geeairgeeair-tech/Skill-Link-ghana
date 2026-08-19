@@ -18,6 +18,7 @@ const ICONS: Record<string, any> = {
   booking_accepted: Calendar,
   booking_declined: XCircle,
   chat_message: MessageCircle,
+  job_match: Briefcase,
   application_received: Briefcase,
   application_accepted: Briefcase,
   application_rejected: Briefcase,

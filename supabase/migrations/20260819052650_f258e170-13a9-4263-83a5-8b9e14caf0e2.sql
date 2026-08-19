@@ -1,0 +1,1 @@
+GRANT SELECT (service_area_id) ON public.job_requests TO authenticated;

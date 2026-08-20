@@ -419,13 +419,7 @@ function CommitmentCard({ c }: { c: any }) {
       <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>
       <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
         {c.service_area && <p>📍 {c.service_area}</p>}
-        {scheduled && (
-          <p>
-            🗓 {scheduled.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-            {w ? ` • ${w.label} (${w.range})` : ` • ${scheduled.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
-          </p>
-        )}
-        {duration && <p>{duration.text}</p>}
+        {lines.map((l) => <p key={l}>{l}</p>)}
         <p className="capitalize font-semibold text-primary">{String(c.status).replace(/_/g, " ")}</p>
       </div>
       <p className="text-[11px] text-muted-foreground mt-2">

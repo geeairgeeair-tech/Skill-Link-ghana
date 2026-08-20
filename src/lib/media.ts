@@ -16,8 +16,8 @@ export function toMediaRefs(value: any, fallbackBucket = "job-media"): MediaRef[
     .filter(Boolean) as MediaRef[];
 }
 
-/** Create signed URLs for a list of media refs (grouped per bucket). */
-export async function signMedia(refs: MediaRef[], expiresIn = 60 * 60 * 6) {
+/** Create short-lived signed URLs for a list of media refs (grouped per bucket). */
+export async function signMedia(refs: MediaRef[], expiresIn = 300) {
   const byBucket = new Map<string, MediaRef[]>();
   for (const r of refs) {
     const b = r.bucket || "job-media";

@@ -456,10 +456,12 @@ export type Database = {
           location_instructions: string | null
           media: Json
           preferred_at: string | null
+          preferred_window: string | null
           region: string | null
           service_area: string | null
           service_area_id: string | null
           status: Database["public"]["Enums"]["job_request_status"]
+          timing_type: string
           title: string
           updated_at: string
           urgency: Database["public"]["Enums"]["job_urgency"]
@@ -485,10 +487,12 @@ export type Database = {
           location_instructions?: string | null
           media?: Json
           preferred_at?: string | null
+          preferred_window?: string | null
           region?: string | null
           service_area?: string | null
           service_area_id?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
+          timing_type?: string
           title: string
           updated_at?: string
           urgency?: Database["public"]["Enums"]["job_urgency"]
@@ -514,10 +518,12 @@ export type Database = {
           location_instructions?: string | null
           media?: Json
           preferred_at?: string | null
+          preferred_window?: string | null
           region?: string | null
           service_area?: string | null
           service_area_id?: string | null
           status?: Database["public"]["Enums"]["job_request_status"]
+          timing_type?: string
           title?: string
           updated_at?: string
           urgency?: Database["public"]["Enums"]["job_urgency"]

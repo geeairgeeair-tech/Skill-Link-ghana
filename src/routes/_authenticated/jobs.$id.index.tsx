@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText, User } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
+import { jobTimingLabel } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { SignedImage } from "./jobs.index";

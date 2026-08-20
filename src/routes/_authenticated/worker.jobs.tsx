@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { CompleteJobModal } from "@/components/complete-job-modal";

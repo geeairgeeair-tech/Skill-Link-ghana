@@ -582,14 +582,74 @@ function BookPage() {
           <Locate className="size-4" /> {lat && lng ? `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : "Use my current location"}
         </button>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="Preferred date">
-            <input required type="date" value={date} onChange={(e)=>setDate(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
-          <Field label="Preferred time">
-            <input type="time" value={time} onChange={(e)=>setTime(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          </Field>
-        </div>
+        <section className="rounded-2xl border border-border bg-card p-4 space-y-3">
+          <p className="text-sm font-semibold">When do you need the service?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => { setTimingType("asap"); setErrors((p)=>({...p, date: "", window: ""})); }}
+              className={`h-12 rounded-xl border text-sm font-semibold ${timingType === "asap" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input"}`}>
+              ⚡ ASAP
+            </button>
+            <button type="button" onClick={() => setTimingType("scheduled")}
+              className={`h-12 rounded-xl border text-sm font-semibold ${timingType === "scheduled" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input"}`}>
+              📅 Schedule
+            </button>
+          </div>
+
+          {timingType === "scheduled" && (
+            <>
+              <Field label="Date">
+                <input type="date" value={date} min={today}
+                  onChange={(e)=>{ setDate(e.target.value); setErrors((p)=>({...p, date: ""})); }}
+                  className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.date ? "border-destructive" : "border-input"}`} />
+                {errors.date && <p className="text-xs text-destructive mt-1">{errors.date}</p>}
+              </Field>
+              <Field label="Time">
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_WINDOWS.map((wd) => {
+                    const passed = !!date && windowHasPassed(date, wd.key);
+                    return (
+                      <button key={wd.key} type="button" disabled={passed}
+                        onClick={() => { setPrefWindow(wd.key); setErrors((p)=>({...p, window: ""})); }}
+                        className={`h-11 rounded-xl border text-xs font-semibold px-2 disabled:opacity-40 ${prefWindow === wd.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input"}`}>
+                        {wd.label} <span className="opacity-70">({wd.range})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.window && <p className="text-xs text-destructive mt-1">{errors.window}</p>}
+              </Field>
+            </>
+          )}
+
+          <div className="pt-1 border-t border-border/70">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mt-2 mb-1.5">Duration</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => { setDurationType("single_day"); setEndDate(""); setErrors((p)=>({...p, endDate: ""})); }}
+                className={`h-10 rounded-xl border text-xs font-semibold px-2 ${durationType === "single_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input"}`}>
+                A day or less
+              </button>
+              <button type="button" onClick={() => setDurationType("multi_day")}
+                className={`h-10 rounded-xl border text-xs font-semibold px-2 ${durationType === "multi_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-input"}`}>
+                More than a day
+              </button>
+            </div>
+            {durationType === "multi_day" && (
+              <div className="mt-2 space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Start: <span className="font-semibold text-foreground">
+                    {timingType === "asap" ? "Today" : (durationStart ? new Date(`${durationStart}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "Pick a date above")}
+                  </span>
+                </p>
+                <Field label="End date">
+                  <input type="date" value={endDate} min={durationStart || today}
+                    onChange={(e)=>{ setEndDate(e.target.value); setErrors((p)=>({...p, endDate: ""})); }}
+                    className={`w-full rounded-xl border bg-card p-3 text-sm ${errors.endDate ? "border-destructive" : "border-input"}`} />
+                  {errors.endDate && <p className="text-xs text-destructive mt-1">{errors.endDate}</p>}
+                </Field>
+              </div>
+            )}
+          </div>
+        </section>
 
         <Field label="Budget (optional, GH₵)">
           <input type="number" min="0" value={budget} onChange={(e)=>setBudget(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm" placeholder="e.g. 300" />

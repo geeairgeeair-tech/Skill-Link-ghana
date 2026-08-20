@@ -110,6 +110,9 @@ function NewJobPage() {
     );
   };
 
+  const today = new Date().toISOString().slice(0, 10);
+  const durationStart = form.timing_type === "scheduled" ? form.preferred_date : today;
+
   const buildPayload = () => {
     const scheduled = form.timing_type === "scheduled";
     const w = scheduled ? windowInfo(form.preferred_window) : null;

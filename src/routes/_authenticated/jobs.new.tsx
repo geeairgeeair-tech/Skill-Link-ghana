@@ -134,6 +134,9 @@ function NewJobPage() {
       preferred_at,
       lat: form.lat,
       lng: form.lng,
+      duration_type: form.duration_type,
+      duration_start_date: form.duration_type === "multi_day" ? durationStart : undefined,
+      duration_end_date: form.duration_type === "multi_day" && form.duration_end_date ? form.duration_end_date : undefined,
     };
   };
 
@@ -143,6 +146,11 @@ function NewJobPage() {
       if (!form.preferred_date) { toast.error("Pick a preferred date"); return null; }
       if (!form.preferred_window) { toast.error("Pick a time window"); return null; }
       if (windowHasPassed(form.preferred_date, form.preferred_window)) { toast.error("That date and time window has already passed"); return null; }
+    }
+    if (form.duration_type === "multi_day") {
+      if (!durationStart) { toast.error("Pick a start date"); return null; }
+      if (!form.duration_end_date) { toast.error("Pick an end date"); return null; }
+      if (form.duration_end_date < durationStart) { toast.error("End date cannot be before the start date"); return null; }
     }
     const parsed = schema.safeParse(buildPayload());
     if (!parsed.success) {

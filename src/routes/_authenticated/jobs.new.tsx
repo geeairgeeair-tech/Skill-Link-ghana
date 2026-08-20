@@ -258,15 +258,44 @@ function NewJobPage() {
           </button>
         </Card>
 
-        <Card title="Schedule & budget">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Preferred date">
-              <input type="date" value={form.preferred_date} onChange={e => setForm({...form, preferred_date: e.target.value})} min={new Date().toISOString().slice(0,10)} className="input" />
-            </Field>
-            <Field label="Preferred time">
-              <input type="time" value={form.preferred_time} onChange={e => setForm({...form, preferred_time: e.target.value})} className="input" />
-            </Field>
+        <Card title="When do you need this done?">
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setForm({...form, timing_type: "asap"})}
+              className={`h-12 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 ${form.timing_type === "asap" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              ⚡ ASAP
+            </button>
+            <button type="button" onClick={() => setForm({...form, timing_type: "scheduled"})}
+              className={`h-12 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 ${form.timing_type === "scheduled" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              📅 Schedule
+            </button>
           </div>
+          {form.timing_type === "asap" ? (
+            <p className="text-xs text-muted-foreground">Workers will see this job marked ⚡ ASAP — as soon as possible.</p>
+          ) : (
+            <>
+              <Field label="Preferred date">
+                <input type="date" value={form.preferred_date} onChange={e => setForm({...form, preferred_date: e.target.value})} min={new Date().toISOString().slice(0,10)} className="input" required />
+              </Field>
+              <Field label="Time window">
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_WINDOWS.map(w => {
+                    const passed = !!form.preferred_date && windowHasPassed(form.preferred_date, w.key);
+                    return (
+                      <button key={w.key} type="button" disabled={passed}
+                        onClick={() => setForm({...form, preferred_window: w.key})}
+                        className={`h-11 rounded-xl border text-xs font-semibold px-2 disabled:opacity-40 ${form.preferred_window === w.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                        {w.label} <span className="opacity-70">({w.range})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            </>
+          )}
+        </Card>
+
+        <Card title="Budget">
+
           <Field label="Budget (GH₵ — optional)">
             <input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" placeholder="e.g. 500" />
           </Field>

@@ -23,10 +23,13 @@ const schema = z.object({
   budget: z.number().int().min(0).max(1_000_000).optional(),
   category_id: z.string().uuid("Select a service category"),
   urgency: z.enum(["normal", "urgent", "emergency"]),
+  timing_type: z.enum(["asap", "scheduled"]),
+  preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });
+
 
 type MediaItem = { path: string; type: "image" | "video"; previewUrl: string; progress?: number };
 

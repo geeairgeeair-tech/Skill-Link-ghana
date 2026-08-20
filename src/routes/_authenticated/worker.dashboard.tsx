@@ -390,9 +390,21 @@ function WorkerDashboard() {
 
 function CommitmentCard({ c }: { c: any }) {
   const scheduled = c.scheduled_at ? new Date(c.scheduled_at) : null;
-  const upcoming = !!scheduled && scheduled.getTime() > Date.now() && c.status === "accepted";
-  const w = windowInfo(c.job?.preferred_window);
-  const duration = c.job ? jobDurationLabel(c.job) : null;
+  const upcoming = !!scheduled && scheduled.getTime() > Date.now() && c.status === "accepted" && c.timing_type !== "asap";
+  // Prefer the booking's own timing/duration; fall back to the linked job request (legacy).
+  const lines = c.timing_type || c.duration_type
+    ? bookingTimingLines(c)
+    : (() => {
+        const w = windowInfo(c.job?.preferred_window);
+        const out: string[] = [];
+        if (scheduled) {
+          out.push(`📅 ${scheduled.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}` +
+            (w ? ` • ${w.label} (${w.range})` : ` • ${scheduled.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`));
+        }
+        const d = c.job ? jobDurationLabel(c.job) : null;
+        if (d) out.push(d.text);
+        return out;
+      })();
   return (
     <Link
       to="/bookings/$bookingId"

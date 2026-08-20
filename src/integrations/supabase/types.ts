@@ -1536,6 +1536,10 @@ export type Database = {
         Args: { _booking_id: string }
         Returns: undefined
       }
+      worker_activate_subscription: {
+        Args: { _plan: Database["public"]["Enums"]["subscription_plan"] }
+        Returns: undefined
+      }
       worker_add_profession: {
         Args: {
           _bio: string

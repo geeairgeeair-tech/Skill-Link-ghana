@@ -135,6 +135,11 @@ function NewJobPage() {
 
 
   const validate = () => {
+    if (form.timing_type === "scheduled") {
+      if (!form.preferred_date) { toast.error("Pick a preferred date"); return null; }
+      if (!form.preferred_window) { toast.error("Pick a time window"); return null; }
+      if (windowHasPassed(form.preferred_date, form.preferred_window)) { toast.error("That date and time window has already passed"); return null; }
+    }
     const parsed = schema.safeParse(buildPayload());
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -142,6 +147,7 @@ function NewJobPage() {
     }
     return parsed.data;
   };
+
 
   const openReview = (e: React.FormEvent) => {
     e.preventDefault();

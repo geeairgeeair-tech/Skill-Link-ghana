@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText, User } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
+import { jobTimingLabel } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { SignedImage } from "./jobs.index";
@@ -38,7 +39,7 @@ function JobDetail() {
     queryFn: async () => (await supabase.from("job_requests")
       // Exact location columns (address/lat/lng/landmark/instructions) are not
       // readable here — the owner/admin/assigned pro reads them via RPC.
-      .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
+      .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
   });
   const jobBookingId = (job as any)?.booking_id as string | null | undefined;
@@ -136,7 +137,9 @@ function JobDetail() {
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
             <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_areas?.name ?? (job as any).service_area ?? (job as any).city ?? cust?.city ?? "Ghana"}</span>
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
-            {(job as any).preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date((job as any).preferred_at).toLocaleString()}</span>}
+            {(() => { const t = jobTimingLabel(job as any); return t.asap
+              ? <span className="inline-flex items-center gap-1 font-semibold text-primary">⚡ ASAP</span>
+              : <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{t.text}</span>; })()}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
           {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}

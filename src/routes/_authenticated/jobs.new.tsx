@@ -8,6 +8,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ServiceAreaSelect } from "@/components/service-area-select";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, jobTimingLabel, type TimeWindowKey } from "@/lib/job-timing";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/new")({
   component: NewJobPage,
@@ -23,10 +25,13 @@ const schema = z.object({
   budget: z.number().int().min(0).max(1_000_000).optional(),
   category_id: z.string().uuid("Select a service category"),
   urgency: z.enum(["normal", "urgent", "emergency"]),
+  timing_type: z.enum(["asap", "scheduled"]),
+  preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });
+
 
 type MediaItem = { path: string; type: "image" | "video"; previewUrl: string; progress?: number };
 
@@ -36,9 +41,11 @@ function NewJobPage() {
   const [form, setForm] = useState({
     title: "", description: "", city: "Accra", address: "", service_area: "", service_area_id: "",
     budget: "" as string, category_id: "", urgency: "normal" as "normal"|"urgent"|"emergency",
-    preferred_date: "", preferred_time: "",
+    timing_type: "asap" as "asap"|"scheduled",
+    preferred_date: "", preferred_window: "" as "" | TimeWindowKey,
     lat: undefined as number | undefined, lng: undefined as number | undefined,
   });
+
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -100,9 +107,14 @@ function NewJobPage() {
   };
 
   const buildPayload = () => {
-    const preferred_at = form.preferred_date
-      ? new Date(`${form.preferred_date}T${form.preferred_time || "09:00"}:00`).toISOString()
-      : undefined;
+    const scheduled = form.timing_type === "scheduled";
+    const w = scheduled ? windowInfo(form.preferred_window) : null;
+    let preferred_at: string | undefined;
+    if (scheduled && form.preferred_date && w) {
+      const d = new Date(`${form.preferred_date}T00:00:00`);
+      d.setHours(w.startHour, 0, 0, 0);
+      preferred_at = d.toISOString();
+    }
     return {
       title: form.title,
       description: form.description,
@@ -113,13 +125,21 @@ function NewJobPage() {
       budget: form.budget ? Number(form.budget) : undefined,
       category_id: form.category_id || undefined,
       urgency: form.urgency,
+      timing_type: form.timing_type,
+      preferred_window: scheduled && form.preferred_window ? form.preferred_window : undefined,
       preferred_at,
       lat: form.lat,
       lng: form.lng,
     };
   };
 
+
   const validate = () => {
+    if (form.timing_type === "scheduled") {
+      if (!form.preferred_date) { toast.error("Pick a preferred date"); return null; }
+      if (!form.preferred_window) { toast.error("Pick a time window"); return null; }
+      if (windowHasPassed(form.preferred_date, form.preferred_window)) { toast.error("That date and time window has already passed"); return null; }
+    }
     const parsed = schema.safeParse(buildPayload());
     if (!parsed.success) {
       toast.error(parsed.error.issues[0].message);
@@ -127,6 +147,7 @@ function NewJobPage() {
     }
     return parsed.data;
   };
+
 
   const openReview = (e: React.FormEvent) => {
     e.preventDefault();
@@ -243,15 +264,44 @@ function NewJobPage() {
           </button>
         </Card>
 
-        <Card title="Schedule & budget">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Preferred date">
-              <input type="date" value={form.preferred_date} onChange={e => setForm({...form, preferred_date: e.target.value})} min={new Date().toISOString().slice(0,10)} className="input" />
-            </Field>
-            <Field label="Preferred time">
-              <input type="time" value={form.preferred_time} onChange={e => setForm({...form, preferred_time: e.target.value})} className="input" />
-            </Field>
+        <Card title="When do you need this done?">
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setForm({...form, timing_type: "asap"})}
+              className={`h-12 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 ${form.timing_type === "asap" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              ⚡ ASAP
+            </button>
+            <button type="button" onClick={() => setForm({...form, timing_type: "scheduled"})}
+              className={`h-12 rounded-xl border text-sm font-semibold inline-flex items-center justify-center gap-1.5 ${form.timing_type === "scheduled" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              📅 Schedule
+            </button>
           </div>
+          {form.timing_type === "asap" ? (
+            <p className="text-xs text-muted-foreground">Workers will see this job marked ⚡ ASAP — as soon as possible.</p>
+          ) : (
+            <>
+              <Field label="Preferred date">
+                <input type="date" value={form.preferred_date} onChange={e => setForm({...form, preferred_date: e.target.value})} min={new Date().toISOString().slice(0,10)} className="input" required />
+              </Field>
+              <Field label="Time window">
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_WINDOWS.map(w => {
+                    const passed = !!form.preferred_date && windowHasPassed(form.preferred_date, w.key);
+                    return (
+                      <button key={w.key} type="button" disabled={passed}
+                        onClick={() => setForm({...form, preferred_window: w.key})}
+                        className={`h-11 rounded-xl border text-xs font-semibold px-2 disabled:opacity-40 ${form.preferred_window === w.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                        {w.label} <span className="opacity-70">({w.range})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            </>
+          )}
+        </Card>
+
+        <Card title="Budget">
+
           <Field label="Budget (GH₵ — optional)">
             <input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" placeholder="e.g. 500" />
           </Field>
@@ -306,7 +356,7 @@ function NewJobPage() {
               <Row k="Address" v={form.address} />
               {form.service_area && <Row k="General service area" v={form.service_area} />}
               {form.lat && <Row k="GPS" v={`${form.lat.toFixed(5)}, ${form.lng!.toFixed(5)}`} />}
-              {form.preferred_date && <Row k="Preferred" v={`${form.preferred_date}${form.preferred_time ? " · " + form.preferred_time : ""}`} />}
+              <Row k="Timing" v={jobTimingLabel({ timing_type: form.timing_type, preferred_at: form.preferred_date ? `${form.preferred_date}T12:00:00` : null, preferred_window: form.preferred_window || null }).text} />
               {form.budget && <Row k="Budget" v={`GH₵${form.budget}`} />}
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Description</p>

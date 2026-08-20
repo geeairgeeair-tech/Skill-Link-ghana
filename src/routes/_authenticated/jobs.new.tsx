@@ -46,6 +46,7 @@ function NewJobPage() {
     budget: "" as string, category_id: "", urgency: "normal" as "normal"|"urgent"|"emergency",
     timing_type: "asap" as "asap"|"scheduled",
     preferred_date: "", preferred_window: "" as "" | TimeWindowKey,
+    duration_type: "single_day" as "single_day"|"multi_day", duration_end_date: "",
     lat: undefined as number | undefined, lng: undefined as number | undefined,
   });
 

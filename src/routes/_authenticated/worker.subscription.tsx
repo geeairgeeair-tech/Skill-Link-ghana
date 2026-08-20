@@ -23,17 +23,14 @@ function SubscriptionPage() {
   const subscribe = async (plan: string) => {
     if (!user) return;
     setBusy(plan);
-    // Demo: simulate activation. Real payment integration (Paystack/MoMo) goes here.
-    const expires = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { error } = await supabase.from("worker_profiles").update({
-      subscription_plan: plan as any,
-      subscription_expires_at: expires,
-      is_featured: plan !== "basic",
-    }).eq("user_id", user.id);
+    // Plan activation goes through a guarded server routine: a professional can
+    // never write subscription / featured columns directly.
+    const { error } = await (supabase.rpc as any)("worker_activate_subscription", { _plan: plan });
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success(`${plan} plan activated for 30 days (demo).`);
   };
+
 
   return (
     <div className="min-h-screen bg-background pb-12">

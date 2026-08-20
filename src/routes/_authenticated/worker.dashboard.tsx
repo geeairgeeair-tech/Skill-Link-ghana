@@ -10,7 +10,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
-import { jobDurationLabel, windowInfo } from "@/lib/job-timing";
+import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
   Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock,
@@ -70,7 +70,7 @@ function WorkerDashboard() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select("id, status, description, budget, estimated_cost, scheduled_at, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
+        .select("id, status, description, budget, estimated_cost, scheduled_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
         .eq("worker_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));
@@ -126,7 +126,7 @@ function WorkerDashboard() {
     queryFn: async () => {
       const { data: b } = await supabase
         .from("bookings")
-        .select("id, status, scheduled_at, service_area, description, categories(name)")
+        .select("id, status, scheduled_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, service_area, description, categories(name)")
         .eq("worker_id", user!.id)
         .in("status", COMMITMENT_STATUSES)
         .order("created_at", { ascending: false })
@@ -390,9 +390,21 @@ function WorkerDashboard() {
 
 function CommitmentCard({ c }: { c: any }) {
   const scheduled = c.scheduled_at ? new Date(c.scheduled_at) : null;
-  const upcoming = !!scheduled && scheduled.getTime() > Date.now() && c.status === "accepted";
-  const w = windowInfo(c.job?.preferred_window);
-  const duration = c.job ? jobDurationLabel(c.job) : null;
+  const upcoming = !!scheduled && scheduled.getTime() > Date.now() && c.status === "accepted" && c.timing_type !== "asap";
+  // Prefer the booking's own timing/duration; fall back to the linked job request (legacy).
+  const lines = c.timing_type || c.duration_type
+    ? bookingTimingLines(c)
+    : (() => {
+        const w = windowInfo(c.job?.preferred_window);
+        const out: string[] = [];
+        if (scheduled) {
+          out.push(`📅 ${scheduled.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}` +
+            (w ? ` • ${w.label} (${w.range})` : ` • ${scheduled.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`));
+        }
+        const d = c.job ? jobDurationLabel(c.job) : null;
+        if (d) out.push(d.text);
+        return out;
+      })();
   return (
     <Link
       to="/bookings/$bookingId"
@@ -407,13 +419,7 @@ function CommitmentCard({ c }: { c: any }) {
       <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>
       <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
         {c.service_area && <p>📍 {c.service_area}</p>}
-        {scheduled && (
-          <p>
-            🗓 {scheduled.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-            {w ? ` • ${w.label} (${w.range})` : ` • ${scheduled.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
-          </p>
-        )}
-        {duration && <p>{duration.text}</p>}
+        {lines.map((l) => <p key={l}>{l}</p>)}
         <p className="capitalize font-semibold text-primary">{String(c.status).replace(/_/g, " ")}</p>
       </div>
       <p className="text-[11px] text-muted-foreground mt-2">
@@ -435,10 +441,10 @@ function BookingRow({ b }: { b: any }) {
               Customer Budget: GH₵{Number(b.budget ?? b.estimated_cost).toLocaleString("en-GH")}
             </p>
           )}
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {b.profiles?.full_name ?? "Customer"}
-            {b.scheduled_at ? ` · ${new Date(b.scheduled_at).toLocaleString()}` : ""}
-          </p>
+          <p className="text-[11px] text-muted-foreground mt-1">{b.profiles?.full_name ?? "Customer"}</p>
+          {bookingTimingLines(b).map((l: string) => (
+            <p key={l} className="text-[11px] text-muted-foreground">{l}</p>
+          ))}
         </div>
         <span className="shrink-0 text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-primary-soft text-primary">
           {String(b.status).replace(/_/g, " ")}

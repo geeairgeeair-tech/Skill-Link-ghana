@@ -5,6 +5,7 @@ import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
 
@@ -134,7 +135,7 @@ export function CustomerMarketplaceSection() {
     queryFn: async () => {
       const { data } = await supabase
         .from("bookings")
-        .select("id, status, description, scheduled_at, created_at, categories(name)")
+        .select("id, status, description, scheduled_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, created_at, categories(name)")
         .eq("customer_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(3);
@@ -230,6 +231,9 @@ export function CustomerMarketplaceSection() {
                   <div className="min-w-0">
                     <p className="font-semibold truncate">{b.categories?.name ?? "Service"}</p>
                     <p className="text-xs text-muted-foreground line-clamp-2">{b.description}</p>
+                    {bookingTimingLines(b).map((l: string) => (
+                      <p key={l} className="text-[11px] text-muted-foreground mt-0.5">{l}</p>
+                    ))}
                   </div>
                   <span className="shrink-0 text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-primary-soft text-primary">
                     {String(b.status).replace(/_/g, " ")}

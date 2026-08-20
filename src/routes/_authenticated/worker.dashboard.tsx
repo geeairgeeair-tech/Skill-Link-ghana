@@ -22,9 +22,15 @@ export const Route = createFileRoute("/_authenticated/worker/dashboard")({
 });
 
 const ACTIVE = ["accepted", "on_the_way", "arrived", "in_progress", "awaiting_customer_confirmation", "disputed"];
+/** ONE definition of "unresolved accepted commitment" — mirrors public.commitment_statuses(). */
+const COMMITMENT_STATUSES = [
+  "accepted", "on_the_way", "arrived", "in_progress", "awaiting_customer_confirmation",
+  "worker_on_the_way", "work_started", "worker_marked_complete", "disputed",
+];
 const cedis = (n: any) => `GH₵${Number(n ?? 0).toLocaleString()}`;
 const isToday = (d?: string | null) => !!d && new Date(d).toDateString() === new Date().toDateString();
 const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"];
+
 
 function WorkerDashboard() {
   const { user } = useAuth();

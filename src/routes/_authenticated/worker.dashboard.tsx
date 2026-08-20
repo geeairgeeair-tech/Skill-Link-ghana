@@ -441,10 +441,10 @@ function BookingRow({ b }: { b: any }) {
               Customer Budget: GH₵{Number(b.budget ?? b.estimated_cost).toLocaleString("en-GH")}
             </p>
           )}
-          <p className="text-[11px] text-muted-foreground mt-1">
-            {b.profiles?.full_name ?? "Customer"}
-            {b.scheduled_at ? ` · ${new Date(b.scheduled_at).toLocaleString()}` : ""}
-          </p>
+          <p className="text-[11px] text-muted-foreground mt-1">{b.profiles?.full_name ?? "Customer"}</p>
+          {bookingTimingLines(b).map((l: string) => (
+            <p key={l} className="text-[11px] text-muted-foreground">{l}</p>
+          ))}
         </div>
         <span className="shrink-0 text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-primary-soft text-primary">
           {String(b.status).replace(/_/g, " ")}

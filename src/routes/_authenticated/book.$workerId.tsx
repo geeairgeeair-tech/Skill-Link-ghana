@@ -40,8 +40,11 @@ function BookPage() {
   const [address, setAddress] = useState("");
   const [area, setArea] = useState("");
   const [areaId, setAreaId] = useState<string | null>(null);
+  const [timingType, setTimingType] = useState<"asap" | "scheduled">("asap");
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
+  const [prefWindow, setPrefWindow] = useState<TimeWindowKey | "">("");
+  const [durationType, setDurationType] = useState<"single_day" | "multi_day">("single_day");
+  const [endDate, setEndDate] = useState("");
   const [budget, setBudget] = useState("");
   const [urgency, setUrgency] = useState<Urgency>("normal");
   const [lat, setLat] = useState<number | null>(null);

@@ -471,6 +471,52 @@ function WorkerDetail() {
             This is your public profile — customers see it exactly like this.
           </div>
         </div>
+      ) : appCtx ? (
+        <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
+          <div className="mx-auto max-w-md space-y-2">
+            <p className="text-xs text-center text-muted-foreground">
+              This professional applied to your job — quoted GH₵{appCtx.app.quoted_price}.
+            </p>
+            {appCtx.app.status === "pending" && appCtx.jobStatus === "open" ? (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDecisionOpen("decline")}
+                  className="flex-1 h-12 rounded-xl border border-destructive/40 text-destructive font-semibold"
+                >
+                  Decline Application
+                </button>
+                <button
+                  onClick={() => setDecisionOpen("accept")}
+                  className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-semibold"
+                >
+                  Accept Application
+                </button>
+              </div>
+            ) : appCtx.app.status === "accepted" ? (
+              appCtx.bookingId ? (
+                <Link
+                  to="/bookings/$bookingId"
+                  params={{ bookingId: appCtx.bookingId }}
+                  className="flex h-12 rounded-xl bg-success text-success-foreground font-semibold items-center justify-center"
+                >
+                  Hired — Open Booking →
+                </Link>
+              ) : (
+                <Link to="/bookings" className="flex h-12 rounded-xl bg-success text-success-foreground font-semibold items-center justify-center">
+                  Hired — Open Booking →
+                </Link>
+              )
+            ) : (
+              <p className="text-sm text-center font-semibold">
+                {appCtx.app.status === "withdrawn"
+                  ? "This application was withdrawn."
+                  : appCtx.app.status === "rejected"
+                    ? "This application was declined."
+                    : "This job is no longer open for applications."}
+              </p>
+            )}
+          </div>
+        </div>
       ) : (
       <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
         <div className="mx-auto max-w-md space-y-2">
@@ -496,6 +542,31 @@ function WorkerDetail() {
         </div>
       </div>
       )}
+
+      {appCtx && decisionOpen === "accept" && (
+        <ReviewAndConfirmModal
+          app={{ ...appCtx.app, profile: p, worker: w }}
+          onClose={() => setDecisionOpen(null)}
+          onDone={(bookingId) => {
+            setDecisionOpen(null);
+            qc.invalidateQueries({ queryKey: ["profile-app-context"] });
+            qc.invalidateQueries({ queryKey: ["job-applicants"] });
+            if (bookingId) navigate({ to: "/bookings/$bookingId", params: { bookingId } });
+          }}
+        />
+      )}
+      {appCtx && decisionOpen === "decline" && (
+        <DeclineApplicationModal
+          app={appCtx.app}
+          onClose={() => setDecisionOpen(null)}
+          onDone={() => {
+            setDecisionOpen(null);
+            qc.invalidateQueries({ queryKey: ["profile-app-context"] });
+            qc.invalidateQueries({ queryKey: ["job-applicants"] });
+          }}
+        />
+      )}
+
 
 
     </div>

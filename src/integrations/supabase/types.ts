@@ -1519,6 +1519,15 @@ export type Database = {
         }[]
       }
       mark_messages_read: { Args: { _booking_id: string }; Returns: undefined }
+      media_array_owned_by: {
+        Args: { _arr: Json; _owner: string }
+        Returns: boolean
+      }
+      media_element_path: { Args: { _item: Json }; Returns: string }
+      media_path_owned_by: {
+        Args: { _owner: string; _path: string }
+        Returns: boolean
+      }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       send_document_expiry_reminders: { Args: never; Returns: number }
       submit_support_ticket: {

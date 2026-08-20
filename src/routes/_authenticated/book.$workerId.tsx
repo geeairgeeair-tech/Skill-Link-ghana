@@ -196,6 +196,10 @@ function BookPage() {
   const uploadFailed = uploads.some((u) => u.status === "error");
 
 
+  const today = new Date().toISOString().slice(0, 10);
+  // Scheduled bookings start on the chosen date; ASAP bookings start today.
+  const durationStart = timingType === "scheduled" ? date : today;
+
   const validate = () => {
     const next: Record<string, string> = {};
     const desc = description.trim();
@@ -204,7 +208,17 @@ function BookPage() {
     if (desc.length < 10) next.description = "Please describe the job before continuing.";
     if (addr.length < 5 || PLACEHOLDERS.includes(addr.toLowerCase())) next.address = "Enter the exact service address.";
     if (!areaId || ar.length < 2) next.area = "Select the general service area this professional covers.";
-    if (!date) next.date = "Choose a preferred date.";
+    if (timingType === "scheduled") {
+      if (!date) next.date = "Choose a date.";
+      else if (date < today) next.date = "That date has already passed.";
+      if (!prefWindow) next.window = "Choose a time window.";
+      else if (date && windowHasPassed(date, prefWindow)) next.window = "That time window has already passed.";
+    }
+    if (durationType === "multi_day") {
+      if (!durationStart) next.date = next.date ?? "Choose a date.";
+      if (!endDate) next.endDate = "Choose an end date.";
+      else if (durationStart && endDate < durationStart) next.endDate = "End date cannot be before the start date.";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
   };

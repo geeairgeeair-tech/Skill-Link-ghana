@@ -24,6 +24,7 @@ import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { BookingTimeline } from "@/components/booking-timeline";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";

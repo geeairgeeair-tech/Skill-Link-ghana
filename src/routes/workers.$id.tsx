@@ -12,10 +12,16 @@ import { signMedia, toMediaRefs } from "@/lib/media";
 import { useAuth } from "@/hooks/use-auth";
 import { LocationMap } from "@/components/location-map";
 import { GuestGate } from "@/components/guest-gate";
+import { useQueryClient } from "@tanstack/react-query";
+import { ReviewAndConfirmModal, DeclineApplicationModal } from "@/components/application-decision-modals";
 
 
 
 export const Route = createFileRoute("/workers/$id")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    jobId: typeof search.jobId === "string" ? search.jobId : undefined,
+    applicationId: typeof search.applicationId === "string" ? search.applicationId : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Worker Profile — Skill Link Ghana" },
@@ -27,6 +33,9 @@ export const Route = createFileRoute("/workers/$id")({
 
 function WorkerDetail() {
   const { id } = Route.useParams();
+  const { jobId, applicationId } = Route.useSearch();
+  const qc = useQueryClient();
+  const [decisionOpen, setDecisionOpen] = useState<"accept" | "decline" | null>(null);
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const [activeProfId, setActiveProfId] = useState<string | null>(null);
@@ -193,6 +202,33 @@ function WorkerDetail() {
   const memberSince = p.created_at ? new Date(p.created_at) : null;
 
   const isSelf = !!user && user.id === id;
+
+  // Application context: only the owner of that job may act on the application.
+  const appCtxQ = useQuery({
+    queryKey: ["profile-app-context", applicationId, user?.id],
+    enabled: !!user && !!applicationId && !!jobId,
+    queryFn: async () => {
+      const { data: app } = await supabase
+        .from("job_applications")
+        .select("id, job_id, worker_id, status, quoted_price, estimated_start, message")
+        .eq("id", applicationId!)
+        .maybeSingle();
+      if (!app || app.job_id !== jobId || app.worker_id !== id) return null;
+      const { data: job } = await supabase
+        .from("job_requests")
+        .select("id, customer_id, status")
+        .eq("id", jobId!)
+        .maybeSingle();
+      if (!job || job.customer_id !== user!.id) return null;
+      const { data: bk } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("job_application_id", app.id)
+        .maybeSingle();
+      return { app, jobStatus: String(job.status), bookingId: bk?.id ?? null };
+    },
+  });
+  const appCtx = appCtxQ.data ?? null;
 
   const onBook = () => {
     if (!user) {

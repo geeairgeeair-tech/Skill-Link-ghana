@@ -10,7 +10,7 @@ import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
-import { jobDurationLabel, windowInfo } from "@/lib/job-timing";
+import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
   Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock,

@@ -226,6 +226,14 @@ function JobsBoard() {
 
         {isLoading ? (
           <p className="text-center text-sm text-muted-foreground py-10">Loading…</p>
+        ) : isError ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm">
+            <p className="font-semibold text-destructive">Couldn't load jobs.</p>
+            <p className="mt-1 text-muted-foreground">Something went wrong fetching the job board. Please try again.</p>
+            <button onClick={() => refetch()} className="mt-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">
+              Retry
+            </button>
+          </div>
         ) : (jobs ?? []).length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             <p className="font-semibold text-foreground">No jobs match these filters.</p>

@@ -62,7 +62,7 @@ function JobsBoard() {
     },
   });
 
-  const { data: jobs, isLoading } = useQuery({
+  const { data: jobs, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-requests-all", category, urgency, minBudget, maxBudget, preferredFrom, sort, locationQ],
     queryFn: async () => {
       let q = supabase.from("job_requests")

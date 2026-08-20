@@ -70,7 +70,7 @@ function WorkerDashboard() {
     queryFn: async () => {
       const { data: rows, error } = await supabase
         .from("bookings")
-        .select("id, status, description, budget, estimated_cost, scheduled_at, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
+        .select("id, status, description, budget, estimated_cost, scheduled_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, created_at, customer_id, worker_completed_at, customer_confirmed_at, categories(name)")
         .eq("worker_id", user!.id).order("created_at", { ascending: false });
       if (error) throw error;
       const ids = Array.from(new Set((rows ?? []).map((r: any) => r.customer_id).filter(Boolean)));

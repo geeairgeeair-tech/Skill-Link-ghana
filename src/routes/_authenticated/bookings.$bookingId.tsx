@@ -12,6 +12,7 @@ import {
 
 import { BackButton } from "@/components/back-button";
 import { BookingMedia } from "@/components/booking-media";
+import { useSignedMedia } from "@/hooks/use-signed-media";
 import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
@@ -530,25 +531,13 @@ function BookingDetail() {
           {progressPhotos.length > 0 && (
             <>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Work in progress</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {progressPhotos.map((src, i) => (
-                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
-                    <img src={src} alt={`Progress photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
-                  </a>
-                ))}
-              </div>
+              <WorkPhotoGrid photos={progressPhotos} alt="Progress photo" />
             </>
           )}
           {completionPhotos.length > 0 && (
             <>
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-2">Completion photos</p>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {completionPhotos.map((src, i) => (
-                  <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border">
-                    <img src={src} alt={`Completion photo ${i + 1}`} className="size-full object-cover" loading="lazy" />
-                  </a>
-                ))}
-              </div>
+              <WorkPhotoGrid photos={completionPhotos} alt="Completion photo" />
             </>
           )}
           {b.completion_note && (
@@ -830,5 +819,18 @@ function BookingReview({ bookingId }: { bookingId: string }) {
       {review.resolution && <p className="text-[11px] text-muted-foreground">Return outcome: {String(review.resolution).replace(/_/g, " ")}</p>}
       <p className="text-[10px] text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
     </section>
+  );
+}
+
+function WorkPhotoGrid({ photos, alt }: { photos: string[]; alt: string }) {
+  const urlFor = useSignedMedia(photos);
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+      {photos.map((p, i) => (
+        <a key={i} href={urlFor(p)} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border bg-muted">
+          <img src={urlFor(p)} alt={`${alt} ${i + 1}`} className="size-full object-cover" loading="lazy" />
+        </a>
+      ))}
+    </div>
   );
 }

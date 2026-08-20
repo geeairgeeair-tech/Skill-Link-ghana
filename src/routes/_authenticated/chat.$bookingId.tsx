@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { uniqueChannel } from "@/lib/realtime";
 import { uploadImage } from "@/components/image-upload";
+import { useSignedMedia } from "@/hooks/use-signed-media";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/chat/$bookingId")({
@@ -180,7 +181,7 @@ function ChatPage() {
     setUploading(true);
     const tempId = `temp-${Date.now()}`;
     try {
-      const url = await uploadImage("job-media", user.id, file, "chat");
+      const url = await uploadImage("job-media", user.id, file, "chat", true);
       appendOptimistic({ id: tempId, booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url, created_at: new Date().toISOString(), read_at: null });
       const { data, error } = await supabase.from("messages").insert({
         booking_id: bookingId, sender_id: user.id, content: "📎 Photo", attachment_url: url,
@@ -198,6 +199,8 @@ function ChatPage() {
   };
 
 
+
+  const attachmentUrl = useSignedMedia((messages ?? []).map((m: any) => m.attachment_url));
 
   const other = booking ? (user?.id === (booking as any).customer_id ? (booking as any).worker?.full_name : (booking as any).customer?.full_name) : "Chat";
   const rank = rankLabel((booking as any)?.professionRank ?? null);
@@ -242,8 +245,8 @@ function ChatPage() {
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${mine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm"}`}>
                 {m.attachment_url && (
-                  <a href={m.attachment_url} target="_blank" rel="noopener noreferrer">
-                    <img src={m.attachment_url} alt="Attachment" className="mb-1 max-h-56 rounded-xl object-cover" />
+                  <a href={attachmentUrl(m.attachment_url)} target="_blank" rel="noopener noreferrer">
+                    <img src={attachmentUrl(m.attachment_url)} alt="Attachment" className="mb-1 max-h-56 rounded-xl object-cover bg-muted" />
                   </a>
                 )}
                 <p className="whitespace-pre-wrap break-words">{m.content}</p>

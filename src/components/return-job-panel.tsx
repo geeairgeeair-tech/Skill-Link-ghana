@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageUpload } from "@/components/image-upload";
+import { useSignedMedia } from "@/hooks/use-signed-media";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Awaiting worker response",
@@ -115,7 +116,7 @@ export function ReturnJobPanel({
           <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)}
             placeholder="Explain what still needs attention…"
             className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          <ImageUpload bucket="job-media" userId={userId} prefix="return" multiple max={5}
+          <ImageUpload bucket="job-media" userId={userId} prefix="return" multiple max={5} returnPath
             label="Photos (optional)" value={photos} onChange={setPhotos} />
           <div className="flex gap-2">
             <button onClick={request} disabled={busy} className="flex-1 rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold disabled:opacity-50">
@@ -136,11 +137,7 @@ export function ReturnJobPanel({
           </div>
           <p className="text-sm">{open.reason}</p>
           {Array.isArray(open.photos) && open.photos.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {(open.photos as string[]).map((p) => (
-                <img key={p} src={p} alt="Return issue" className="size-20 rounded-lg object-cover border border-border" />
-              ))}
-            </div>
+            <ReturnPhotos photos={open.photos as string[]} />
           )}
           {open.scheduled_at && (
             <p className="text-xs text-muted-foreground">Scheduled for {new Date(open.scheduled_at).toLocaleString()}</p>
@@ -191,5 +188,18 @@ export function ReturnJobPanel({
         </div>
       )}
     </section>
+  );
+}
+
+function ReturnPhotos({ photos }: { photos: string[] }) {
+  const urlFor = useSignedMedia(photos);
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {photos.map((p) => (
+        <a key={p} href={urlFor(p)} target="_blank" rel="noopener noreferrer">
+          <img src={urlFor(p)} alt="Return issue" className="size-20 rounded-lg object-cover border border-border bg-muted" />
+        </a>
+      ))}
+    </div>
   );
 }

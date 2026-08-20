@@ -143,6 +143,9 @@ export type Database = {
           dispute_details: string | null
           dispute_reason: string | null
           disputed_at: string | null
+          duration_end_date: string | null
+          duration_start_date: string | null
+          duration_type: string | null
           estimated_amount: number | null
           estimated_cost: number | null
           final_amount: number | null
@@ -160,6 +163,7 @@ export type Database = {
           payment_confirmed_at: string | null
           payment_status: string
           photos: Json
+          preferred_window: string | null
           progress_photos: Json
           reminder_count: number | null
           reopened_at: string | null
@@ -170,6 +174,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["booking_status"]
           submission_id: string | null
+          timing_type: string | null
           updated_at: string
           urgency: string
           worker_completed_at: string | null
@@ -203,6 +208,9 @@ export type Database = {
           dispute_details?: string | null
           dispute_reason?: string | null
           disputed_at?: string | null
+          duration_end_date?: string | null
+          duration_start_date?: string | null
+          duration_type?: string | null
           estimated_amount?: number | null
           estimated_cost?: number | null
           final_amount?: number | null
@@ -220,6 +228,7 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          preferred_window?: string | null
           progress_photos?: Json
           reminder_count?: number | null
           reopened_at?: string | null
@@ -230,6 +239,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           submission_id?: string | null
+          timing_type?: string | null
           updated_at?: string
           urgency?: string
           worker_completed_at?: string | null
@@ -263,6 +273,9 @@ export type Database = {
           dispute_details?: string | null
           dispute_reason?: string | null
           disputed_at?: string | null
+          duration_end_date?: string | null
+          duration_start_date?: string | null
+          duration_type?: string | null
           estimated_amount?: number | null
           estimated_cost?: number | null
           final_amount?: number | null
@@ -280,6 +293,7 @@ export type Database = {
           payment_confirmed_at?: string | null
           payment_status?: string
           photos?: Json
+          preferred_window?: string | null
           progress_photos?: Json
           reminder_count?: number | null
           reopened_at?: string | null
@@ -290,6 +304,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
           submission_id?: string | null
+          timing_type?: string | null
           updated_at?: string
           urgency?: string
           worker_completed_at?: string | null
@@ -1380,29 +1395,57 @@ export type Database = {
         }
         Returns: undefined
       }
-      customer_create_booking: {
-        Args: {
-          _address: string
-          _budget: number
-          _category_id: string
-          _description: string
-          _estimated_cost: number
-          _latitude: number
-          _longitude: number
-          _photos?: Json
-          _scheduled_at: string
-          _service_area: string
-          _service_area_id?: string
-          _submission_id: string
-          _urgency: string
-          _worker_id: string
-          _worker_profession_id: string
-        }
-        Returns: {
-          id: string
-          photos: Json
-        }[]
-      }
+      customer_create_booking:
+        | {
+            Args: {
+              _address: string
+              _budget: number
+              _category_id: string
+              _description: string
+              _estimated_cost: number
+              _latitude: number
+              _longitude: number
+              _photos?: Json
+              _scheduled_at: string
+              _service_area: string
+              _service_area_id?: string
+              _submission_id: string
+              _urgency: string
+              _worker_id: string
+              _worker_profession_id: string
+            }
+            Returns: {
+              id: string
+              photos: Json
+            }[]
+          }
+        | {
+            Args: {
+              _address: string
+              _budget: number
+              _category_id: string
+              _description: string
+              _duration_end_date?: string
+              _duration_type?: string
+              _estimated_cost: number
+              _latitude: number
+              _longitude: number
+              _photos?: Json
+              _preferred_window?: string
+              _scheduled_at: string
+              _service_area: string
+              _service_area_id?: string
+              _submission_id: string
+              _timing_type?: string
+              _urgency: string
+              _worker_id: string
+              _worker_profession_id: string
+            }
+            Returns: {
+              id: string
+              photos: Json
+            }[]
+          }
       customer_decline_job_application: {
         Args: { _application_id: string; _reason: string }
         Returns: undefined

@@ -24,6 +24,7 @@ import { DeclineBookingModal } from "@/components/decline-booking-modal";
 import { CancelBookingModal, cancelReasonLabel } from "@/components/cancel-booking-modal";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { BookingTimeline } from "@/components/booking-timeline";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
 import { uniqueChannel } from "@/lib/realtime";
@@ -482,12 +483,11 @@ function BookingDetail() {
           <h3 className="font-display font-bold text-sm">Job details</h3>
           <p className="text-sm whitespace-pre-wrap">{b.description}</p>
           <div className="grid gap-1 text-xs text-muted-foreground pt-1">
-            {b.scheduled_at && (
-              <>
-                <p className="inline-flex items-center gap-1"><Calendar className="size-3"/>Date: {new Date(b.scheduled_at).toLocaleDateString()}</p>
-                <p className="inline-flex items-center gap-1"><Clock className="size-3"/>Time: {new Date(b.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-              </>
-            )}
+            {bookingTimingLines(b as any).map((line, i) => (
+              <p key={i} className="inline-flex items-center gap-1">
+                {i === 0 ? <Calendar className="size-3"/> : <Clock className="size-3"/>}{line}
+              </p>
+            ))}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
             {showAddress && (
               <div className="mt-1 rounded-xl border border-border bg-muted/50 p-3">

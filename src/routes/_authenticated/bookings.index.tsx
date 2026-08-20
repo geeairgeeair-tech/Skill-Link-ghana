@@ -5,6 +5,7 @@ import { useAcceptedEstimates } from "@/lib/accepted-estimates";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -153,7 +154,9 @@ function BookingsPage() {
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{b.categories?.name}</p>
               <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
-              {b.scheduled_at && <p className="text-xs text-muted-foreground mt-2">📅 {new Date(b.scheduled_at).toLocaleString()}</p>}
+              {bookingTimingLines(b as any).length > 0 && (
+                <p className="text-xs text-muted-foreground mt-2">{bookingTimingLines(b as any).join(" · ")}</p>
+              )}
               {(b.budget ?? b.estimated_cost) != null && <p className="text-sm font-semibold text-primary mt-1">Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
               {acceptedEstimates?.[b.id] != null && <p className="text-sm text-muted-foreground mt-1">Accepted Estimate: {fmtGHS(acceptedEstimates[b.id])}</p>}
 

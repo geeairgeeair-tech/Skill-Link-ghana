@@ -482,12 +482,11 @@ function BookingDetail() {
           <h3 className="font-display font-bold text-sm">Job details</h3>
           <p className="text-sm whitespace-pre-wrap">{b.description}</p>
           <div className="grid gap-1 text-xs text-muted-foreground pt-1">
-            {b.scheduled_at && (
-              <>
-                <p className="inline-flex items-center gap-1"><Calendar className="size-3"/>Date: {new Date(b.scheduled_at).toLocaleDateString()}</p>
-                <p className="inline-flex items-center gap-1"><Clock className="size-3"/>Time: {new Date(b.scheduled_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
-              </>
-            )}
+            {bookingTimingLines(b as any).map((line, i) => (
+              <p key={i} className="inline-flex items-center gap-1">
+                {i === 0 ? <Calendar className="size-3"/> : <Clock className="size-3"/>}{line}
+              </p>
+            ))}
             {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>General service area: {b.service_area}</p>}
             {showAddress && (
               <div className="mt-1 rounded-xl border border-border bg-muted/50 p-3">

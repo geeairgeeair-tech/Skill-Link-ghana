@@ -28,6 +28,9 @@ const schema = z.object({
   timing_type: z.enum(["asap", "scheduled"]),
   preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
+  duration_type: z.enum(["single_day", "multi_day"]),
+  duration_start_date: z.string().optional(),
+  duration_end_date: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });

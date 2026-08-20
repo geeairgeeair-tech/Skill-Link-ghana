@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Plus, MapPin, Image as ImageIcon, Video, Zap, AlertTriangle, ListChecks, Calendar, SlidersHorizontal, X, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { jobTimingLabel } from "@/lib/job-timing";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
@@ -65,7 +66,7 @@ function JobsBoard() {
     queryKey: ["job-requests-all", category, urgency, minBudget, maxBudget, preferredFrom, sort, locationQ],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, media, created_at, customer_id, category_id, categories(name, slug), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, media, created_at, customer_id, category_id, categories(name, slug), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status", "open")
         .limit(100);
       if (category) {

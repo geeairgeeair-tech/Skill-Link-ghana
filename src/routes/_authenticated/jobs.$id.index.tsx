@@ -38,7 +38,7 @@ function JobDetail() {
     queryFn: async () => (await supabase.from("job_requests")
       // Exact location columns (address/lat/lng/landmark/instructions) are not
       // readable here — the owner/admin/assigned pro reads them via RPC.
-      .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
+      .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
       .eq("id", id).maybeSingle()).data,
   });
   const jobBookingId = (job as any)?.booking_id as string | null | undefined;

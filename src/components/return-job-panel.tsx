@@ -115,7 +115,7 @@ export function ReturnJobPanel({
           <textarea rows={3} value={reason} onChange={(e) => setReason(e.target.value)}
             placeholder="Explain what still needs attention…"
             className="w-full rounded-xl border border-input bg-card p-3 text-sm" />
-          <ImageUpload bucket="job-media" userId={userId} prefix="return" multiple max={5}
+          <ImageUpload bucket="job-media" userId={userId} prefix="return" multiple max={5} returnPath
             label="Photos (optional)" value={photos} onChange={setPhotos} />
           <div className="flex gap-2">
             <button onClick={request} disabled={busy} className="flex-1 rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold disabled:opacity-50">

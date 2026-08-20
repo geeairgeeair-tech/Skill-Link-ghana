@@ -80,12 +80,12 @@ export function WorkProgressPanel({
       <div className="space-y-3">
         {canUploadProgress && (
           <ImageUpload bucket="job-media" userId={userId} prefix="progress" multiple max={Math.max(0, 10 - progress.length)}
-            label="Upload work progress photos" hint={`Show the customer how the job is going. ${progress.length} uploaded.`}
+            returnPath label="Upload work progress photos" hint={`Show the customer how the job is going. ${progress.length} uploaded.`}
             value={[]} onChange={(urls) => addPhotos("progress", urls)} />
         )}
         {canUploadCompletion && (
           <ImageUpload bucket="job-media" userId={userId} prefix="completion" multiple max={Math.max(0, 10 - completion.length)}
-            label="Upload completion photos" hint={`Attach before you mark the job complete. ${completion.length} uploaded.`}
+            returnPath label="Upload completion photos" hint={`Attach before you mark the job complete. ${completion.length} uploaded.`}
             value={[]} onChange={(urls) => addPhotos("completion", urls)} />
         )}
       </div>

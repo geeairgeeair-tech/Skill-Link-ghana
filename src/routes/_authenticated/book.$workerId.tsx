@@ -265,7 +265,16 @@ function BookPage() {
         .map((u) => ({ path: u.path, bucket: "job-media", kind: "image" as const, name: u.name }));
 
 
-      const scheduledAt = time ? `${date}T${time}:00` : `${date}T09:00:00`;
+      // Scheduled bookings anchor to the start of the chosen time window; ASAP uses now.
+      let scheduledAt: string;
+      if (timingType === "scheduled") {
+        const win = windowInfo(prefWindow);
+        const d = new Date(`${date}T00:00:00`);
+        d.setHours(win?.startHour ?? 9, 0, 0, 0);
+        scheduledAt = d.toISOString();
+      } else {
+        scheduledAt = new Date().toISOString();
+      }
       const estimated = (selectedProf?.callout_fee ?? w.callout_fee ?? 0) + (selectedProf?.starting_price ?? w.starting_price ?? 0);
       const currentSubmissionId = submissionId.current ?? crypto.randomUUID();
       submissionId.current = currentSubmissionId;
@@ -288,6 +297,10 @@ function BookPage() {
         _latitude: lat,
         _longitude: lng,
         _photos: refs,
+        _timing_type: timingType,
+        _preferred_window: timingType === "scheduled" ? prefWindow : null,
+        _duration_type: durationType,
+        _duration_end_date: durationType === "multi_day" ? endDate : null,
       } as any).abortSignal(controller.signal).single();
       const { data: inserted, error } = await Promise.race([rpcRequest, timeoutFailure]);
       if (error) throw error;

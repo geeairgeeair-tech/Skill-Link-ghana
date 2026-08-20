@@ -136,7 +136,9 @@ function JobDetail() {
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
             <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{(job as any).service_areas?.name ?? (job as any).service_area ?? (job as any).city ?? cust?.city ?? "Ghana"}</span>
             {(job as any).budget ? <span className="font-semibold text-primary">Budget GH₵{(job as any).budget}</span> : null}
-            {(job as any).preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date((job as any).preferred_at).toLocaleString()}</span>}
+            {(() => { const t = jobTimingLabel(job as any); return t.asap
+              ? <span className="inline-flex items-center gap-1 font-semibold text-primary">⚡ ASAP</span>
+              : <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{t.text}</span>; })()}
           </div>
           <p className="mt-3 text-sm whitespace-pre-wrap leading-relaxed">{(job as any).description}</p>
           {jobAddress && <p className="mt-3 text-xs text-muted-foreground">📍 {jobAddress}</p>}

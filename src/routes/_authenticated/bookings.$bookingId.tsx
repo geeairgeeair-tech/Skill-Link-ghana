@@ -12,6 +12,7 @@ import {
 
 import { BackButton } from "@/components/back-button";
 import { BookingMedia } from "@/components/booking-media";
+import { useSignedMedia } from "@/hooks/use-signed-media";
 import { VerificationBadge } from "@/components/verification-badge";
 import { LocationMap } from "@/components/location-map";
 import { EstimateSection } from "@/components/booking-estimate";
@@ -818,5 +819,18 @@ function BookingReview({ bookingId }: { bookingId: string }) {
       {review.resolution && <p className="text-[11px] text-muted-foreground">Return outcome: {String(review.resolution).replace(/_/g, " ")}</p>}
       <p className="text-[10px] text-muted-foreground">{new Date(review.created_at).toLocaleDateString()}</p>
     </section>
+  );
+}
+
+function WorkPhotoGrid({ photos, alt }: { photos: string[]; alt: string }) {
+  const urlFor = useSignedMedia(photos);
+  return (
+    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+      {photos.map((p, i) => (
+        <a key={i} href={urlFor(p)} target="_blank" rel="noopener noreferrer" className="block aspect-square rounded-xl overflow-hidden border border-border bg-muted">
+          <img src={urlFor(p)} alt={`${alt} ${i + 1}`} className="size-full object-cover" loading="lazy" />
+        </a>
+      ))}
+    </div>
   );
 }

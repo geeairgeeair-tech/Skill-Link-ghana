@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ImageUpload } from "@/components/image-upload";
+import { useSignedMedia } from "@/hooks/use-signed-media";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Awaiting worker response",
@@ -187,5 +188,18 @@ export function ReturnJobPanel({
         </div>
       )}
     </section>
+  );
+}
+
+function ReturnPhotos({ photos }: { photos: string[] }) {
+  const urlFor = useSignedMedia(photos);
+  return (
+    <div className="flex gap-2 flex-wrap">
+      {photos.map((p) => (
+        <a key={p} href={urlFor(p)} target="_blank" rel="noopener noreferrer">
+          <img src={urlFor(p)} alt="Return issue" className="size-20 rounded-lg object-cover border border-border bg-muted" />
+        </a>
+      ))}
+    </div>
   );
 }

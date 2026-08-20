@@ -1342,6 +1342,7 @@ export type Database = {
         Args: { _booking_id: string; _kind: string; _urls: Json }
         Returns: undefined
       }
+      commitment_statuses: { Args: never; Returns: string[] }
       complete_profile_identity: {
         Args: {
           _date_of_birth: string
@@ -1539,6 +1540,7 @@ export type Database = {
       }
       send_awaiting_confirmation_reminders: { Args: never; Returns: number }
       send_document_expiry_reminders: { Args: never; Returns: number }
+      send_scheduled_booking_reminders: { Args: never; Returns: undefined }
       submit_support_ticket: {
         Args: {
           _attachment_url?: string
@@ -1604,6 +1606,10 @@ export type Database = {
           this_month: number
           total_paid: number
         }[]
+      }
+      worker_has_commitment: {
+        Args: { _exclude_booking?: string; _worker_id: string }
+        Returns: boolean
       }
       worker_mark_arrived: { Args: { _booking_id: string }; Returns: undefined }
       worker_mark_booking_completed: {

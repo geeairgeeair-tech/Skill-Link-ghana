@@ -5,6 +5,7 @@ import { useAcceptedEstimates } from "@/lib/accepted-estimates";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { AppShell } from "@/components/app-shell";
 import { ConfirmCompletionModal } from "@/components/confirm-completion-modal";
 import { useAuth } from "@/hooks/use-auth";

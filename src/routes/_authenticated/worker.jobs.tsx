@@ -233,7 +233,9 @@ function JobsPage() {
               </div>
               <p className="text-sm mt-2">{b.description}</p>
               <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
-                {b.scheduled_at && <p className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date(b.scheduled_at).toLocaleString()}</p>}
+                {bookingTimingLines(b).map((l: string) => (
+                  <p key={l} className="inline-flex items-center gap-1">{l}</p>
+                ))}
                 {b.service_area && <p className="inline-flex items-center gap-1"><MapPin className="size-3"/>{b.service_area}</p>}
                 {(b.budget ?? b.estimated_cost) != null && <p className="inline-flex items-center gap-1 font-semibold text-primary"><Wallet className="size-3"/>Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
                 {acceptedEstimates?.[b.id] != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Accepted Estimate {fmtGHS(acceptedEstimates[b.id])}</p>}

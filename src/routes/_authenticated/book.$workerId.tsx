@@ -9,6 +9,7 @@ import { compressImage } from "@/lib/image-compress";
 import { ServiceAreaSelect } from "@/components/service-area-select";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { useAuth } from "@/hooks/use-auth";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, jobDurationLabel, type TimeWindowKey } from "@/lib/job-timing";
 
 
 export const Route = createFileRoute("/_authenticated/book/$workerId")({

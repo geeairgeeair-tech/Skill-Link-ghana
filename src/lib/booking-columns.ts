@@ -16,5 +16,6 @@ export const BOOKING_COLUMNS = [
   "progress_photos", "completion_photos", "is_paused", "paused_at", "pause_reason",
   "return_count", "reopened_at", "worker_profession_id", "cancelled_at",
   "cancelled_by", "cancelled_by_role", "cancel_reason_code", "cancel_note",
-  "submission_id",
+  "submission_id", "timing_type", "preferred_window", "duration_type",
+  "duration_start_date", "duration_end_date",
 ].join(", ");

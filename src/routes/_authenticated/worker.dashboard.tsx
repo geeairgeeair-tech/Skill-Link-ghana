@@ -126,7 +126,7 @@ function WorkerDashboard() {
     queryFn: async () => {
       const { data: b } = await supabase
         .from("bookings")
-        .select("id, status, scheduled_at, service_area, description, categories(name)")
+        .select("id, status, scheduled_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, service_area, description, categories(name)")
         .eq("worker_id", user!.id)
         .in("status", COMMITMENT_STATUSES)
         .order("created_at", { ascending: false })

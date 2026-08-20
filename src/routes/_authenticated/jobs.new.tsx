@@ -313,6 +313,33 @@ function NewJobPage() {
               </Field>
             </>
           )}
+
+          <Field label="How long will you need the Professional?">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setForm({...form, duration_type: "single_day", duration_end_date: ""})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "single_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                ⏱ One day or less
+              </button>
+              <button type="button" onClick={() => setForm({...form, duration_type: "multi_day"})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "multi_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                📆 More than one day
+              </button>
+            </div>
+          </Field>
+          {form.duration_type === "multi_day" && (
+            <>
+              <Field label="Start date">
+                <input type="date" value={durationStart} readOnly disabled className="input opacity-70" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {form.timing_type === "scheduled" ? "Uses your scheduled date above." : "ASAP jobs start from today."}
+                </p>
+              </Field>
+              <Field label="Expected end date">
+                <input type="date" value={form.duration_end_date} min={durationStart || today}
+                  onChange={e => setForm({...form, duration_end_date: e.target.value})} className="input" required />
+              </Field>
+            </>
+          )}
         </Card>
 
         <Card title="Budget">

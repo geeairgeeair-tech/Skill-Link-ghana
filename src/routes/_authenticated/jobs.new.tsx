@@ -8,6 +8,8 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ServiceAreaSelect } from "@/components/service-area-select";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, jobTimingLabel, type TimeWindowKey } from "@/lib/job-timing";
+
 
 export const Route = createFileRoute("/_authenticated/jobs/new")({
   component: NewJobPage,

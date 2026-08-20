@@ -449,6 +449,9 @@ export type Database = {
           created_at: string
           customer_id: string
           description: string
+          duration_end_date: string | null
+          duration_start_date: string | null
+          duration_type: string | null
           id: string
           landmark: string | null
           lat: number | null
@@ -480,6 +483,9 @@ export type Database = {
           created_at?: string
           customer_id: string
           description: string
+          duration_end_date?: string | null
+          duration_start_date?: string | null
+          duration_type?: string | null
           id?: string
           landmark?: string | null
           lat?: number | null
@@ -511,6 +517,9 @@ export type Database = {
           created_at?: string
           customer_id?: string
           description?: string
+          duration_end_date?: string | null
+          duration_start_date?: string | null
+          duration_type?: string | null
           id?: string
           landmark?: string | null
           lat?: number | null

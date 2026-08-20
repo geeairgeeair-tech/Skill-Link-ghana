@@ -84,7 +84,8 @@ function JobsBoard() {
       else if (sort === "budget_low") q = q.order("budget", { ascending: true, nullsFirst: false });
       else if (sort === "soonest") q = q.order("preferred_at", { ascending: true, nullsFirst: false });
 
-      const { data } = await q;
+      const { data, error } = await q;
+      if (error) throw error;
       let rows = data ?? [];
       const needle = locationQ.trim().toLowerCase();
       if (needle) {

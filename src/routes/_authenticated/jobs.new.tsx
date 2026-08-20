@@ -350,7 +350,7 @@ function NewJobPage() {
               <Row k="Address" v={form.address} />
               {form.service_area && <Row k="General service area" v={form.service_area} />}
               {form.lat && <Row k="GPS" v={`${form.lat.toFixed(5)}, ${form.lng!.toFixed(5)}`} />}
-              {form.preferred_date && <Row k="Preferred" v={`${form.preferred_date}${form.preferred_time ? " · " + form.preferred_time : ""}`} />}
+              <Row k="Timing" v={jobTimingLabel({ timing_type: form.timing_type, preferred_at: form.preferred_date ? `${form.preferred_date}T12:00:00` : null, preferred_window: form.preferred_window || null }).text} />
               {form.budget && <Row k="Budget" v={`GH₵${form.budget}`} />}
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Description</p>

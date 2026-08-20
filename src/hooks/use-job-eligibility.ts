@@ -85,7 +85,7 @@ export function useWorkerEligibility() {
     if (!coversArea(jobAreaId))
       return `This job is in ${jobAreaName ?? "an area"} which is outside your service areas. Update your service areas to cover it.`;
     if (isUnavailable) return "You're marked Unavailable. Switch to Available to apply for jobs.";
-    if (isBusy) return "You have an active booking. Finish it before applying to new jobs.";
+    if (isBusy) return "You already have an accepted booking. Complete or resolve it before applying for another job.";
     return null;
   };
 

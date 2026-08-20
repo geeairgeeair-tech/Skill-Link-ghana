@@ -454,7 +454,16 @@ function BookPage() {
             <Row label="General service area">{area}</Row>
             <Row label="Exact service address">{address}</Row>
             <Row label="Profession">{selectedProf?.categories?.name ?? w.categories?.name ?? "Service"}</Row>
-            <Row label="Date & time">{date} {time || "09:00"}</Row>
+            <Row label="When">
+              {timingType === "asap"
+                ? "⚡ ASAP"
+                : `📅 ${date}${windowInfo(prefWindow) ? ` • ${windowInfo(prefWindow)!.label} (${windowInfo(prefWindow)!.range})` : ""}`}
+            </Row>
+            <Row label="Duration">
+              {durationType === "single_day"
+                ? "A day or less"
+                : jobDurationLabel({ duration_type: "multi_day", duration_start_date: durationStart, duration_end_date: endDate })?.text ?? "More than a day"}
+            </Row>
 
             <Row label="Urgency"><span className="capitalize">{urgency}</span></Row>
             {budget && <Row label="Budget">GH₵{budget}</Row>}

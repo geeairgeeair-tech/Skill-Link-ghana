@@ -263,7 +263,9 @@ function JobsBoard() {
                   <div className="flex items-center gap-2 mt-1.5 text-xs text-muted-foreground flex-wrap">
                     <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{j.service_areas?.name ?? j.service_area ?? j.city ?? j.profiles?.city ?? "Ghana"}</span>
                     {j.budget ? <span className="font-semibold text-primary">GH₵{j.budget}</span> : null}
-                    {j.preferred_at && <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{new Date(j.preferred_at).toLocaleDateString()}</span>}
+                    {(() => { const t = jobTimingLabel(j as any); return t.asap
+                      ? <span className="inline-flex items-center gap-1 font-semibold text-primary">⚡ ASAP</span>
+                      : <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{t.text}</span>; })()}
                     <span className="inline-flex items-center gap-1"><Clock className="size-3"/>{timeAgo(j.created_at)}</span>
                     <span className="inline-flex items-center gap-1"><Users className="size-3"/>{count}</span>
                     {imgCount > 0 && <span className="inline-flex items-center gap-0.5"><ImageIcon className="size-3"/>{imgCount}</span>}

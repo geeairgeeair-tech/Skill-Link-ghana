@@ -64,3 +64,33 @@ export function jobDurationLabel(job: JobDurationFields): { text: string; multi:
   }
   return null;
 }
+
+export type BookingTimingFields = JobDurationFields & {
+  timing_type?: string | null;
+  preferred_window?: string | null;
+  scheduled_at?: string | null;
+};
+
+/**
+ * Compact timing + duration lines for a direct booking.
+ * Legacy bookings (no timing_type) fall back to their scheduled_at date/time.
+ */
+export function bookingTimingLines(b: BookingTimingFields): string[] {
+  const lines: string[] = [];
+  const d = b.scheduled_at ? new Date(b.scheduled_at) : null;
+  const w = windowInfo(b.preferred_window);
+
+  if (b.timing_type === "asap") {
+    lines.push("⚡ ASAP");
+  } else if (d) {
+    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const timePart = w
+      ? `${w.label} (${w.range})`
+      : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    lines.push(`📅 ${date} • ${timePart}`);
+  }
+
+  const dur = jobDurationLabel(b);
+  if (dur) lines.push(dur.text);
+  return lines;
+}

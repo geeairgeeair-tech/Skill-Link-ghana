@@ -5,6 +5,7 @@ import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
+import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
 

@@ -156,6 +156,34 @@ function WorkerDetail() {
     },
   });
 
+  // This hook must stay above every loading/error early return so its order is
+  // identical while auth and profile data transition from loading to loaded.
+  const appCtxQ = useQuery({
+    queryKey: ["profile-app-context", applicationId, user?.id],
+    enabled: !!user && !!applicationId && !!jobId,
+    queryFn: async () => {
+      if (!user || !applicationId || !jobId) return null;
+      const { data: app } = await supabase
+        .from("job_applications")
+        .select("id, job_id, worker_id, status, quoted_price, estimated_start, message")
+        .eq("id", applicationId)
+        .maybeSingle();
+      if (!app || app.job_id !== jobId || app.worker_id !== id) return null;
+      const { data: job } = await supabase
+        .from("job_requests")
+        .select("id, customer_id, status")
+        .eq("id", jobId)
+        .maybeSingle();
+      if (!job || job.customer_id !== user.id) return null;
+      const { data: bk } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("job_application_id", app.id)
+        .maybeSingle();
+      return { app, jobStatus: String(job.status), bookingId: bk?.id ?? null };
+    },
+  });
+
 
   if (authLoading) return <ProfileSkeleton />;
   if (!user) return <GuestGate />;
@@ -203,31 +231,6 @@ function WorkerDetail() {
 
   const isSelf = !!user && user.id === id;
 
-  // Application context: only the owner of that job may act on the application.
-  const appCtxQ = useQuery({
-    queryKey: ["profile-app-context", applicationId, user?.id],
-    enabled: !!user && !!applicationId && !!jobId,
-    queryFn: async () => {
-      const { data: app } = await supabase
-        .from("job_applications")
-        .select("id, job_id, worker_id, status, quoted_price, estimated_start, message")
-        .eq("id", applicationId!)
-        .maybeSingle();
-      if (!app || app.job_id !== jobId || app.worker_id !== id) return null;
-      const { data: job } = await supabase
-        .from("job_requests")
-        .select("id, customer_id, status")
-        .eq("id", jobId!)
-        .maybeSingle();
-      if (!job || job.customer_id !== user!.id) return null;
-      const { data: bk } = await supabase
-        .from("bookings")
-        .select("id")
-        .eq("job_application_id", app.id)
-        .maybeSingle();
-      return { app, jobStatus: String(job.status), bookingId: bk?.id ?? null };
-    },
-  });
   const appCtx = appCtxQ.data ?? null;
 
   const onBook = () => {

@@ -10,9 +10,10 @@ import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
+import { jobDurationLabel, windowInfo } from "@/lib/job-timing";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  Wallet, Star, Layers, RotateCcw, UserCog, MapPin,
+  Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock,
 } from "lucide-react";
 
 
@@ -117,6 +118,30 @@ function WorkerDashboard() {
     },
   });
 
+  /** The single unresolved accepted commitment (upcoming scheduled OR current) + its job details. */
+  const { data: commitment } = useQuery({
+    queryKey: ["worker-commitment", user?.id],
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data: b } = await supabase
+        .from("bookings")
+        .select("id, status, scheduled_at, service_area, description, categories(name)")
+        .eq("worker_id", user!.id)
+        .in("status", COMMITMENT_STATUSES)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!b) return null;
+      const { data: jr } = await supabase
+        .from("job_requests")
+        .select("preferred_window, duration_type, duration_start_date, duration_end_date")
+        .eq("booking_id", b.id)
+        .maybeSingle();
+      return { ...(b as any), job: jr ?? null };
+    },
+  });
+
   const { data: tickets } = useQuery({
     queryKey: ["worker-tickets", user?.id],
     enabled: !!user,
@@ -129,7 +154,10 @@ function WorkerDashboard() {
     if (!user) return;
     const channel = uniqueChannel(`worker-dash:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "bookings", filter: `worker_id=eq.${user.id}` },
-        () => qc.invalidateQueries({ queryKey: ["worker-bookings", user.id] }))
+        () => {
+          qc.invalidateQueries({ queryKey: ["worker-bookings", user.id] });
+          qc.invalidateQueries({ queryKey: ["worker-commitment", user.id] });
+        })
       .on("postgres_changes", { event: "*", schema: "public", table: "return_requests", filter: `worker_id=eq.${user.id}` },
         () => qc.invalidateQueries({ queryKey: ["worker-returns", user.id] }))
       .subscribe();
@@ -304,6 +332,8 @@ function WorkerDashboard() {
           </div>
         )}
 
+        {commitment && <CommitmentCard c={commitment} />}
+
         {(returns ?? []).length > 0 && (
           <div className="rounded-2xl bg-gold/15 border border-gold/40 p-4 space-y-2">
             <p className="font-semibold inline-flex items-center gap-2"><RotateCcw className="size-4" /> Return job requests</p>
@@ -355,6 +385,41 @@ function WorkerDashboard() {
       </main>
 
     </AppShell>
+  );
+}
+
+function CommitmentCard({ c }: { c: any }) {
+  const scheduled = c.scheduled_at ? new Date(c.scheduled_at) : null;
+  const upcoming = !!scheduled && scheduled.getTime() > Date.now() && c.status === "accepted";
+  const w = windowInfo(c.job?.preferred_window);
+  const duration = c.job ? jobDurationLabel(c.job) : null;
+  return (
+    <Link
+      to="/bookings/$bookingId"
+      params={{ bookingId: c.id }}
+      className="block rounded-2xl bg-primary-soft border border-primary/30 p-4"
+    >
+      <p className="font-display font-bold inline-flex items-center gap-2">
+        <CalendarClock className="size-4 text-primary" />
+        {upcoming ? "Upcoming scheduled booking" : "Current commitment"}
+      </p>
+      <p className="font-semibold mt-1 truncate">{c.categories?.name ?? "Service"}</p>
+      <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>
+      <div className="mt-2 space-y-0.5 text-[11px] text-muted-foreground">
+        {c.service_area && <p>📍 {c.service_area}</p>}
+        {scheduled && (
+          <p>
+            🗓 {scheduled.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
+            {w ? ` • ${w.label} (${w.range})` : ` • ${scheduled.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`}
+          </p>
+        )}
+        {duration && <p>{duration.text}</p>}
+        <p className="capitalize font-semibold text-primary">{String(c.status).replace(/_/g, " ")}</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground mt-2">
+        You're reserved for this booking. Complete or resolve it before taking new work.
+      </p>
+    </Link>
   );
 }
 

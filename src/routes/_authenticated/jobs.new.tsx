@@ -39,9 +39,11 @@ function NewJobPage() {
   const [form, setForm] = useState({
     title: "", description: "", city: "Accra", address: "", service_area: "", service_area_id: "",
     budget: "" as string, category_id: "", urgency: "normal" as "normal"|"urgent"|"emergency",
-    preferred_date: "", preferred_time: "",
+    timing_type: "asap" as "asap"|"scheduled",
+    preferred_date: "", preferred_window: "" as "" | TimeWindowKey,
     lat: undefined as number | undefined, lng: undefined as number | undefined,
   });
+
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);

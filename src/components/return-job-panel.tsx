@@ -136,11 +136,7 @@ export function ReturnJobPanel({
           </div>
           <p className="text-sm">{open.reason}</p>
           {Array.isArray(open.photos) && open.photos.length > 0 && (
-            <div className="flex gap-2 flex-wrap">
-              {(open.photos as string[]).map((p) => (
-                <img key={p} src={p} alt="Return issue" className="size-20 rounded-lg object-cover border border-border" />
-              ))}
-            </div>
+            <ReturnPhotos photos={open.photos as string[]} />
           )}
           {open.scheduled_at && (
             <p className="text-xs text-muted-foreground">Scheduled for {new Date(open.scheduled_at).toLocaleString()}</p>

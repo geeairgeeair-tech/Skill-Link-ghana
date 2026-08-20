@@ -1,0 +1,2 @@
+GRANT SELECT (duration_type, duration_start_date, duration_end_date) ON public.job_requests TO authenticated, anon;
+GRANT INSERT (duration_type, duration_start_date, duration_end_date), UPDATE (duration_type, duration_start_date, duration_end_date) ON public.job_requests TO authenticated;

@@ -105,9 +105,14 @@ function NewJobPage() {
   };
 
   const buildPayload = () => {
-    const preferred_at = form.preferred_date
-      ? new Date(`${form.preferred_date}T${form.preferred_time || "09:00"}:00`).toISOString()
-      : undefined;
+    const scheduled = form.timing_type === "scheduled";
+    const w = scheduled ? windowInfo(form.preferred_window) : null;
+    let preferred_at: string | undefined;
+    if (scheduled && form.preferred_date && w) {
+      const d = new Date(`${form.preferred_date}T00:00:00`);
+      d.setHours(w.startHour, 0, 0, 0);
+      preferred_at = d.toISOString();
+    }
     return {
       title: form.title,
       description: form.description,
@@ -118,11 +123,14 @@ function NewJobPage() {
       budget: form.budget ? Number(form.budget) : undefined,
       category_id: form.category_id || undefined,
       urgency: form.urgency,
+      timing_type: form.timing_type,
+      preferred_window: scheduled && form.preferred_window ? form.preferred_window : undefined,
       preferred_at,
       lat: form.lat,
       lng: form.lng,
     };
   };
+
 
   const validate = () => {
     const parsed = schema.safeParse(buildPayload());

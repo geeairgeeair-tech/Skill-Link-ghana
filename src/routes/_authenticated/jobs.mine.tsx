@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
+import { jobDurationLabel } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
@@ -36,7 +37,7 @@ function MyJobPosts() {
     enabled: !!user,
     queryFn: async () => (await supabase
       .from("job_requests")
-      .select("id, title, description, budget, city, status, urgency, preferred_at, timing_type, preferred_window, media, created_at, booking_id, categories(name)")
+      .select("id, title, description, budget, city, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, booking_id, categories(name)")
       .eq("customer_id", user!.id)
       .order("created_at", { ascending: false })).data ?? [],
   });
@@ -135,6 +136,7 @@ function MyJobPosts() {
                     <span className="inline-flex items-center gap-1 font-semibold text-foreground">
                       <FileText className="size-3"/>{appCounts?.[j.id] ?? 0} application{(appCounts?.[j.id] ?? 0) === 1 ? "" : "s"}
                     </span>
+                    {(() => { const d = jobDurationLabel(j as any); return d ? <span className="inline-flex items-center gap-1">{d.text}</span> : null; })()}
                   </div>
                 </div>
               </Link>

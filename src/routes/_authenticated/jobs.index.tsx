@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Plus, MapPin, Image as ImageIcon, Video, Zap, AlertTriangle, ListChecks, Calendar, SlidersHorizontal, X, Users, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { jobTimingLabel } from "@/lib/job-timing";
+import { jobTimingLabel, jobDurationLabel } from "@/lib/job-timing";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
@@ -66,7 +66,7 @@ function JobsBoard() {
     queryKey: ["job-requests-all", category, urgency, minBudget, maxBudget, preferredFrom, sort, locationQ],
     queryFn: async () => {
       let q = supabase.from("job_requests")
-        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, media, created_at, customer_id, category_id, categories(name, slug), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city)")
+        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, customer_id, category_id, categories(name, slug), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city)")
         .eq("status", "open")
         .limit(100);
       if (category) {
@@ -267,6 +267,7 @@ function JobsBoard() {
                     {(() => { const t = jobTimingLabel(j as any); return t.asap
                       ? <span className="inline-flex items-center gap-1 font-semibold text-primary">⚡ ASAP</span>
                       : <span className="inline-flex items-center gap-1"><Calendar className="size-3"/>{t.text}</span>; })()}
+                    {(() => { const d = jobDurationLabel(j as any); return d ? <span className="inline-flex items-center gap-1">{d.text}</span> : null; })()}
                     <span className="inline-flex items-center gap-1"><Clock className="size-3"/>{timeAgo(j.created_at)}</span>
                     <span className="inline-flex items-center gap-1"><Users className="size-3"/>{count}</span>
                     {imgCount > 0 && <span className="inline-flex items-center gap-0.5"><ImageIcon className="size-3"/>{imgCount}</span>}

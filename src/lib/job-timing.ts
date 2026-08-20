@@ -32,3 +32,35 @@ export function jobTimingLabel(job: { timing_type?: string | null; preferred_at?
     .filter(Boolean).join(" • ");
   return { asap: false, text: text || "Scheduled" };
 }
+
+export type DurationType = "single_day" | "multi_day";
+
+export type JobDurationFields = {
+  duration_type?: string | null;
+  duration_start_date?: string | null;
+  duration_end_date?: string | null;
+};
+
+function friendlyDate(dateStr: string) {
+  const d = new Date(`${dateStr}T00:00:00`);
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+export function daysBetweenInclusive(start: string, end: string) {
+  const a = new Date(`${start}T00:00:00`).getTime();
+  const b = new Date(`${end}T00:00:00`).getTime();
+  return Math.max(1, Math.round((b - a) / 86_400_000) + 1);
+}
+
+/** Friendly duration label, or null for legacy jobs with no duration data. */
+export function jobDurationLabel(job: JobDurationFields): { text: string; multi: boolean } | null {
+  if (job.duration_type === "single_day") return { text: "⏱ One day or less", multi: false };
+  if (job.duration_type === "multi_day" && job.duration_start_date && job.duration_end_date) {
+    const days = daysBetweenInclusive(job.duration_start_date, job.duration_end_date);
+    return {
+      text: `📆 ${friendlyDate(job.duration_start_date)} – ${friendlyDate(job.duration_end_date)} • ${days} day${days === 1 ? "" : "s"}`,
+      multi: true,
+    };
+  }
+  return null;
+}

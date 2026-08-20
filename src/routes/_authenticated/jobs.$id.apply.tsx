@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { BackButton } from "@/components/back-button";
+import { jobDurationLabel } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
@@ -27,7 +28,7 @@ function ApplyPage() {
   const { data: job, isLoading } = useQuery({
     queryKey: ["job-request-brief", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, budget, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)").eq("id", id).maybeSingle()).data,
+      .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)").eq("id", id).maybeSingle()).data,
   });
 
   const eligibility = useWorkerEligibility();
@@ -128,6 +129,7 @@ function ApplyPage() {
         <BackButton fallback="/jobs" />
         <h1 className="font-display text-2xl font-bold mt-2">{existing ? "Edit application" : "Apply for job"}</h1>
         <p className="text-sm opacity-80">{(job as any).title}</p>
+        {(() => { const d = jobDurationLabel(job as any); return d ? <p className="text-xs opacity-80 mt-1">{d.text}</p> : null; })()}
       </div>
       <main className="mx-auto max-w-md px-5 -mt-3">
         <form onSubmit={onSubmit} className="rounded-2xl bg-card border border-border p-5 shadow-elevated space-y-4">

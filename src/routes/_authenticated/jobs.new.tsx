@@ -8,7 +8,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ServiceAreaSelect } from "@/components/service-area-select";
-import { TIME_WINDOWS, windowInfo, windowHasPassed, jobTimingLabel, type TimeWindowKey } from "@/lib/job-timing";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, jobTimingLabel, jobDurationLabel, type TimeWindowKey } from "@/lib/job-timing";
 
 
 export const Route = createFileRoute("/_authenticated/jobs/new")({
@@ -28,6 +28,9 @@ const schema = z.object({
   timing_type: z.enum(["asap", "scheduled"]),
   preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
+  duration_type: z.enum(["single_day", "multi_day"]),
+  duration_start_date: z.string().optional(),
+  duration_end_date: z.string().optional(),
   lat: z.number().optional(),
   lng: z.number().optional(),
 });
@@ -43,6 +46,7 @@ function NewJobPage() {
     budget: "" as string, category_id: "", urgency: "normal" as "normal"|"urgent"|"emergency",
     timing_type: "asap" as "asap"|"scheduled",
     preferred_date: "", preferred_window: "" as "" | TimeWindowKey,
+    duration_type: "single_day" as "single_day"|"multi_day", duration_end_date: "",
     lat: undefined as number | undefined, lng: undefined as number | undefined,
   });
 
@@ -106,6 +110,9 @@ function NewJobPage() {
     );
   };
 
+  const today = new Date().toISOString().slice(0, 10);
+  const durationStart = form.timing_type === "scheduled" ? form.preferred_date : today;
+
   const buildPayload = () => {
     const scheduled = form.timing_type === "scheduled";
     const w = scheduled ? windowInfo(form.preferred_window) : null;
@@ -130,6 +137,9 @@ function NewJobPage() {
       preferred_at,
       lat: form.lat,
       lng: form.lng,
+      duration_type: form.duration_type,
+      duration_start_date: form.duration_type === "multi_day" ? durationStart : undefined,
+      duration_end_date: form.duration_type === "multi_day" && form.duration_end_date ? form.duration_end_date : undefined,
     };
   };
 
@@ -139,6 +149,11 @@ function NewJobPage() {
       if (!form.preferred_date) { toast.error("Pick a preferred date"); return null; }
       if (!form.preferred_window) { toast.error("Pick a time window"); return null; }
       if (windowHasPassed(form.preferred_date, form.preferred_window)) { toast.error("That date and time window has already passed"); return null; }
+    }
+    if (form.duration_type === "multi_day") {
+      if (!durationStart) { toast.error("Pick a start date"); return null; }
+      if (!form.duration_end_date) { toast.error("Pick an end date"); return null; }
+      if (form.duration_end_date < durationStart) { toast.error("End date cannot be before the start date"); return null; }
     }
     const parsed = schema.safeParse(buildPayload());
     if (!parsed.success) {
@@ -298,6 +313,33 @@ function NewJobPage() {
               </Field>
             </>
           )}
+
+          <Field label="How long will you need the Professional?">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setForm({...form, duration_type: "single_day", duration_end_date: ""})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "single_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                ⏱ One day or less
+              </button>
+              <button type="button" onClick={() => setForm({...form, duration_type: "multi_day"})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "multi_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                📆 More than one day
+              </button>
+            </div>
+          </Field>
+          {form.duration_type === "multi_day" && (
+            <>
+              <Field label="Start date">
+                <input type="date" value={durationStart} readOnly disabled className="input opacity-70" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {form.timing_type === "scheduled" ? "Uses your scheduled date above." : "ASAP jobs start from today."}
+                </p>
+              </Field>
+              <Field label="Expected end date">
+                <input type="date" value={form.duration_end_date} min={durationStart || today}
+                  onChange={e => setForm({...form, duration_end_date: e.target.value})} className="input" required />
+              </Field>
+            </>
+          )}
         </Card>
 
         <Card title="Budget">
@@ -357,6 +399,7 @@ function NewJobPage() {
               {form.service_area && <Row k="General service area" v={form.service_area} />}
               {form.lat && <Row k="GPS" v={`${form.lat.toFixed(5)}, ${form.lng!.toFixed(5)}`} />}
               <Row k="Timing" v={jobTimingLabel({ timing_type: form.timing_type, preferred_at: form.preferred_date ? `${form.preferred_date}T12:00:00` : null, preferred_window: form.preferred_window || null }).text} />
+              <Row k="Duration" v={jobDurationLabel({ duration_type: form.duration_type, duration_start_date: durationStart, duration_end_date: form.duration_end_date })?.text ?? "—"} />
               {form.budget && <Row k="Budget" v={`GH₵${form.budget}`} />}
               <div>
                 <p className="text-xs text-muted-foreground mb-1">Description</p>

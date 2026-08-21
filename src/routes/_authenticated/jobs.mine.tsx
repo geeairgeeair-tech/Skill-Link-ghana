@@ -104,13 +104,19 @@ function MyJobPosts() {
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
         {isLoading ? (
-          <p className="text-center text-sm text-muted-foreground py-10">Loading…</p>
+          Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+        ) : isError ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm">
+            <p className="font-semibold text-destructive">Couldn't load your job posts.</p>
+            <button onClick={() => refetch()} className="mt-3 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+          </div>
         ) : (jobs ?? []).length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             <p className="font-semibold text-foreground">You haven't posted any jobs yet.</p>
             <Link to="/jobs/new" className="mt-3 inline-block text-primary font-semibold">Post your first job →</Link>
           </div>
         ) : (jobs ?? []).map((j: any) => {
+
           const media: any[] = Array.isArray(j.media) ? j.media : [];
           const firstImg = media.find(m => m.type === "image");
           const canEdit = isJobEditable(j.status);

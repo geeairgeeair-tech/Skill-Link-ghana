@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAppRole } from "@/hooks/use-app-role";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { BrandLogo } from "@/components/brand-logo";
 import { GuestGateCard } from "@/components/guest-gate";
 

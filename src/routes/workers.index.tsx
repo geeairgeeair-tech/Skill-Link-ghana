@@ -151,17 +151,10 @@ function WorkersPage() {
   });
 
 
-  const withStatus = useMemo(() => {
-    if (!workers) return [];
-    return workers.map((w) => ({
-      ...w,
-      availability_state: (w.is_available ?? true)
-        ? busyIds?.has(w.user_id)
-          ? ("busy" as const)
-          : ("available" as const)
-        : ("unavailable" as const),
-    }));
-  }, [workers, busyIds]);
+  const withStatus = useMemo(
+    () => withAvailabilityState(workers, busyIds),
+    [workers, busyIds],
+  );
 
   const filtered = useMemo(() => {
     const base = search.availableOnly

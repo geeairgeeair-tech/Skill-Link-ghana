@@ -4,7 +4,7 @@ import { useState } from "react";
 import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
-import { jobDurationLabel } from "@/lib/job-timing";
+import { jobDurationLabel, jobTimingLabel } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";

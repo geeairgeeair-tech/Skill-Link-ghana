@@ -31,11 +31,24 @@ function SignedMedia({ path, type }: { path: string; type: "image"|"video" }) {
     : <video src={data} controls className="w-full rounded-xl bg-black" />;
 }
 
+function JobDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="fg-gradient-hero px-5 pt-5 pb-10" />
+      <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
+        ))}
+      </main>
+    </div>
+  );
+}
+
 function JobDetail() {
   const { id } = Route.useParams();
   const { user, role } = useAuth();
   const eligibility = useWorkerEligibility();
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-request", id],
     queryFn: async () => (await supabase.from("job_requests")
       // Exact location columns (address/lat/lng/landmark/instructions) are not
@@ -83,7 +96,13 @@ function JobDetail() {
     },
   });
 
-  if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (isLoading) return <JobDetailSkeleton />;
+  if (isError) return (
+    <div className="p-8 text-center space-y-3">
+      <p className="font-semibold text-destructive">Couldn't load this job.</p>
+      <button onClick={() => refetch()} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+    </div>
+  );
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];

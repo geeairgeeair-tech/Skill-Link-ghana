@@ -10,6 +10,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
 import { isJobEditable } from "@/lib/job-editable";
+import { useJobApplicantCounts } from "@/hooks/use-job-applicant-counts";
 
 
 export const Route = createFileRoute("/_authenticated/jobs/mine")({
@@ -138,7 +139,7 @@ function MyJobPosts() {
                     <span className="inline-flex items-center gap-1 min-w-0"><MapPin className="size-3 shrink-0"/><span className="truncate">{j.service_areas?.name ?? j.service_area ?? j.city ?? "Ghana"}</span></span>
                     {j.budget ? <span className="font-semibold text-primary">Budget GH₵{Number(j.budget).toLocaleString("en-GH")}</span> : null}
                     <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                      <FileText className="size-3"/>{appCounts?.[j.id] ?? 0} application{(appCounts?.[j.id] ?? 0) === 1 ? "" : "s"}
+                      <FileText className="size-3"/>{appCounts?.[j.id]?.total ?? 0} application{(appCounts?.[j.id]?.total ?? 0) === 1 ? "" : "s"}
                     </span>
                     {(() => { const t = jobTimingLabel(j as any); return t.asap
                       ? <span className="font-semibold text-primary">⚡ ASAP</span>

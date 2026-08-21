@@ -162,7 +162,9 @@ function Home() {
             <EmptyWorkers />
           ) : (
             <div className="space-y-3">
-              {featured.slice(0, 3).map((w) => <WorkerCard key={w.user_id} w={w} locked={!user} />)}
+              {withAvailabilityState(featured.slice(0, 3), busyIds).map((w) => (
+                <WorkerCard key={w.user_id} w={w} locked={!user} />
+              ))}
             </div>
           )}
         </section>

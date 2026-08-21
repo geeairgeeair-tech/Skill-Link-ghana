@@ -142,13 +142,17 @@ function MyJobPosts() {
                   <p className="font-semibold truncate mt-1">{j.title}</p>
                   <p className="text-xs text-muted-foreground truncate">{j.categories?.name ?? "General"}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-                    <span className="inline-flex items-center gap-1"><MapPin className="size-3"/>{j.city ?? "Ghana"}</span>
-                    {j.budget ? <span className="font-semibold text-primary">GH₵{j.budget}</span> : null}
+                    <span className="inline-flex items-center gap-1 min-w-0"><MapPin className="size-3 shrink-0"/><span className="truncate">{j.service_areas?.name ?? j.service_area ?? j.city ?? "Ghana"}</span></span>
+                    {j.budget ? <span className="font-semibold text-primary">Budget GH₵{Number(j.budget).toLocaleString("en-GH")}</span> : null}
                     <span className="inline-flex items-center gap-1 font-semibold text-foreground">
                       <FileText className="size-3"/>{appCounts?.[j.id] ?? 0} application{(appCounts?.[j.id] ?? 0) === 1 ? "" : "s"}
                     </span>
+                    {(() => { const t = jobTimingLabel(j as any); return t.asap
+                      ? <span className="font-semibold text-primary">⚡ ASAP</span>
+                      : <span className="inline-flex items-center gap-1">📅 {t.text}</span>; })()}
                     {(() => { const d = jobDurationLabel(j as any); return d ? <span className="inline-flex items-center gap-1">{d.text}</span> : null; })()}
                   </div>
+
                 </div>
               </Link>
               {(canEdit || canCancel) && (

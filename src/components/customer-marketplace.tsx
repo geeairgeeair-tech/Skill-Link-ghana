@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, PlusSquare, Calendar } from "lucide-react";
+import { ArrowRight, Search, PlusSquare, Calendar, ClipboardList } from "lucide-react";
 import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
@@ -9,6 +9,7 @@ import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 
 
 /** Slugs shown as the "everyday services" shortlist on home / hire surfaces. */

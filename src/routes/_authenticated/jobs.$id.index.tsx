@@ -511,6 +511,8 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
             qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
             qc.invalidateQueries({ queryKey: ["job-request", jobId] });
             qc.invalidateQueries({ queryKey: ["my-bookings"] });
+            qc.invalidateQueries({ queryKey: ["job-applicant-counts"] });
+            qc.invalidateQueries({ queryKey: ["my-job-posts-summary"] });
             if (bookingId) navigate({ to: "/bookings/$bookingId", params: { bookingId } });
           }}
         />

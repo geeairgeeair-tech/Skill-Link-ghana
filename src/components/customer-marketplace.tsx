@@ -202,7 +202,7 @@ export function CustomerMarketplaceSection() {
           <p className="text-sm text-muted-foreground">No professionals listed yet.</p>
         ) : (
           <div className="space-y-3">
-            {(recommended ?? []).map((w) => (
+            {withAvailabilityState(recommended, busyIds).map((w) => (
               <WorkerCard key={w.user_id} w={w} />
             ))}
           </div>

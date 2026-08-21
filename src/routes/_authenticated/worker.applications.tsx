@@ -7,6 +7,8 @@ import { BackButton } from "@/components/back-button";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { jobTimingLabel, jobDurationLabel } from "@/lib/job-timing";
+
 
 export const Route = createFileRoute("/_authenticated/worker/applications")({
   component: MyApplicationsPage,

@@ -404,7 +404,7 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
   });
 
   return (
-    <section className="rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
+    <section id="applicants" className="scroll-mt-4 rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-primary"/>
@@ -511,6 +511,8 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
             qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
             qc.invalidateQueries({ queryKey: ["job-request", jobId] });
             qc.invalidateQueries({ queryKey: ["my-bookings"] });
+            qc.invalidateQueries({ queryKey: ["job-applicant-counts"] });
+            qc.invalidateQueries({ queryKey: ["my-job-posts-summary"] });
             if (bookingId) navigate({ to: "/bookings/$bookingId", params: { bookingId } });
           }}
         />
@@ -522,6 +524,8 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
           onDone={() => {
             setDeclineFor(null);
             qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
+            qc.invalidateQueries({ queryKey: ["job-applicant-counts"] });
+            qc.invalidateQueries({ queryKey: ["my-job-posts-summary"] });
           }}
         />
       )}

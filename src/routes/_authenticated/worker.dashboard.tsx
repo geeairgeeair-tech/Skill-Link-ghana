@@ -13,8 +13,9 @@ import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock,
+  Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock, ClipboardList,
 } from "lucide-react";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({
@@ -36,6 +37,8 @@ const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"
 function WorkerDashboard() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const { data: myJobs } = useMyJobPostsSummary();
+
 
   const { data: coverage, isLoading: coverageLoading } = useQuery({
     queryKey: ["my-service-areas", user?.id],
@@ -371,6 +374,20 @@ function WorkerDashboard() {
           </div>
         )}
 
+
+        {(myJobs?.jobCount ?? 0) > 0 && (
+          <Link to="/jobs/mine" className="flex items-center gap-2 rounded-2xl bg-card border border-border px-4 py-3 shadow-card">
+            <ClipboardList className="size-4 text-primary shrink-0" />
+            <span className="font-semibold text-sm">My posted jobs</span>
+            {myJobs!.pending > 0 ? (
+              <span className="ml-auto rounded-full bg-gold/25 text-gold-foreground text-[11px] font-bold px-2 py-0.5">
+                {myJobs!.pending} awaiting review
+              </span>
+            ) : (
+              <span className="ml-auto text-xs text-muted-foreground font-medium">{myJobs!.jobCount} posted</span>
+            )}
+          </Link>
+        )}
 
         <div className="grid grid-cols-2 gap-2 pb-4">
           <Tile to="/worker/profile" icon={UserCog} title="My profile" subtitle="Bio, pricing, documents" />

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Search, PlusSquare, Calendar } from "lucide-react";
+import { ArrowRight, Search, PlusSquare, Calendar, ClipboardList } from "lucide-react";
 import { fetchPrimaryAreaNames } from "@/lib/service-areas";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryIcon } from "@/components/category-icon";
@@ -9,6 +9,7 @@ import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 
 
 /** Slugs shown as the "everyday services" shortlist on home / hire surfaces. */
@@ -145,6 +146,10 @@ export function CustomerMarketplaceSection() {
     },
   });
 
+  const { data: myJobs } = useMyJobPostsSummary();
+
+
+
   return (
     <div className="space-y-8">
       <section>
@@ -178,6 +183,21 @@ export function CustomerMarketplaceSection() {
             )}
           </Link>
 
+          <Link
+            to="/jobs/mine"
+            className="col-span-2 rounded-2xl bg-card border border-border px-4 py-3 font-semibold text-sm flex items-center gap-2"
+          >
+            <ClipboardList className="size-4 text-primary" /> My job posts
+            {myJobs?.pending ? (
+              <span className="ml-auto rounded-full bg-gold/25 text-gold-foreground text-[11px] font-bold px-2 py-0.5">
+                {myJobs.pending} awaiting review
+              </span>
+            ) : (
+              <span className="ml-auto text-xs font-medium text-muted-foreground">
+                {myJobs?.jobCount ?? 0} posted
+              </span>
+            )}
+          </Link>
         </div>
       </section>
 

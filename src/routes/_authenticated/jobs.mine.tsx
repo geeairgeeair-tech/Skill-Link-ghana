@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText } from "lucide-react";
+import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText, Users } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { jobDurationLabel, jobTimingLabel } from "@/lib/job-timing";
@@ -10,6 +10,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAuth } from "@/hooks/use-auth";
 import { SignedImage } from "./jobs.index";
 import { isJobEditable } from "@/lib/job-editable";
+import { useJobApplicantCounts } from "@/hooks/use-job-applicant-counts";
 
 
 export const Route = createFileRoute("/_authenticated/jobs/mine")({
@@ -59,16 +60,9 @@ function MyJobPosts() {
       return map;
     },
   });
-  const { data: appCounts } = useQuery({
-    queryKey: ["my-jobs-app-counts", user?.id, jobIds.join(",")],
-    enabled: !!user && jobIds.length > 0,
-    queryFn: async () => {
-      const { data } = await supabase.from("job_applications").select("job_id").in("job_id", jobIds);
-      const map: Record<string, number> = {};
-      (data ?? []).forEach((r: any) => { map[r.job_id] = (map[r.job_id] ?? 0) + 1; });
-      return map;
-    },
-  });
+  // Counts come from live job_applications rows (status = 'pending'), never
+  // from notification read state.
+  const { data: appCounts } = useJobApplicantCounts(jobIds);
 
 
   const submitCancel = async () => {
@@ -121,6 +115,7 @@ function MyJobPosts() {
           const firstImg = media.find(m => m.type === "image");
           const canEdit = isJobEditable(j.status);
           const canCancel = j.status === "open" || j.status === "assigned";
+          const pending = appCounts?.[j.id]?.pending ?? 0;
           return (
             <div key={j.id} className="rounded-2xl bg-card border border-border p-3 shadow-card">
               <Link to="/jobs/$id" params={{ id: j.id }} className="flex gap-3">
@@ -145,7 +140,7 @@ function MyJobPosts() {
                     <span className="inline-flex items-center gap-1 min-w-0"><MapPin className="size-3 shrink-0"/><span className="truncate">{j.service_areas?.name ?? j.service_area ?? j.city ?? "Ghana"}</span></span>
                     {j.budget ? <span className="font-semibold text-primary">Budget GH₵{Number(j.budget).toLocaleString("en-GH")}</span> : null}
                     <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                      <FileText className="size-3"/>{appCounts?.[j.id] ?? 0} application{(appCounts?.[j.id] ?? 0) === 1 ? "" : "s"}
+                      <FileText className="size-3"/>{appCounts?.[j.id]?.total ?? 0} application{(appCounts?.[j.id]?.total ?? 0) === 1 ? "" : "s"}
                     </span>
                     {(() => { const t = jobTimingLabel(j as any); return t.asap
                       ? <span className="font-semibold text-primary">⚡ ASAP</span>
@@ -155,6 +150,20 @@ function MyJobPosts() {
 
                 </div>
               </Link>
+              {pending > 0 && (
+                <Link
+                  to="/jobs/$id"
+                  params={{ id: j.id }}
+                  hash="applicants"
+                  className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-gold/15 border border-gold/40 px-3 py-2"
+                >
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-foreground">
+                    <Users className="size-3.5" />
+                    {pending} awaiting review
+                  </span>
+                  <span className="text-xs font-semibold text-primary">Review applicants →</span>
+                </Link>
+              )}
               {(canEdit || canCancel) && (
                 <div className="flex gap-2 mt-3 pt-3 border-t border-border">
                   {canEdit && (

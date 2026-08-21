@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText } from "lucide-react";
+import { MapPin, Plus, Pencil, XCircle, Zap, AlertTriangle, FileText, Users } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { toast } from "sonner";
 import { jobDurationLabel, jobTimingLabel } from "@/lib/job-timing";

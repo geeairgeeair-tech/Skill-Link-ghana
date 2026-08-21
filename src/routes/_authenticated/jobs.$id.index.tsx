@@ -379,7 +379,7 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
   const [reviewFor, setReviewFor] = useState<any | null>(null);
   const [declineFor, setDeclineFor] = useState<any | null>(null);
 
-  const { data: apps, isLoading, error: appsError } = useQuery({
+  const { data: apps, isLoading, error: appsError, refetch: refetchApps } = useQuery({
     queryKey: ["job-applicants", jobId],
     queryFn: async () => {
       const { data: rows, error } = await supabase
@@ -414,9 +414,12 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
       </div>
 
       {isLoading ? (
-        <p className="text-xs text-muted-foreground">Loading applicants…</p>
+        Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)
       ) : appsError ? (
-        <p className="text-xs text-destructive">Could not load applicants: {(appsError as any).message}</p>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+          <p className="text-xs font-semibold text-destructive">Couldn't load applicants.</p>
+          <button onClick={() => refetchApps()} className="mt-2 rounded-lg bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-semibold">Retry</button>
+        </div>
       ) : !apps || apps.length === 0 ? (
         <p className="text-xs text-muted-foreground">No applications yet. Verified workers in this category will see your job on their board.</p>
       ) : apps.map((a: any) => {

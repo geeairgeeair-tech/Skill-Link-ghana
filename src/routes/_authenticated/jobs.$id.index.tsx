@@ -524,6 +524,8 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
           onDone={() => {
             setDeclineFor(null);
             qc.invalidateQueries({ queryKey: ["job-applicants", jobId] });
+            qc.invalidateQueries({ queryKey: ["job-applicant-counts"] });
+            qc.invalidateQueries({ queryKey: ["my-job-posts-summary"] });
           }}
         />
       )}

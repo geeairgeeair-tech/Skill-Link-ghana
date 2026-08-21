@@ -74,7 +74,7 @@ function BookingsPage() {
   const [confirmFor, setConfirmFor] = useState<any | null>(null);
   const [disputeFor, setDisputeFor] = useState<any | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
     staleTime: 30_000,

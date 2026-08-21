@@ -150,6 +150,20 @@ function MyJobPosts() {
 
                 </div>
               </Link>
+              {pending > 0 && (
+                <Link
+                  to="/jobs/$id"
+                  params={{ id: j.id }}
+                  hash="applicants"
+                  className="mt-3 flex items-center justify-between gap-2 rounded-xl bg-gold/15 border border-gold/40 px-3 py-2"
+                >
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold text-gold-foreground">
+                    <Users className="size-3.5" />
+                    {pending} awaiting review
+                  </span>
+                  <span className="text-xs font-semibold text-primary">Review applicants →</span>
+                </Link>
+              )}
               {(canEdit || canCancel) && (
                 <div className="flex gap-2 mt-3 pt-3 border-t border-border">
                   {canEdit && (

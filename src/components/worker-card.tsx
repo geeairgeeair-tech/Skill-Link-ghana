@@ -3,7 +3,9 @@ import { MapPin } from "lucide-react";
 import { StarRating } from "./star-rating";
 import { VerificationBadge } from "./verification-badge";
 
-export type AvailabilityState = "available" | "busy" | "unavailable";
+/** "unknown" = commitment state not resolved yet; the badge is hidden rather
+ *  than optimistically showing "Active" for a possibly-committed pro. */
+export type AvailabilityState = "available" | "busy" | "unavailable" | "unknown";
 
 export interface WorkerCardData {
   user_id: string;
@@ -30,11 +32,15 @@ const STATE_LABEL: Record<AvailabilityState, string> = {
   available: "Active",
   busy: "Busy",
   unavailable: "Unavailable",
+  unknown: "Checking…",
 };
 
 export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: boolean }) {
+  // Availability must come from the unified commitment-aware source
+  // (useBusyWorkerIds / availabilityStateFor). `is_available` alone can only
+  // ever prove "unavailable" — never "available".
   const state: AvailabilityState =
-    w.availability_state ?? ((w.is_available ?? true) ? "available" : "unavailable");
+    w.availability_state ?? ((w.is_available ?? true) ? "unknown" : "unavailable");
   
   const dotClass =
     state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground/60";
@@ -44,6 +50,7 @@ export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: 
       : state === "busy"
         ? "bg-gold/20 text-gold-foreground"
         : "bg-muted text-muted-foreground";
+  const showBadge = state !== "unknown";
   const className =
     "block rounded-2xl border border-border bg-card p-3 shadow-card hover:shadow-elevated transition-all";
   const linkProps = locked
@@ -73,9 +80,11 @@ export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: 
                 Featured
               </span>
             )}
-            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badgeClass}`}>
-              {STATE_LABEL[state]}
-            </span>
+            {showBadge && (
+              <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badgeClass}`}>
+                {STATE_LABEL[state]}
+              </span>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground truncate">{w.category_name ?? "Pro"}</p>

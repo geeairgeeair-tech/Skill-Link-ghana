@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAppRole } from "@/hooks/use-app-role";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { BrandLogo } from "@/components/brand-logo";
 import { GuestGateCard } from "@/components/guest-gate";
 
@@ -72,6 +73,7 @@ function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
   const { user, effectiveRole, hasApplication } = useAppRole();
+  const { data: busyIds } = useBusyWorkerIds();
   const role = effectiveRole;
   const navigate = useNavigate();
 
@@ -160,7 +162,9 @@ function Home() {
             <EmptyWorkers />
           ) : (
             <div className="space-y-3">
-              {featured.slice(0, 3).map((w) => <WorkerCard key={w.user_id} w={w} locked={!user} />)}
+              {withAvailabilityState(featured.slice(0, 3), busyIds).map((w) => (
+                <WorkerCard key={w.user_id} w={w} locked={!user} />
+              ))}
             </div>
           )}
         </section>

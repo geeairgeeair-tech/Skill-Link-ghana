@@ -11,6 +11,7 @@ import { BackButton } from "@/components/back-button";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { GuestGate } from "@/components/guest-gate";
 
 
@@ -57,15 +58,7 @@ function WorkersPage() {
     queryFn: async () => (await supabase.from("categories").select("*").eq("active", true).order("sort_order")).data ?? [],
   });
 
-  const { data: busyIds } = useQuery({
-    queryKey: ["busy-workers"],
-    refetchInterval: 30000,
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("list_busy_workers");
-      return new Set<string>(((data ?? []) as any[]).map((r) => r.worker_id));
-    },
-  });
+  const { data: busyIds } = useBusyWorkerIds();
 
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],
@@ -159,17 +152,10 @@ function WorkersPage() {
   });
 
 
-  const withStatus = useMemo(() => {
-    if (!workers) return [];
-    return workers.map((w) => ({
-      ...w,
-      availability_state: (w.is_available ?? true)
-        ? busyIds?.has(w.user_id)
-          ? ("busy" as const)
-          : ("available" as const)
-        : ("unavailable" as const),
-    }));
-  }, [workers, busyIds]);
+  const withStatus = useMemo(
+    () => withAvailabilityState(workers, busyIds),
+    [workers, busyIds],
+  );
 
   const filtered = useMemo(() => {
     const base = search.availableOnly

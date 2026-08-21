@@ -7,6 +7,7 @@ import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
 
 
@@ -67,6 +68,7 @@ export function FeaturedCategoryGrid({
  */
 export function CustomerMarketplaceSection() {
   const { user } = useAuth();
+  const { data: busyIds } = useBusyWorkerIds();
   const customerActions = useCustomerActionCount();
 
   const { data: categories } = useQuery({
@@ -200,7 +202,7 @@ export function CustomerMarketplaceSection() {
           <p className="text-sm text-muted-foreground">No professionals listed yet.</p>
         ) : (
           <div className="space-y-3">
-            {(recommended ?? []).map((w) => (
+            {withAvailabilityState(recommended, busyIds).map((w) => (
               <WorkerCard key={w.user_id} w={w} />
             ))}
           </div>

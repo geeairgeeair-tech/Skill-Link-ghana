@@ -27,8 +27,13 @@ function ApplyPage() {
 
   const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-request-brief", id],
-    queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)").eq("id", id).maybeSingle()).data,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("job_requests")
+        .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)")
+        .eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
   });
 
   const eligibility = useWorkerEligibility();

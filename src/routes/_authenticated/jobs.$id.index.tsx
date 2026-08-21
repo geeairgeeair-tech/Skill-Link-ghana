@@ -50,11 +50,15 @@ function JobDetail() {
   const eligibility = useWorkerEligibility();
   const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-request", id],
-    queryFn: async () => (await supabase.from("job_requests")
+    queryFn: async () => {
+      const { data, error } = await supabase.from("job_requests")
       // Exact location columns (address/lat/lng/landmark/instructions) are not
       // readable here — the owner/admin/assigned pro reads them via RPC.
       .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
-      .eq("id", id).maybeSingle()).data,
+        .eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
   });
   const jobBookingId = (job as any)?.booking_id as string | null | undefined;
   const { data: jobBookingStatus } = useQuery({

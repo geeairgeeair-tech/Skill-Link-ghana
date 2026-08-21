@@ -32,15 +32,20 @@ function MyJobPosts() {
   const [cancelFor, setCancelFor] = useState<{ id: string; title: string } | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
-  const { data: jobs, isLoading } = useQuery({
+  const { data: jobs, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-job-requests", user?.id],
     enabled: !!user,
-    queryFn: async () => (await supabase
-      .from("job_requests")
-      .select("id, title, description, budget, city, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, booking_id, categories(name)")
-      .eq("customer_id", user!.id)
-      .order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("job_requests")
+        .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, booking_id, categories(name), service_areas(name)")
+        .eq("customer_id", user!.id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
   });
+
 
   const jobIds = (jobs ?? []).map((j: any) => j.id);
   const bookingIds = (jobs ?? []).map((j: any) => j.booking_id).filter(Boolean);

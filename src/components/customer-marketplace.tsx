@@ -68,6 +68,7 @@ export function FeaturedCategoryGrid({
  */
 export function CustomerMarketplaceSection() {
   const { user } = useAuth();
+  const { data: busyIds } = useBusyWorkerIds();
   const customerActions = useCustomerActionCount();
 
   const { data: categories } = useQuery({

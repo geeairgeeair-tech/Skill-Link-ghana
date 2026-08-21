@@ -129,6 +129,11 @@ function BookingsPage() {
       <main className="mx-auto max-w-md px-5 space-y-3 mt-3 pb-32">
         {isLoading && !data ? (
           Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+        ) : isError && !data ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm">
+            <p className="font-semibold text-destructive">Couldn't load your bookings.</p>
+            <button onClick={() => refetch()} className="mt-3 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+          </div>
         ) : visible.length === 0 ? (
 
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
@@ -136,6 +141,7 @@ function BookingsPage() {
             <p className="text-sm text-muted-foreground">No {TABS.find(t=>t.key===tab)?.label.toLowerCase()} bookings.</p>
             <Link to="/workers" className="mt-3 inline-block text-primary font-semibold text-sm">Find a pro →</Link>
           </div>
+
         ) : visible.map((b: any) => {
           const hasReview = (b.reviews ?? []).length > 0;
           const awaiting = b.status === "awaiting_customer_confirmation" || b.status === "worker_marked_complete";

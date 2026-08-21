@@ -80,9 +80,11 @@ export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: 
                 Featured
               </span>
             )}
-            <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badgeClass}`}>
-              {STATE_LABEL[state]}
-            </span>
+            {showBadge && (
+              <span className={`text-[10px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded ${badgeClass}`}>
+                {STATE_LABEL[state]}
+              </span>
+            )}
           </div>
 
           <p className="text-sm text-muted-foreground truncate">{w.category_name ?? "Pro"}</p>

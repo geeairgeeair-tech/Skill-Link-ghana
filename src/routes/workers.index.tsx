@@ -57,15 +57,7 @@ function WorkersPage() {
     queryFn: async () => (await supabase.from("categories").select("*").eq("active", true).order("sort_order")).data ?? [],
   });
 
-  const { data: busyIds } = useQuery({
-    queryKey: ["busy-workers"],
-    refetchInterval: 30000,
-    enabled: !!user,
-    queryFn: async () => {
-      const { data } = await supabase.rpc("list_busy_workers");
-      return new Set<string>(((data ?? []) as any[]).map((r) => r.worker_id));
-    },
-  });
+  const { data: busyIds } = useBusyWorkerIds();
 
   const { data: workers, isLoading, isError, refetch } = useQuery({
     queryKey: ["workers", { category, minRating: search.minRating, minExperience: search.minExperience, availableOnly: search.availableOnly, sort }],

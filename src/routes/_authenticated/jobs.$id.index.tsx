@@ -404,7 +404,7 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
   });
 
   return (
-    <section className="rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
+    <section id="applicants" className="scroll-mt-4 rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <FileText className="size-4 text-primary"/>

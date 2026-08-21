@@ -115,6 +115,7 @@ function MyJobPosts() {
           const firstImg = media.find(m => m.type === "image");
           const canEdit = isJobEditable(j.status);
           const canCancel = j.status === "open" || j.status === "assigned";
+          const pending = appCounts?.[j.id]?.pending ?? 0;
           return (
             <div key={j.id} className="rounded-2xl bg-card border border-border p-3 shadow-card">
               <Link to="/jobs/$id" params={{ id: j.id }} className="flex gap-3">

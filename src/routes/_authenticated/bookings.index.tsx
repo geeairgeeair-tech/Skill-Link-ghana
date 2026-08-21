@@ -160,9 +160,11 @@ function BookingsPage() {
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{b.categories?.name}</p>
               <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
+              {b.service_area && <p className="text-xs text-muted-foreground mt-2 truncate">📍 {b.service_area}</p>}
               {bookingTimingLines(b as any).length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">{bookingTimingLines(b as any).join(" · ")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{bookingTimingLines(b as any).join(" · ")}</p>
               )}
+
               {(b.budget ?? b.estimated_cost) != null && <p className="text-sm font-semibold text-primary mt-1">Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
               {acceptedEstimates?.[b.id] != null && <p className="text-sm text-muted-foreground mt-1">Accepted Estimate: {fmtGHS(acceptedEstimates[b.id])}</p>}
 

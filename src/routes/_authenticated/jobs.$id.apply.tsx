@@ -25,10 +25,15 @@ function ApplyPage() {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
 
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-request-brief", id],
-    queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)").eq("id", id).maybeSingle()).data,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("job_requests")
+        .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)")
+        .eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
   });
 
   const eligibility = useWorkerEligibility();
@@ -52,7 +57,17 @@ function ApplyPage() {
     setMessage(existing.message ?? "");
   }
 
-  if (isLoading || eligibility.loading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (isLoading || eligibility.loading) return (
+    <div className="mx-auto max-w-md p-5 space-y-3">
+      {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-20 rounded-2xl bg-muted animate-pulse" />)}
+    </div>
+  );
+  if (isError) return (
+    <div className="p-8 text-center space-y-3">
+      <p className="font-semibold text-destructive">Couldn't load this job.</p>
+      <button onClick={() => refetch()} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+    </div>
+  );
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
   const jobCatName = (job as any).categories?.name ?? "this category";

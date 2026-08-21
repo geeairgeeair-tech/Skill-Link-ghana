@@ -7,6 +7,8 @@ import { BackButton } from "@/components/back-button";
 import { AppShell } from "@/components/app-shell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { jobTimingLabel, jobDurationLabel } from "@/lib/job-timing";
+
 
 export const Route = createFileRoute("/_authenticated/worker/applications")({
   component: MyApplicationsPage,
@@ -24,12 +26,13 @@ function MyApplicationsPage() {
   const qc = useQueryClient();
   const [editing, setEditing] = useState<any | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-applications", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data: apps, error } = await supabase.from("job_applications")
-        .select("id, status, quoted_price, estimated_start, message, created_at, job_id, decline_reason, job_requests(id, title, city, status, urgency, budget, booking_id, categories(name))")
+        .select("id, status, quoted_price, estimated_start, message, created_at, job_id, decline_reason, job_requests(id, title, city, service_area, status, urgency, budget, booking_id, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, categories(name), service_areas(name))")
+
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -77,7 +80,12 @@ function MyApplicationsPage() {
 
       <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
         {isLoading ? (
-          <p className="text-center text-sm text-muted-foreground py-10">Loading…</p>
+          Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+        ) : isError ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm">
+            <p className="font-semibold text-destructive">Couldn't load your applications.</p>
+            <button onClick={() => refetch()} className="mt-3 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+          </div>
         ) : (data ?? []).length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             <FileText className="size-8 mx-auto text-muted-foreground/50 mb-2"/>
@@ -88,6 +96,22 @@ function MyApplicationsPage() {
           const job = a.job_requests;
           const canEdit = a.status === "pending" && job?.status === "open";
           const bookingId = a.booking_id as string | null;
+          const area = job?.service_areas?.name ?? job?.service_area ?? job?.city ?? "Ghana";
+          const timing = job ? jobTimingLabel(job) : null;
+          const duration = job ? jobDurationLabel(job) : null;
+          const head = (
+            <>
+              <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
+              <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {area}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                {timing && (timing.asap
+                  ? <span className="font-semibold text-primary">⚡ ASAP</span>
+                  : <span>📅 {timing.text}</span>)}
+                {duration && <span>{duration.text}</span>}
+                {job?.budget != null && <span className="font-semibold text-primary">Budget GH₵{Number(job.budget).toLocaleString("en-GH")}</span>}
+              </div>
+            </>
+          );
           return (
             <div key={a.id} className="rounded-2xl bg-card border border-border p-4 shadow-card">
               <div className="flex items-center justify-between gap-2 mb-1">
@@ -97,20 +121,15 @@ function MyApplicationsPage() {
                 <span className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</span>
               </div>
               {a.status === "accepted" && bookingId ? (
-                <Link to="/bookings/$bookingId" params={{ bookingId }} className="block">
-                  <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
-                  <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {job?.city ?? "Ghana"}</p>
-                </Link>
+                <Link to="/bookings/$bookingId" params={{ bookingId }} className="block">{head}</Link>
               ) : (
-                <Link to="/jobs/$id" params={{ id: a.job_id }} className="block">
-                  <p className="font-semibold truncate">{job?.title ?? "Job"}</p>
-                  <p className="text-xs text-muted-foreground truncate">{job?.categories?.name ?? "General"} · {job?.city ?? "Ghana"}</p>
-                </Link>
+                <Link to="/jobs/$id" params={{ id: a.job_id }} className="block">{head}</Link>
               )}
-              <div className="mt-2 flex items-center gap-3 text-xs">
-                <span className="font-semibold text-primary">Your quote: GH₵{a.quoted_price}</span>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="font-semibold text-primary">Your quote: GH₵{Number(a.quoted_price).toLocaleString("en-GH")}</span>
                 {a.estimated_start && <span className="text-muted-foreground">Start: {new Date(a.estimated_start).toLocaleString()}</span>}
               </div>
+
               {a.message && <p className="mt-2 text-xs text-muted-foreground line-clamp-2">"{a.message}"</p>}
               {a.status === "rejected" && a.decline_reason && (
                 <p className="mt-2 text-[11px] text-muted-foreground italic">Customer note: "{a.decline_reason}"</p>

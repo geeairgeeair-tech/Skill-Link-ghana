@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { BackButton } from "@/components/back-button";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
+import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { GuestGate } from "@/components/guest-gate";
 
@@ -199,7 +200,7 @@ function WorkersPage() {
   };
 
   if (authLoading) {
-    return <div className="p-10 text-center text-sm text-muted-foreground">Loading…</div>;
+    return <PageSkeleton rows={4} />;
   }
   if (!user) return <GuestGate />;
 

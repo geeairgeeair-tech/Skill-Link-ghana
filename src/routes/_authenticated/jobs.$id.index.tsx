@@ -31,17 +31,34 @@ function SignedMedia({ path, type }: { path: string; type: "image"|"video" }) {
     : <video src={data} controls className="w-full rounded-xl bg-black" />;
 }
 
+function JobDetailSkeleton() {
+  return (
+    <div className="min-h-screen bg-background">
+      <div className="fg-gradient-hero px-5 pt-5 pb-10" />
+      <main className="mx-auto max-w-md px-5 -mt-4 space-y-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="h-24 rounded-2xl bg-muted animate-pulse" />
+        ))}
+      </main>
+    </div>
+  );
+}
+
 function JobDetail() {
   const { id } = Route.useParams();
   const { user, role } = useAuth();
   const eligibility = useWorkerEligibility();
-  const { data: job, isLoading } = useQuery({
+  const { data: job, isLoading, isError, refetch } = useQuery({
     queryKey: ["job-request", id],
-    queryFn: async () => (await supabase.from("job_requests")
+    queryFn: async () => {
+      const { data, error } = await supabase.from("job_requests")
       // Exact location columns (address/lat/lng/landmark/instructions) are not
       // readable here — the owner/admin/assigned pro reads them via RPC.
       .select("id, title, description, budget, city, service_area, service_area_id, status, urgency, preferred_at, timing_type, preferred_window, duration_type, duration_start_date, duration_end_date, media, created_at, customer_id, category_id, booking_id, categories(name), service_areas(name), profiles!job_requests_customer_id_fkey(full_name, city, avatar_url)")
-      .eq("id", id).maybeSingle()).data,
+        .eq("id", id).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
   });
   const jobBookingId = (job as any)?.booking_id as string | null | undefined;
   const { data: jobBookingStatus } = useQuery({
@@ -83,7 +100,13 @@ function JobDetail() {
     },
   });
 
-  if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
+  if (isLoading) return <JobDetailSkeleton />;
+  if (isError) return (
+    <div className="p-8 text-center space-y-3">
+      <p className="font-semibold text-destructive">Couldn't load this job.</p>
+      <button onClick={() => refetch()} className="rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+    </div>
+  );
   if (!job) return <div className="p-8 text-center"><p>Job not found.</p><Link to="/jobs" className="text-primary font-semibold">Back to board</Link></div>;
 
   const media: any[] = Array.isArray((job as any).media) ? (job as any).media : [];
@@ -356,7 +379,7 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
   const [reviewFor, setReviewFor] = useState<any | null>(null);
   const [declineFor, setDeclineFor] = useState<any | null>(null);
 
-  const { data: apps, isLoading, error: appsError } = useQuery({
+  const { data: apps, isLoading, error: appsError, refetch: refetchApps } = useQuery({
     queryKey: ["job-applicants", jobId],
     queryFn: async () => {
       const { data: rows, error } = await supabase
@@ -391,9 +414,12 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
       </div>
 
       {isLoading ? (
-        <p className="text-xs text-muted-foreground">Loading applicants…</p>
+        Array.from({ length: 2 }).map((_, i) => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)
       ) : appsError ? (
-        <p className="text-xs text-destructive">Could not load applicants: {(appsError as any).message}</p>
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+          <p className="text-xs font-semibold text-destructive">Couldn't load applicants.</p>
+          <button onClick={() => refetchApps()} className="mt-2 rounded-lg bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-semibold">Retry</button>
+        </div>
       ) : !apps || apps.length === 0 ? (
         <p className="text-xs text-muted-foreground">No applications yet. Verified workers in this category will see your job on their board.</p>
       ) : apps.map((a: any) => {

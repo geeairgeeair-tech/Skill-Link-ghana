@@ -74,7 +74,7 @@ function BookingsPage() {
   const [confirmFor, setConfirmFor] = useState<any | null>(null);
   const [disputeFor, setDisputeFor] = useState<any | null>(null);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ["my-bookings", user?.id],
     enabled: !!user,
     staleTime: 30_000,
@@ -129,6 +129,11 @@ function BookingsPage() {
       <main className="mx-auto max-w-md px-5 space-y-3 mt-3 pb-32">
         {isLoading && !data ? (
           Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />)
+        ) : isError && !data ? (
+          <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center text-sm">
+            <p className="font-semibold text-destructive">Couldn't load your bookings.</p>
+            <button onClick={() => refetch()} className="mt-3 rounded-xl bg-primary text-primary-foreground px-4 py-2 text-xs font-semibold">Retry</button>
+          </div>
         ) : visible.length === 0 ? (
 
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
@@ -136,6 +141,7 @@ function BookingsPage() {
             <p className="text-sm text-muted-foreground">No {TABS.find(t=>t.key===tab)?.label.toLowerCase()} bookings.</p>
             <Link to="/workers" className="mt-3 inline-block text-primary font-semibold text-sm">Find a pro →</Link>
           </div>
+
         ) : visible.map((b: any) => {
           const hasReview = (b.reviews ?? []).length > 0;
           const awaiting = b.status === "awaiting_customer_confirmation" || b.status === "worker_marked_complete";
@@ -154,9 +160,11 @@ function BookingsPage() {
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{b.categories?.name}</p>
               <p className="text-sm mt-2 line-clamp-2">{b.description}</p>
+              {b.service_area && <p className="text-xs text-muted-foreground mt-2 truncate">📍 {b.service_area}</p>}
               {bookingTimingLines(b as any).length > 0 && (
-                <p className="text-xs text-muted-foreground mt-2">{bookingTimingLines(b as any).join(" · ")}</p>
+                <p className="text-xs text-muted-foreground mt-1">{bookingTimingLines(b as any).join(" · ")}</p>
               )}
+
               {(b.budget ?? b.estimated_cost) != null && <p className="text-sm font-semibold text-primary mt-1">Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
               {acceptedEstimates?.[b.id] != null && <p className="text-sm text-muted-foreground mt-1">Accepted Estimate: {fmtGHS(acceptedEstimates[b.id])}</p>}
 

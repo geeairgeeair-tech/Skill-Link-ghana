@@ -32,11 +32,15 @@ const STATE_LABEL: Record<AvailabilityState, string> = {
   available: "Active",
   busy: "Busy",
   unavailable: "Unavailable",
+  unknown: "Checking…",
 };
 
 export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: boolean }) {
+  // Availability must come from the unified commitment-aware source
+  // (useBusyWorkerIds / availabilityStateFor). `is_available` alone can only
+  // ever prove "unavailable" — never "available".
   const state: AvailabilityState =
-    w.availability_state ?? ((w.is_available ?? true) ? "available" : "unavailable");
+    w.availability_state ?? ((w.is_available ?? true) ? "unknown" : "unavailable");
   
   const dotClass =
     state === "available" ? "bg-success" : state === "busy" ? "bg-gold" : "bg-muted-foreground/60";

@@ -146,6 +146,10 @@ export function CustomerMarketplaceSection() {
     },
   });
 
+  const { data: myJobs } = useMyJobPostsSummary();
+
+
+
   return (
     <div className="space-y-8">
       <section>

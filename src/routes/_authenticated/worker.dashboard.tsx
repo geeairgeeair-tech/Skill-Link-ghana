@@ -13,8 +13,9 @@ import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {
   BadgeCheck, AlertCircle, LifeBuoy, RefreshCw, Briefcase, CalendarDays, FileText,
-  Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock,
+  Wallet, Star, Layers, RotateCcw, UserCog, MapPin, CalendarClock, ClipboardList,
 } from "lucide-react";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 
 
 export const Route = createFileRoute("/_authenticated/worker/dashboard")({

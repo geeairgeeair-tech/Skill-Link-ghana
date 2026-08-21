@@ -3,7 +3,9 @@ import { MapPin } from "lucide-react";
 import { StarRating } from "./star-rating";
 import { VerificationBadge } from "./verification-badge";
 
-export type AvailabilityState = "available" | "busy" | "unavailable";
+/** "unknown" = commitment state not resolved yet; the badge is hidden rather
+ *  than optimistically showing "Active" for a possibly-committed pro. */
+export type AvailabilityState = "available" | "busy" | "unavailable" | "unknown";
 
 export interface WorkerCardData {
   user_id: string;

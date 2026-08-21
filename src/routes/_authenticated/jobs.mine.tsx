@@ -59,16 +59,9 @@ function MyJobPosts() {
       return map;
     },
   });
-  const { data: appCounts } = useQuery({
-    queryKey: ["my-jobs-app-counts", user?.id, jobIds.join(",")],
-    enabled: !!user && jobIds.length > 0,
-    queryFn: async () => {
-      const { data } = await supabase.from("job_applications").select("job_id").in("job_id", jobIds);
-      const map: Record<string, number> = {};
-      (data ?? []).forEach((r: any) => { map[r.job_id] = (map[r.job_id] ?? 0) + 1; });
-      return map;
-    },
-  });
+  // Counts come from live job_applications rows (status = 'pending'), never
+  // from notification read state.
+  const { data: appCounts } = useJobApplicantCounts(jobIds);
 
 
   const submitCancel = async () => {

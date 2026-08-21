@@ -50,6 +50,7 @@ export function WorkerCard({ w, locked = false }: { w: WorkerCardData; locked?: 
       : state === "busy"
         ? "bg-gold/20 text-gold-foreground"
         : "bg-muted text-muted-foreground";
+  const showBadge = state !== "unknown";
   const className =
     "block rounded-2xl border border-border bg-card p-3 shadow-card hover:shadow-elevated transition-all";
   const linkProps = locked

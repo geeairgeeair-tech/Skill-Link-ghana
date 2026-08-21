@@ -7,6 +7,7 @@ import { CategoryIcon } from "@/components/category-icon";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { bookingTimingLines } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { useCustomerActionCount } from "@/hooks/use-action-badges";
 
 

@@ -11,6 +11,7 @@ import { BackButton } from "@/components/back-button";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { PageSkeleton } from "@/components/page-skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
 import { GuestGate } from "@/components/guest-gate";
 
 

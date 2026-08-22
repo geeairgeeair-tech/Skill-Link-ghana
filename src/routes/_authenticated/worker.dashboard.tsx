@@ -35,7 +35,7 @@ const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"
 
 
 function WorkerDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const { data: myJobs } = useMyJobPostsSummary();
 
@@ -202,8 +202,8 @@ function WorkerDashboard() {
     return Math.round((checks.filter(Boolean).length / checks.length) * 100);
   })();
 
-  // Never render customer / unverified content while the professional record is still loading.
-  if (wpLoading || profileLoading) return <PageSkeleton rows={5} />;
+  // Never render customer / unverified content while auth or the professional record is still loading.
+  if (authLoading || wpLoading || profileLoading) return <PageSkeleton rows={5} />;
 
   return (
     <AppShell>

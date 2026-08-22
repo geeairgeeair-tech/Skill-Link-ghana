@@ -273,19 +273,87 @@ function EditJobPage() {
             {(categories ?? []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </F>
+        <F label="General service area *">
+          <ServiceAreaSelect
+            value={form.service_area_id || null}
+            onChange={(sid, a) => setForm({ ...form, service_area_id: sid ?? "", service_area: a?.name ?? "" })}
+          />
+        </F>
         <div className="grid grid-cols-2 gap-3">
           <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
-          <F label="Service area"><input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" /></F>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
           <F label="Region"><input value={form.region} onChange={e => setForm({...form, region: e.target.value})} className="input" /></F>
-          <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
         </div>
+        <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
         <F label="Landmark"><input value={form.landmark} onChange={e => setForm({...form, landmark: e.target.value})} className="input" placeholder="e.g. Near Total filling station" /></F>
         <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" /></F>
         <F label="Location instructions"><textarea rows={2} value={form.location_instructions} onChange={e => setForm({...form, location_instructions: e.target.value})} className="input resize-none" placeholder="Gate colour, how to find it, parking…" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
-        <F label="Preferred date/time"><input type="datetime-local" value={form.preferred_at} onChange={e => setForm({...form, preferred_at: e.target.value})} className="input" /></F>
+
+        <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <p className="text-sm font-semibold">When do you need this done?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setForm({...form, timing_type: "asap"})}
+              className={`h-12 rounded-xl border text-sm font-semibold ${form.timing_type === "asap" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              ⚡ ASAP
+            </button>
+            <button type="button" onClick={() => setForm({...form, timing_type: "scheduled"})}
+              className={`h-12 rounded-xl border text-sm font-semibold ${form.timing_type === "scheduled" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              📅 Schedule
+            </button>
+          </div>
+          {form.timing_type === "asap" ? (
+            <p className="text-xs text-muted-foreground">Workers will see this job marked ⚡ ASAP — as soon as possible.</p>
+          ) : (
+            <>
+              <F label="Preferred date">
+                <input type="date" value={form.preferred_date} min={today}
+                  onChange={e => setForm({...form, preferred_date: e.target.value})} className="input" />
+              </F>
+              <F label="Time window">
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_WINDOWS.map(w => {
+                    const passed = !!form.preferred_date && windowHasPassed(form.preferred_date, w.key);
+                    return (
+                      <button key={w.key} type="button" disabled={passed}
+                        onClick={() => setForm({...form, preferred_window: w.key})}
+                        className={`h-11 rounded-xl border text-xs font-semibold px-2 disabled:opacity-40 ${form.preferred_window === w.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                        {w.label} <span className="opacity-70">({w.range})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </F>
+            </>
+          )}
+
+          <F label="How long will you need the Professional?">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setForm({...form, duration_type: "single_day", duration_end_date: ""})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "single_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                ⏱ One day or less
+              </button>
+              <button type="button" onClick={() => setForm({...form, duration_type: "multi_day"})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "multi_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                📆 More than one day
+              </button>
+            </div>
+          </F>
+          {form.duration_type === "multi_day" && (
+            <>
+              <F label="Start date">
+                <input type="date" value={durationStart} readOnly disabled className="input opacity-70" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {form.timing_type === "scheduled" ? "Uses your scheduled date above." : "ASAP jobs start from today."}
+                </p>
+              </F>
+              <F label="Expected end date">
+                <input type="date" value={form.duration_end_date} min={durationStart}
+                  onChange={e => setForm({...form, duration_end_date: e.target.value})} className="input" />
+              </F>
+            </>
+          )}
+        </div>
+
         <F label="Urgency *">
           <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input">
             <option value="normal">Normal</option>

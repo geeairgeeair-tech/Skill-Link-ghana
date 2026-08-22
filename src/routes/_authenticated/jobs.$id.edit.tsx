@@ -9,6 +9,8 @@ import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { isJobEditable } from "@/lib/job-editable";
+import { ServiceAreaSelect } from "@/components/service-area-select";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, type TimeWindowKey } from "@/lib/job-timing";
 
 
 
@@ -25,6 +27,7 @@ const schema = z.object({
   category_id: z.string().uuid("Pick a category"),
   city: z.string().trim().min(2, "City is required").max(60),
   address: z.string().trim().min(3, "Address is required").max(200),
+  service_area_id: z.string().uuid("Select your general service area"),
   service_area: z.string().trim().max(120).optional(),
   region: z.string().trim().max(60).optional(),
   area: z.string().trim().max(120).optional(),
@@ -32,7 +35,12 @@ const schema = z.object({
   location_instructions: z.string().trim().max(500).optional(),
   budget: z.number().int().min(0).max(1_000_000).optional(),
   urgency: z.enum(["normal","urgent","emergency"]),
+  timing_type: z.enum(["asap", "scheduled"]),
+  preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
+  duration_type: z.enum(["single_day", "multi_day"]),
+  duration_start_date: z.string().optional(),
+  duration_end_date: z.string().optional(),
 });
 
 function EditJobPage() {
@@ -48,7 +56,7 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id, media")
+      .select("id, title, description, city, service_area, service_area_id, budget, urgency, status, customer_id, category_id, preferred_at, preferred_window, timing_type, duration_type, duration_start_date, duration_end_date, region, area, assigned_worker_id, booking_id, media")
       .eq("id", id).maybeSingle()).data,
   });
 
@@ -113,6 +121,11 @@ function EditJobPage() {
   useEffect(() => {
     if (!job) return;
     const j = job as any;
+    // Legacy fallback: jobs posted before canonical timing/duration fields existed.
+    const legacyTiming: "asap" | "scheduled" = j.timing_type === "scheduled" || j.timing_type === "asap"
+      ? j.timing_type
+      : j.preferred_at ? "scheduled" : "asap";
+    const legacyDate = j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 10) : "";
     setForm((prev: any) => ({
       title: prev?.title ?? j.title ?? "",
       description: prev?.description ?? j.description ?? "",
@@ -120,13 +133,18 @@ function EditJobPage() {
       city: prev?.city ?? j.city ?? "",
       address: prev?.address ?? addr ?? "",
       service_area: prev?.service_area ?? j.service_area ?? "",
+      service_area_id: prev?.service_area_id ?? j.service_area_id ?? "",
       region: prev?.region ?? j.region ?? "",
       area: prev?.area ?? j.area ?? "",
       landmark: prev?.landmark ?? (priv as any)?.landmark ?? "",
       location_instructions: prev?.location_instructions ?? (priv as any)?.location_instructions ?? "",
       budget: prev?.budget ?? (j.budget?.toString() ?? ""),
       urgency: prev?.urgency ?? j.urgency ?? "normal",
-      preferred_at: prev?.preferred_at ?? (j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : ""),
+      timing_type: prev?.timing_type ?? legacyTiming,
+      preferred_date: prev?.preferred_date ?? legacyDate,
+      preferred_window: prev?.preferred_window ?? (j.preferred_window ?? ""),
+      duration_type: prev?.duration_type ?? (j.duration_type === "multi_day" ? "multi_day" : "single_day"),
+      duration_end_date: prev?.duration_end_date ?? (j.duration_end_date ?? ""),
     }));
   }, [job, addr, priv]);
 
@@ -142,17 +160,50 @@ function EditJobPage() {
 
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 
+  const today = new Date().toISOString().slice(0, 10);
+  // Start date is derived, never entered twice: scheduled date, or today for ASAP,
+  // falling back to whatever the job already had.
+  const durationStart = form.timing_type === "scheduled"
+    ? (form.preferred_date || (job as any).duration_start_date || today)
+    : ((job as any).duration_start_date && (job as any).duration_start_date < today
+        ? (job as any).duration_start_date
+        : today);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const scheduled = form.timing_type === "scheduled";
+    if (scheduled) {
+      if (!form.preferred_date) return toast.error("Pick a preferred date");
+      if (!form.preferred_window) return toast.error("Pick a time window");
+      if (windowHasPassed(form.preferred_date, form.preferred_window)) return toast.error("That date and time window has already passed");
+    }
+    if (form.duration_type === "multi_day") {
+      if (!durationStart) return toast.error("Pick a start date");
+      if (!form.duration_end_date) return toast.error("Pick an end date");
+      if (form.duration_end_date < durationStart) return toast.error("End date cannot be before the start date");
+    }
+
+    let preferredAtIso: string | undefined;
+    const w = scheduled ? windowInfo(form.preferred_window as TimeWindowKey) : null;
+    if (scheduled && form.preferred_date && w) {
+      const d = new Date(`${form.preferred_date}T00:00:00`);
+      d.setHours(w.startHour, 0, 0, 0);
+      preferredAtIso = d.toISOString();
+    }
+
     const parsed = schema.safeParse({
       ...form,
       budget: form.budget ? Number(form.budget) : undefined,
       service_area: form.service_area || undefined,
+      service_area_id: form.service_area_id || undefined,
       region: form.region || undefined,
       area: form.area || undefined,
       landmark: form.landmark || undefined,
       location_instructions: form.location_instructions || undefined,
-      preferred_at: form.preferred_at || undefined,
+      preferred_window: scheduled && form.preferred_window ? form.preferred_window : undefined,
+      preferred_at: preferredAtIso,
+      duration_start_date: form.duration_type === "multi_day" ? durationStart : undefined,
+      duration_end_date: form.duration_type === "multi_day" ? form.duration_end_date : undefined,
     });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
@@ -163,7 +214,7 @@ function EditJobPage() {
       _category_id: parsed.data.category_id,
       _budget: parsed.data.budget ?? null,
       _urgency: parsed.data.urgency,
-      _preferred_at: parsed.data.preferred_at ? new Date(parsed.data.preferred_at).toISOString() : null,
+      _preferred_at: parsed.data.preferred_at ?? null,
       _city: parsed.data.city,
       _address: parsed.data.address,
       _service_area: parsed.data.service_area ?? null,
@@ -174,10 +225,26 @@ function EditJobPage() {
       _media: (media ?? []).map((m) => ({ path: m.path, type: m.type })),
     } as any);
 
-    setBusy(false);
     if (error) {
+      setBusy(false);
       console.error("[customer_update_job_request]", error);
       return toast.error(error.message || "Could not save changes.");
+    }
+
+    // Canonical scheduling/service-area columns (owner-scoped by RLS).
+    const { error: canonErr } = await supabase.from("job_requests").update({
+      service_area_id: parsed.data.service_area_id,
+      timing_type: parsed.data.timing_type,
+      preferred_window: parsed.data.preferred_window ?? null,
+      duration_type: parsed.data.duration_type,
+      duration_start_date: parsed.data.duration_type === "multi_day" ? durationStart : null,
+      duration_end_date: parsed.data.duration_type === "multi_day" ? (parsed.data.duration_end_date ?? null) : null,
+    } as any).eq("id", id);
+
+    setBusy(false);
+    if (canonErr) {
+      console.error("[job_requests canonical update]", canonErr);
+      return toast.error(canonErr.message || "Could not save scheduling details.");
     }
     toast.success("Job updated");
     qc.invalidateQueries({ queryKey: ["job-request", id] });
@@ -206,19 +273,87 @@ function EditJobPage() {
             {(categories ?? []).map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </F>
+        <F label="General service area *">
+          <ServiceAreaSelect
+            value={form.service_area_id || null}
+            onChange={(sid, a) => setForm({ ...form, service_area_id: sid ?? "", service_area: a?.name ?? "" })}
+          />
+        </F>
         <div className="grid grid-cols-2 gap-3">
           <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
-          <F label="Service area"><input value={form.service_area} onChange={e => setForm({...form, service_area: e.target.value})} className="input" /></F>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
           <F label="Region"><input value={form.region} onChange={e => setForm({...form, region: e.target.value})} className="input" /></F>
-          <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
         </div>
+        <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
         <F label="Landmark"><input value={form.landmark} onChange={e => setForm({...form, landmark: e.target.value})} className="input" placeholder="e.g. Near Total filling station" /></F>
         <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" /></F>
         <F label="Location instructions"><textarea rows={2} value={form.location_instructions} onChange={e => setForm({...form, location_instructions: e.target.value})} className="input resize-none" placeholder="Gate colour, how to find it, parking…" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
-        <F label="Preferred date/time"><input type="datetime-local" value={form.preferred_at} onChange={e => setForm({...form, preferred_at: e.target.value})} className="input" /></F>
+
+        <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
+          <p className="text-sm font-semibold">When do you need this done?</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={() => setForm({...form, timing_type: "asap"})}
+              className={`h-12 rounded-xl border text-sm font-semibold ${form.timing_type === "asap" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              ⚡ ASAP
+            </button>
+            <button type="button" onClick={() => setForm({...form, timing_type: "scheduled"})}
+              className={`h-12 rounded-xl border text-sm font-semibold ${form.timing_type === "scheduled" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+              📅 Schedule
+            </button>
+          </div>
+          {form.timing_type === "asap" ? (
+            <p className="text-xs text-muted-foreground">Workers will see this job marked ⚡ ASAP — as soon as possible.</p>
+          ) : (
+            <>
+              <F label="Preferred date">
+                <input type="date" value={form.preferred_date} min={today}
+                  onChange={e => setForm({...form, preferred_date: e.target.value})} className="input" />
+              </F>
+              <F label="Time window">
+                <div className="grid grid-cols-2 gap-2">
+                  {TIME_WINDOWS.map(w => {
+                    const passed = !!form.preferred_date && windowHasPassed(form.preferred_date, w.key);
+                    return (
+                      <button key={w.key} type="button" disabled={passed}
+                        onClick={() => setForm({...form, preferred_window: w.key})}
+                        className={`h-11 rounded-xl border text-xs font-semibold px-2 disabled:opacity-40 ${form.preferred_window === w.key ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                        {w.label} <span className="opacity-70">({w.range})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </F>
+            </>
+          )}
+
+          <F label="How long will you need the Professional?">
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setForm({...form, duration_type: "single_day", duration_end_date: ""})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "single_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                ⏱ One day or less
+              </button>
+              <button type="button" onClick={() => setForm({...form, duration_type: "multi_day"})}
+                className={`h-12 rounded-xl border text-xs font-semibold px-2 ${form.duration_type === "multi_day" ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border"}`}>
+                📆 More than one day
+              </button>
+            </div>
+          </F>
+          {form.duration_type === "multi_day" && (
+            <>
+              <F label="Start date">
+                <input type="date" value={durationStart} readOnly disabled className="input opacity-70" />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {form.timing_type === "scheduled" ? "Uses your scheduled date above." : "ASAP jobs start from today."}
+                </p>
+              </F>
+              <F label="Expected end date">
+                <input type="date" value={form.duration_end_date} min={durationStart}
+                  onChange={e => setForm({...form, duration_end_date: e.target.value})} className="input" />
+              </F>
+            </>
+          )}
+        </div>
+
         <F label="Urgency *">
           <select value={form.urgency} onChange={e => setForm({...form, urgency: e.target.value})} className="input">
             <option value="normal">Normal</option>

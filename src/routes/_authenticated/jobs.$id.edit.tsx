@@ -121,6 +121,11 @@ function EditJobPage() {
   useEffect(() => {
     if (!job) return;
     const j = job as any;
+    // Legacy fallback: jobs posted before canonical timing/duration fields existed.
+    const legacyTiming: "asap" | "scheduled" = j.timing_type === "scheduled" || j.timing_type === "asap"
+      ? j.timing_type
+      : j.preferred_at ? "scheduled" : "asap";
+    const legacyDate = j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 10) : "";
     setForm((prev: any) => ({
       title: prev?.title ?? j.title ?? "",
       description: prev?.description ?? j.description ?? "",
@@ -128,13 +133,18 @@ function EditJobPage() {
       city: prev?.city ?? j.city ?? "",
       address: prev?.address ?? addr ?? "",
       service_area: prev?.service_area ?? j.service_area ?? "",
+      service_area_id: prev?.service_area_id ?? j.service_area_id ?? "",
       region: prev?.region ?? j.region ?? "",
       area: prev?.area ?? j.area ?? "",
       landmark: prev?.landmark ?? (priv as any)?.landmark ?? "",
       location_instructions: prev?.location_instructions ?? (priv as any)?.location_instructions ?? "",
       budget: prev?.budget ?? (j.budget?.toString() ?? ""),
       urgency: prev?.urgency ?? j.urgency ?? "normal",
-      preferred_at: prev?.preferred_at ?? (j.preferred_at ? new Date(j.preferred_at).toISOString().slice(0, 16) : ""),
+      timing_type: prev?.timing_type ?? legacyTiming,
+      preferred_date: prev?.preferred_date ?? legacyDate,
+      preferred_window: prev?.preferred_window ?? (j.preferred_window ?? ""),
+      duration_type: prev?.duration_type ?? (j.duration_type === "multi_day" ? "multi_day" : "single_day"),
+      duration_end_date: prev?.duration_end_date ?? (j.duration_end_date ?? ""),
     }));
   }, [job, addr, priv]);
 
@@ -150,17 +160,50 @@ function EditJobPage() {
 
   if (!form) return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
 
+  const today = new Date().toISOString().slice(0, 10);
+  // Start date is derived, never entered twice: scheduled date, or today for ASAP,
+  // falling back to whatever the job already had.
+  const durationStart = form.timing_type === "scheduled"
+    ? (form.preferred_date || (job as any).duration_start_date || today)
+    : ((job as any).duration_start_date && (job as any).duration_start_date < today
+        ? (job as any).duration_start_date
+        : today);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const scheduled = form.timing_type === "scheduled";
+    if (scheduled) {
+      if (!form.preferred_date) return toast.error("Pick a preferred date");
+      if (!form.preferred_window) return toast.error("Pick a time window");
+      if (windowHasPassed(form.preferred_date, form.preferred_window)) return toast.error("That date and time window has already passed");
+    }
+    if (form.duration_type === "multi_day") {
+      if (!durationStart) return toast.error("Pick a start date");
+      if (!form.duration_end_date) return toast.error("Pick an end date");
+      if (form.duration_end_date < durationStart) return toast.error("End date cannot be before the start date");
+    }
+
+    let preferredAtIso: string | undefined;
+    const w = scheduled ? windowInfo(form.preferred_window as TimeWindowKey) : null;
+    if (scheduled && form.preferred_date && w) {
+      const d = new Date(`${form.preferred_date}T00:00:00`);
+      d.setHours(w.startHour, 0, 0, 0);
+      preferredAtIso = d.toISOString();
+    }
+
     const parsed = schema.safeParse({
       ...form,
       budget: form.budget ? Number(form.budget) : undefined,
       service_area: form.service_area || undefined,
+      service_area_id: form.service_area_id || undefined,
       region: form.region || undefined,
       area: form.area || undefined,
       landmark: form.landmark || undefined,
       location_instructions: form.location_instructions || undefined,
-      preferred_at: form.preferred_at || undefined,
+      preferred_window: scheduled && form.preferred_window ? form.preferred_window : undefined,
+      preferred_at: preferredAtIso,
+      duration_start_date: form.duration_type === "multi_day" ? durationStart : undefined,
+      duration_end_date: form.duration_type === "multi_day" ? form.duration_end_date : undefined,
     });
     if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setBusy(true);
@@ -171,7 +214,7 @@ function EditJobPage() {
       _category_id: parsed.data.category_id,
       _budget: parsed.data.budget ?? null,
       _urgency: parsed.data.urgency,
-      _preferred_at: parsed.data.preferred_at ? new Date(parsed.data.preferred_at).toISOString() : null,
+      _preferred_at: parsed.data.preferred_at ?? null,
       _city: parsed.data.city,
       _address: parsed.data.address,
       _service_area: parsed.data.service_area ?? null,
@@ -182,10 +225,26 @@ function EditJobPage() {
       _media: (media ?? []).map((m) => ({ path: m.path, type: m.type })),
     } as any);
 
-    setBusy(false);
     if (error) {
+      setBusy(false);
       console.error("[customer_update_job_request]", error);
       return toast.error(error.message || "Could not save changes.");
+    }
+
+    // Canonical scheduling/service-area columns (owner-scoped by RLS).
+    const { error: canonErr } = await supabase.from("job_requests").update({
+      service_area_id: parsed.data.service_area_id,
+      timing_type: parsed.data.timing_type,
+      preferred_window: parsed.data.preferred_window ?? null,
+      duration_type: parsed.data.duration_type,
+      duration_start_date: parsed.data.duration_type === "multi_day" ? durationStart : null,
+      duration_end_date: parsed.data.duration_type === "multi_day" ? (parsed.data.duration_end_date ?? null) : null,
+    } as any).eq("id", id);
+
+    setBusy(false);
+    if (canonErr) {
+      console.error("[job_requests canonical update]", canonErr);
+      return toast.error(canonErr.message || "Could not save scheduling details.");
     }
     toast.success("Job updated");
     qc.invalidateQueries({ queryKey: ["job-request", id] });

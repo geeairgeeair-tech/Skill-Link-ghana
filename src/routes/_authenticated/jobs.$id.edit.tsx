@@ -9,6 +9,8 @@ import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { isJobEditable } from "@/lib/job-editable";
+import { ServiceAreaSelect } from "@/components/service-area-select";
+import { TIME_WINDOWS, windowInfo, windowHasPassed, type TimeWindowKey } from "@/lib/job-timing";
 
 
 
@@ -25,6 +27,7 @@ const schema = z.object({
   category_id: z.string().uuid("Pick a category"),
   city: z.string().trim().min(2, "City is required").max(60),
   address: z.string().trim().min(3, "Address is required").max(200),
+  service_area_id: z.string().uuid("Select your general service area"),
   service_area: z.string().trim().max(120).optional(),
   region: z.string().trim().max(60).optional(),
   area: z.string().trim().max(120).optional(),
@@ -32,7 +35,12 @@ const schema = z.object({
   location_instructions: z.string().trim().max(500).optional(),
   budget: z.number().int().min(0).max(1_000_000).optional(),
   urgency: z.enum(["normal","urgent","emergency"]),
+  timing_type: z.enum(["asap", "scheduled"]),
+  preferred_window: z.enum(["overnight", "morning", "afternoon", "evening", "night"]).optional(),
   preferred_at: z.string().optional(),
+  duration_type: z.enum(["single_day", "multi_day"]),
+  duration_start_date: z.string().optional(),
+  duration_end_date: z.string().optional(),
 });
 
 function EditJobPage() {

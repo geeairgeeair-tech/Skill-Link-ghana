@@ -474,6 +474,13 @@ function WorkerDetail() {
             This is your public profile — customers see it exactly like this.
           </div>
         </div>
+      ) : appCtxLoading ? (
+        <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
+          <div className="mx-auto max-w-md space-y-2" aria-busy="true">
+            <div className="h-3 w-2/3 mx-auto rounded bg-muted animate-pulse" />
+            <div className="h-12 rounded-xl bg-muted animate-pulse" />
+          </div>
+        </div>
       ) : appCtx ? (
         <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
           <div className="mx-auto max-w-md space-y-2">

@@ -279,14 +279,8 @@ function EditJobPage() {
             onChange={(sid, a) => setForm({ ...form, service_area_id: sid ?? "", service_area: a?.name ?? "" })}
           />
         </F>
-        <div className="grid grid-cols-2 gap-3">
-          <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
-          <F label="Region"><input value={form.region} onChange={e => setForm({...form, region: e.target.value})} className="input" /></F>
-        </div>
-        <F label="Area"><input value={form.area} onChange={e => setForm({...form, area: e.target.value})} className="input" /></F>
-        <F label="Landmark"><input value={form.landmark} onChange={e => setForm({...form, landmark: e.target.value})} className="input" placeholder="e.g. Near Total filling station" /></F>
-        <F label="Address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" /></F>
-        <F label="Location instructions"><textarea rows={2} value={form.location_instructions} onChange={e => setForm({...form, location_instructions: e.target.value})} className="input resize-none" placeholder="Gate colour, how to find it, parking…" /></F>
+        <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
+        <F label="Exact service address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" placeholder="House / street / landmark" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
 
         <div className="rounded-2xl bg-card border border-border p-4 space-y-3">

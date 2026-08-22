@@ -56,7 +56,7 @@ function EditJobPage() {
   const { data: job } = useQuery({
     queryKey: ["job-edit", id],
     queryFn: async () => (await supabase.from("job_requests")
-      .select("id, title, description, city, service_area, budget, urgency, status, customer_id, category_id, preferred_at, region, area, assigned_worker_id, booking_id, media")
+      .select("id, title, description, city, service_area, service_area_id, budget, urgency, status, customer_id, category_id, preferred_at, preferred_window, timing_type, duration_type, duration_start_date, duration_end_date, region, area, assigned_worker_id, booking_id, media")
       .eq("id", id).maybeSingle()).data,
   });
 

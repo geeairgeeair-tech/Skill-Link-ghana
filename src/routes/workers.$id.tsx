@@ -232,6 +232,10 @@ function WorkerDetail() {
   const isSelf = !!user && user.id === id;
 
   const appCtx = appCtxQ.data ?? null;
+  // While a job/application context is present in the URL we must never render
+  // the Book flow — hold a neutral placeholder until the context resolves.
+  const hasCtxParams = !!applicationId && !!jobId;
+  const appCtxLoading = hasCtxParams && (authLoading || !appCtxQ.isSuccess);
 
   const onBook = () => {
     if (!user) {

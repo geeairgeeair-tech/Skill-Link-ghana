@@ -35,7 +35,7 @@ const COMPLETED_STATUSES = ["completed", "closed", "customer_confirmed_complete"
 
 
 function WorkerDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const { data: myJobs } = useMyJobPostsSummary();
 

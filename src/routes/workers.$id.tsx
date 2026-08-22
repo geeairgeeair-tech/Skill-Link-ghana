@@ -232,6 +232,10 @@ function WorkerDetail() {
   const isSelf = !!user && user.id === id;
 
   const appCtx = appCtxQ.data ?? null;
+  // While a job/application context is present in the URL we must never render
+  // the Book flow — hold a neutral placeholder until the context resolves.
+  const hasCtxParams = !!applicationId && !!jobId;
+  const appCtxLoading = hasCtxParams && (authLoading || !appCtxQ.isSuccess);
 
   const onBook = () => {
     if (!user) {
@@ -472,6 +476,13 @@ function WorkerDetail() {
         <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
           <div className="mx-auto max-w-md text-center text-xs text-muted-foreground">
             This is your public profile — customers see it exactly like this.
+          </div>
+        </div>
+      ) : appCtxLoading ? (
+        <div className="fixed bottom-0 inset-x-0 bg-card/95 backdrop-blur border-t border-border p-3 z-40">
+          <div className="mx-auto max-w-md space-y-2" aria-busy="true">
+            <div className="h-3 w-2/3 mx-auto rounded bg-muted animate-pulse" />
+            <div className="h-12 rounded-xl bg-muted animate-pulse" />
           </div>
         </div>
       ) : appCtx ? (

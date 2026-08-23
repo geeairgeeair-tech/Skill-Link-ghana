@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { BackButton } from "@/components/back-button";
-import { jobDurationLabel } from "@/lib/job-timing";
+import { jobDurationLabel, jobTimingLabel } from "@/lib/job-timing";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
@@ -29,7 +29,7 @@ function ApplyPage() {
     queryKey: ["job-request-brief", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("job_requests")
-        .select("id, title, budget, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)")
+        .select("id, title, budget, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, status, customer_id, category_id, service_area_id, categories(name), service_areas(name)")
         .eq("id", id).maybeSingle();
       if (error) throw error;
       return data;
@@ -47,15 +47,30 @@ function ApplyPage() {
   });
 
   const [quotedPrice, setQuotedPrice] = useState<string>("");
-  const [estStart, setEstStart] = useState<string>("");
   const [message, setMessage] = useState<string>("");
+  const [asapMode, setAsapMode] = useState<"asap" | "specific">("asap");
+  const [todayTime, setTodayTime] = useState<string>("");
+  const [hydrated, setHydrated] = useState(false);
 
-  // hydrate on edit
-  if (existing && quotedPrice === "" && estStart === "" && message === "") {
-    setQuotedPrice(String(existing.quoted_price));
-    setEstStart(existing.estimated_start ? new Date(existing.estimated_start).toISOString().slice(0,16) : "");
-    setMessage(existing.message ?? "");
+  // Prefill: existing application values, else the customer's budget.
+  if (!hydrated && job) {
+    setHydrated(true);
+    if (existing) {
+      setQuotedPrice(String(existing.quoted_price));
+      setMessage(existing.message ?? "");
+      if (existing.estimated_start) {
+        const d = new Date(existing.estimated_start);
+        const sameDay = d.toDateString() === new Date().toDateString();
+        if (sameDay) {
+          setAsapMode("specific");
+          setTodayTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+        }
+      }
+    } else if ((job as any).budget != null) {
+      setQuotedPrice(String((job as any).budget));
+    }
   }
+
 
   if (isLoading || eligibility.loading) return (
     <div className="mx-auto max-w-md p-5 space-y-3">

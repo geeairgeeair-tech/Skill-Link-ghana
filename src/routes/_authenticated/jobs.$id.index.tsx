@@ -262,73 +262,16 @@ function WorkerApplySection({
           <p className="text-xs text-muted-foreground">{blockedReason}</p>
         </div>
       ) : (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold"
+        <Link
+          to="/jobs/$id/apply"
+          params={{ id: jobId }}
+          className="flex items-center justify-center w-full h-12 rounded-xl bg-primary text-primary-foreground font-semibold"
         >
           Apply for this Job
-        </button>
+        </Link>
       )}
       <p className="text-[11px] text-muted-foreground mt-3">Customer contact details are shared only after your application is accepted.</p>
 
-      {open && (
-        <div className="fixed inset-0 z-50 bg-black/60 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !submitting && setOpen(false)}>
-          <form
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={submit}
-            className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] overflow-y-auto"
-          >
-            <h3 className="font-display text-lg font-bold">Apply for this job</h3>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Proposed amount (GH₵) *</label>
-              <input
-                type="number" min={1} inputMode="numeric"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={jobBudget ? `Customer budget: GH₵${jobBudget}` : "e.g. 250"}
-                className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Expected arrival / start *</label>
-              <input
-                type="datetime-local"
-                value={start}
-                onChange={(e) => setStart(e.target.value)}
-                className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Message to the customer *</label>
-              <textarea
-                rows={3}
-                value={message}
-                onChange={(e) => setMessage(e.target.value.slice(0, 1000))}
-                placeholder="Tell the customer why you're the right pro."
-                className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              />
-              <p className="text-[11px] text-muted-foreground mt-1">{message.length}/1000</p>
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Additional note (optional)</label>
-              <textarea
-                rows={2}
-                value={note}
-                onChange={(e) => setNote(e.target.value.slice(0, 500))}
-                placeholder="Anything else the customer should know."
-                className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-              />
-            </div>
-            <div className="flex gap-2 pt-1">
-              <button type="button" disabled={submitting} onClick={() => setOpen(false)} className="flex-1 h-12 rounded-xl border border-border font-semibold">Cancel</button>
-              <button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">
-                {submitting ? "Sending…" : "Submit application"}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </section>
   );
 }

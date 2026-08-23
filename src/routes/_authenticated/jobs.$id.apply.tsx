@@ -248,7 +248,7 @@ function ApplyPage() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground">Message (optional)</label>
+            <label className="text-xs font-semibold text-muted-foreground">Message / additional note (optional)</label>
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 1000))}

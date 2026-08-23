@@ -237,47 +237,8 @@ function WorkerApplySection({
   blockedReason: string | null;
   myApp: { id: string; status: string; quoted_price: number } | null;
 }) {
-  const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState("");
-  const [start, setStart] = useState("");
-  const [message, setMessage] = useState("");
-  const [note, setNote] = useState("");
-  const [submitting, setSubmitting] = useState(false);
+  void jobBudget; void jobCategoryName;
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const amt = Number(amount);
-    if (!Number.isFinite(amt) || amt < 1) return toast.error("Enter a valid amount (GH₵1 or more).");
-    if (!start) return toast.error("Please choose an expected arrival/start time.");
-    if (message.trim().length < 3) return toast.error("Please write a short message to the customer.");
-    setSubmitting(true);
-    const { error } = await supabase.rpc("worker_apply_to_job", {
-      _job_id: jobId,
-      _proposed_amount: amt,
-      _estimated_start: new Date(start).toISOString(),
-      _message: message.trim(),
-      _note: note.trim() || null,
-    } as any);
-    setSubmitting(false);
-    if (error) {
-      console.error("[worker_apply_to_job]", error);
-      const msg = error.message || "Could not send application.";
-      if (/already applied/i.test(msg)) toast.error("You've already applied to this job.");
-      else if (/not in your service category/i.test(msg)) toast.error(`This job is not in your ${jobCategoryName} category.`);
-      else if (/verified/i.test(msg)) toast.error("Only approved workers can apply. Please complete verification.");
-      else if (/active booking/i.test(msg)) toast.error("You have an active booking. Finish it before applying to new jobs.");
-      else if (/own job/i.test(msg)) toast.error("You cannot apply to your own job.");
-      else if (/no longer open/i.test(msg)) toast.error("This job is no longer open.");
-      else toast.error(msg);
-      return;
-    }
-    toast.success("Application sent!");
-    setOpen(false);
-    qc.invalidateQueries({ queryKey: ["my-application-for-job", jobId] });
-    qc.invalidateQueries({ queryKey: ["worker-open-jobs"] });
-    qc.invalidateQueries({ queryKey: ["my-applications"] });
-  };
 
   return (
     <section className="rounded-2xl bg-card border border-border p-4 text-sm">

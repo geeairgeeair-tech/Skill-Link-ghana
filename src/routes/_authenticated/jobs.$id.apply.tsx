@@ -114,10 +114,29 @@ function ApplyPage() {
     );
   }
 
+  const timing = jobTimingLabel(job as any);
+  const isAsapJob = timing.asap;
+
+  const resolveEstimatedStart = (): string | null => {
+    if (isAsapJob) {
+      if (asapMode !== "specific" || !todayTime) return null;
+      const [h, m] = todayTime.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h ?? 0, m ?? 0, 0, 0);
+      return d.toISOString();
+    }
+    // Scheduled job: reuse the customer's own scheduled slot; never a new date.
+    return (job as any).preferred_at ?? null;
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    const parsed = schema.safeParse({ quoted_price: quotedPrice, estimated_start: estStart || undefined, message: message.trim() || undefined });
+    if (isAsapJob && asapMode === "specific" && !todayTime) {
+      toast.error("Choose the time you can arrive today.");
+      return;
+    }
+    const parsed = schema.safeParse({ quoted_price: quotedPrice, message: message.trim() || undefined });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check the form");
       return;
@@ -125,7 +144,7 @@ function ApplyPage() {
     setSubmitting(true);
     const payload = {
       quoted_price: parsed.data.quoted_price,
-      estimated_start: parsed.data.estimated_start ? new Date(parsed.data.estimated_start).toISOString() : null,
+      estimated_start: resolveEstimatedStart(),
       message: parsed.data.message ?? null,
     };
     let error;
@@ -167,26 +186,67 @@ function ApplyPage() {
             <div className="rounded-lg bg-muted p-3 text-xs">This application is <b>{existing?.status}</b> and can no longer be edited.</div>
           )}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground">Your quoted price (GH₵) *</label>
+            <label className="text-xs font-semibold text-muted-foreground">Your proposed amount (GH₵) *</label>
             <input
               type="number" min={1} inputMode="numeric" required
               value={quotedPrice}
               onChange={(e) => setQuotedPrice(e.target.value)}
               disabled={!canEditExisting}
-              placeholder={(job as any).budget ? `Customer budget: GH₵${(job as any).budget}` : "e.g. 250"}
+              placeholder="e.g. 250"
               className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
             />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {(job as any).budget != null
+                ? `Prefilled from the customer's budget (GH₵${Number((job as any).budget).toLocaleString("en-GH")}). You can change it — the customer's budget stays as posted.`
+                : "The customer didn't set a budget."}
+            </p>
           </div>
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">Estimated arrival / start time</label>
-            <input
-              type="datetime-local"
-              value={estStart}
-              onChange={(e) => setEstStart(e.target.value)}
-              disabled={!canEditExisting}
-              className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
-            />
+
+          <div className="rounded-xl border border-border p-3">
+            <p className="text-xs font-semibold text-muted-foreground">Customer's timing</p>
+            {isAsapJob ? (
+              <>
+                <p className="mt-1 text-sm font-semibold text-primary">⚡ ASAP</p>
+                <div className="mt-3 space-y-2">
+                  {([
+                    { key: "asap", label: "I can come ASAP" },
+                    { key: "specific", label: "Specific time today" },
+                  ] as const).map((opt) => (
+                    <label key={opt.key} className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${asapMode === opt.key ? "border-primary bg-primary-soft" : "border-border"}`}>
+                      <input
+                        type="radio"
+                        name="asap-mode"
+                        checked={asapMode === opt.key}
+                        disabled={!canEditExisting}
+                        onChange={() => setAsapMode(opt.key)}
+                      />
+                      <span className="font-medium">{opt.label}</span>
+                    </label>
+                  ))}
+                  {asapMode === "specific" && (
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">Time today *</label>
+                      <input
+                        type="time"
+                        value={todayTime}
+                        onChange={(e) => setTodayTime(e.target.value)}
+                        disabled={!canEditExisting}
+                        className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                      />
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mt-1 text-sm font-semibold">📅 {timing.text}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The customer set this date and time window. Applying means you're available then.
+                </p>
+              </>
+            )}
           </div>
+
           <div>
             <label className="text-xs font-semibold text-muted-foreground">Message (optional)</label>
             <textarea

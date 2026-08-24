@@ -31,7 +31,7 @@ function MyApplicationsPage() {
     enabled: !!user,
     queryFn: async () => {
       const { data: apps, error } = await supabase.from("job_applications")
-        .select("id, status, quoted_price, estimated_start, message, created_at, job_id, decline_reason, job_requests(id, title, city, service_area, status, urgency, budget, booking_id, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, categories(name), service_areas(name))")
+        .select("id, status, quoted_price, estimated_start, message, note, created_at, job_id, decline_reason, job_requests(id, title, city, service_area, status, urgency, budget, booking_id, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, categories(name), service_areas(name))")
 
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });

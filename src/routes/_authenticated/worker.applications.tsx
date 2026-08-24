@@ -173,24 +173,55 @@ function MyApplicationsPage() {
 
 function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void }) {
   const qc = useQueryClient();
+  const job = app.job_requests;
+  const timing = job ? jobTimingLabel(job) : null;
+  const isAsapJob = timing?.asap ?? false;
+  const duration = job ? jobDurationLabel(job) : null;
+
   const [amount, setAmount] = useState(String(app.quoted_price ?? ""));
-  const [start, setStart] = useState(app.estimated_start ? new Date(app.estimated_start).toISOString().slice(0, 16) : "");
   const [message, setMessage] = useState(app.message ?? "");
+  const [asapMode, setAsapMode] = useState<"asap" | "specific">("asap");
+  const [todayTime, setTodayTime] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Hydrate timing choice from the existing application.
+  useState(() => {
+    if (isAsapJob && app.estimated_start) {
+      const d = new Date(app.estimated_start);
+      const sameDay = d.toDateString() === new Date().toDateString();
+      if (sameDay) {
+        setAsapMode("specific");
+        setTodayTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
+      }
+    }
+  });
+
+  const resolveEstimatedStart = (): string | null => {
+    if (isAsapJob) {
+      if (asapMode !== "specific" || !todayTime) return null;
+      const [h, m] = todayTime.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h ?? 0, m ?? 0, 0, 0);
+      return d.toISOString();
+    }
+    // Scheduled job: reuse the customer's own scheduled slot; never a new date.
+    return job?.preferred_at ?? null;
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const amt = Number(amount);
     if (!Number.isFinite(amt) || amt < 1) return toast.error("Enter a valid amount (GH₵1 or more).");
-    if (!start) return toast.error("Please choose an expected arrival/start time.");
-    if (message.trim().length < 3) return toast.error("Please write a short message.");
+    if (isAsapJob && asapMode === "specific" && !todayTime) {
+      return toast.error("Choose the time you can arrive today.");
+    }
     setSubmitting(true);
     const { error } = await supabase.rpc("worker_update_job_application", {
       _application_id: app.id,
       _proposed_amount: amt,
-      _estimated_start: new Date(start).toISOString(),
-      _message: message.trim(),
-      _note: null,
+      _estimated_start: resolveEstimatedStart(),
+      _message: message.trim() || null,
+      _note: app.note ?? null,
     } as any);
     setSubmitting(false);
     if (error) {
@@ -206,20 +237,83 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !submitting && onClose()}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl p-5 space-y-3 max-h-[92vh] overflow-y-auto">
-        <h3 className="font-display text-lg font-bold">Edit application</h3>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
         <div>
-          <label className="text-xs font-semibold text-muted-foreground">Proposed amount (GH₵) *</label>
-          <input type="number" min={1} inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm" />
+          <h3 className="font-display text-lg font-bold">Edit application</h3>
+          <p className="text-sm text-muted-foreground">{job?.title ?? "Job"}</p>
+          {duration && <p className="text-xs text-muted-foreground mt-1">{duration.text}</p>}
         </div>
+
         <div>
-          <label className="text-xs font-semibold text-muted-foreground">Expected arrival / start *</label>
-          <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm" />
+          <label className="text-xs font-semibold text-muted-foreground">Your proposed amount (GH₵) *</label>
+          <input
+            type="number" min={1} inputMode="numeric" required
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+          />
+          {job?.budget != null && (
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Customer's budget: GH₵{Number(job.budget).toLocaleString("en-GH")}. You can change your quote.
+            </p>
+          )}
         </div>
+
+        <div className="rounded-xl border border-border p-3">
+          <p className="text-xs font-semibold text-muted-foreground">Customer's timing</p>
+          {isAsapJob ? (
+            <>
+              <p className="mt-1 text-sm font-semibold text-primary">⚡ ASAP</p>
+              <div className="mt-3 space-y-2">
+                {([
+                  { key: "asap", label: "I can come ASAP" },
+                  { key: "specific", label: "Specific time today" },
+                ] as const).map((opt) => (
+                  <label key={opt.key} className={`flex items-center gap-2 rounded-lg border p-3 text-sm ${asapMode === opt.key ? "border-primary bg-primary-soft" : "border-border"}`}>
+                    <input
+                      type="radio"
+                      name="edit-asap-mode"
+                      checked={asapMode === opt.key}
+                      onChange={() => setAsapMode(opt.key)}
+                    />
+                    <span className="font-medium">{opt.label}</span>
+                  </label>
+                ))}
+                {asapMode === "specific" && (
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground">Time today *</label>
+                    <input
+                      type="time"
+                      value={todayTime}
+                      onChange={(e) => setTodayTime(e.target.value)}
+                      className="mt-1 w-full h-12 rounded-xl border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+                    />
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-sm font-semibold">📅 {timing?.text}</p>
+              <p className="text-[11px] text-muted-foreground mt-1">
+                The customer set this date and time window. Your application confirms you're available then.
+              </p>
+            </>
+          )}
+        </div>
+
         <div>
-          <label className="text-xs font-semibold text-muted-foreground">Message *</label>
-          <textarea rows={3} value={message} onChange={(e) => setMessage(e.target.value.slice(0, 1000))} className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm" />
+          <label className="text-xs font-semibold text-muted-foreground">Message / additional note (optional)</label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value.slice(0, 1000))}
+            rows={4}
+            placeholder="Tell the customer why you're the right pro for the job."
+            className="mt-1 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1">{message.length}/1000</p>
         </div>
+
         <div className="flex gap-2 pt-1">
           <button type="button" disabled={submitting} onClick={onClose} className="flex-1 h-12 rounded-xl border border-border font-semibold">Cancel</button>
           <button type="submit" disabled={submitting} className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50">

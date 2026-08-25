@@ -185,7 +185,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
   const [submitting, setSubmitting] = useState(false);
 
   // Hydrate timing choice from the existing application.
-  useState(() => {
+  useEffect(() => {
     if (isAsapJob && app.estimated_start) {
       const d = new Date(app.estimated_start);
       const sameDay = d.toDateString() === new Date().toDateString();
@@ -194,7 +194,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
         setTodayTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
       }
     }
-  });
+  }, []);
 
   const resolveEstimatedStart = (): string | null => {
     if (isAsapJob) {

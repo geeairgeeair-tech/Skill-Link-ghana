@@ -221,7 +221,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
       _proposed_amount: amt,
       _estimated_start: resolveEstimatedStart(),
       _message: message.trim() || null,
-      _note: app.note ?? null,
+      _note: null,
     } as any);
     setSubmitting(false);
     if (error) {

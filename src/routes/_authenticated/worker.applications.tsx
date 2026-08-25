@@ -31,7 +31,7 @@ function MyApplicationsPage() {
     enabled: !!user,
     queryFn: async () => {
       const { data: apps, error } = await supabase.from("job_applications")
-        .select("id, status, quoted_price, estimated_start, message, note, created_at, job_id, decline_reason, job_requests(id, title, city, service_area, status, urgency, budget, booking_id, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, categories(name), service_areas(name))")
+        .select("id, status, quoted_price, estimated_start, message, created_at, job_id, decline_reason, job_requests(id, title, city, service_area, status, urgency, budget, booking_id, timing_type, preferred_at, preferred_window, duration_type, duration_start_date, duration_end_date, categories(name), service_areas(name))")
 
         .eq("worker_id", user!.id)
         .order("created_at", { ascending: false });
@@ -185,7 +185,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
   const [submitting, setSubmitting] = useState(false);
 
   // Hydrate timing choice from the existing application.
-  useState(() => {
+  useEffect(() => {
     if (isAsapJob && app.estimated_start) {
       const d = new Date(app.estimated_start);
       const sameDay = d.toDateString() === new Date().toDateString();
@@ -194,7 +194,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
         setTodayTime(`${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`);
       }
     }
-  });
+  }, []);
 
   const resolveEstimatedStart = (): string | null => {
     if (isAsapJob) {
@@ -221,7 +221,7 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
       _proposed_amount: amt,
       _estimated_start: resolveEstimatedStart(),
       _message: message.trim() || null,
-      _note: app.note ?? null,
+      _note: null,
     } as any);
     setSubmitting(false);
     if (error) {

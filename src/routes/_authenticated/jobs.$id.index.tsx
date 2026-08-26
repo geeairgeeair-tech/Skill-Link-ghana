@@ -5,11 +5,11 @@ import { isJobEditable } from "@/lib/job-editable";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText, User } from "lucide-react";
+import { MapPin, Zap, AlertTriangle, Calendar, Pencil, CheckCircle2, FileText, User, Clock } from "lucide-react";
 import { BackButton } from "@/components/back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { ReviewAndConfirmModal, DeclineApplicationModal } from "@/components/application-decision-modals";
-import { jobTimingLabel, jobDurationLabel } from "@/lib/job-timing";
+import { jobTimingLabel, jobDurationLabel, windowInfo } from "@/lib/job-timing";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { SignedImage } from "./jobs.index";
@@ -206,7 +206,18 @@ function JobDetail() {
           </div>
         </section>
 
-        {isOwner && <ApplicantsPanel jobId={id} jobStatus={(job as any).status} />}
+        {isOwner && (
+          <ApplicantsPanel
+            jobId={id}
+            jobStatus={(job as any).status}
+            jobBudget={(job as any).budget ?? null}
+            jobTimingType={(job as any).timing_type ?? null}
+            jobPreferredAt={(job as any).preferred_at ?? null}
+            jobPreferredWindow={(job as any).preferred_window ?? null}
+            jobServiceAreaName={(job as any).service_areas?.name ?? null}
+            jobServiceAreaFallback={(job as any).service_area ?? (job as any).city ?? null}
+          />
+        )}
 
         {eligibility.isWorker && !isOwner && (
           <WorkerApplySection
@@ -277,7 +288,25 @@ function WorkerApplySection({
 }
 
 
-function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: string }) {
+function ApplicantsPanel({
+  jobId,
+  jobStatus,
+  jobBudget,
+  jobTimingType,
+  jobPreferredAt,
+  jobPreferredWindow,
+  jobServiceAreaName,
+  jobServiceAreaFallback,
+}: {
+  jobId: string;
+  jobStatus: string;
+  jobBudget: number | null;
+  jobTimingType?: string | null;
+  jobPreferredAt?: string | null;
+  jobPreferredWindow?: string | null;
+  jobServiceAreaName?: string | null;
+  jobServiceAreaFallback?: string | null;
+}) {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [reviewFor, setReviewFor] = useState<any | null>(null);
@@ -306,6 +335,39 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
       return list.map((a: any) => ({ ...a, profile: pMap.get(a.worker_id) ?? null, worker: wMap.get(a.worker_id) ?? null, booking_id: bMap.get(a.id) ?? null }));
     },
   });
+
+  const isAsapJob = !jobTimingType || jobTimingType === "asap";
+
+  function applicationTimingLine(app: any): string {
+    if (isAsapJob) {
+      if (!app.estimated_start) return "⚡ Can start ASAP";
+      const d = new Date(app.estimated_start);
+      const time = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      return `🕐 Can start today at ${time}`;
+    }
+    const d = jobPreferredAt ? new Date(jobPreferredAt) : null;
+    const date = d ? d.toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+    const w = windowInfo(jobPreferredWindow);
+    const windowText = w ? `${w.label} (${w.range})` : "";
+    return [date, windowText].filter(Boolean).join(" • ");
+  }
+
+  function AmountDisplay({ proposal }: { proposal: number }) {
+    const sameAsBudget = jobBudget != null && jobBudget === proposal;
+    if (sameAsBudget) {
+      return <span className="text-[11px] text-muted-foreground">Customer Budget: <span className="font-bold text-primary text-sm">GH₵{proposal.toLocaleString("en-GH")}</span></span>;
+    }
+    return (
+      <div className="text-right leading-tight">
+        {jobBudget != null && (
+          <p className="text-[10px] text-muted-foreground">Customer Budget: GH₵{jobBudget.toLocaleString("en-GH")}</p>
+        )}
+        <p className="font-bold text-primary text-sm">Professional Proposal: GH₵{proposal.toLocaleString("en-GH")}</p>
+      </div>
+    );
+  }
+
+  const jobArea = jobServiceAreaName ?? jobServiceAreaFallback ?? "Ghana";
 
   return (
     <section id="applicants" className="scroll-mt-4 rounded-2xl bg-card border border-border p-4 text-sm space-y-3">
@@ -357,15 +419,23 @@ function ApplicantsPanel({ jobId, jobStatus }: { jobId: string; jobStatus: strin
                   {cat ? cat : "Worker"}
                   {wp?.rating ? ` · ★ ${wp.rating}` : " · New"}{wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
                   {wp?.jobs_completed != null ? ` · ${wp.jobs_completed} jobs` : ""}
-                  {wp?.service_area ? ` · ${wp.service_area}` : ""}
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">Applied {new Date(a.created_at).toLocaleString()}</p>
               </div>
-              <span className="font-bold text-primary shrink-0">GH₵{a.quoted_price}</span>
+              <div className="shrink-0 max-w-[45%]">
+                <AmountDisplay proposal={a.quoted_price} />
+              </div>
             </div>
-            {a.estimated_start && (
-              <p className="text-[11px] text-muted-foreground">Can start: {new Date(a.estimated_start).toLocaleString()}</p>
-            )}
+
+            <div className="space-y-1">
+              <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                <Clock className="size-3 text-primary"/> {applicationTimingLine(a)}
+              </p>
+              <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                <MapPin className="size-3 text-primary"/> {jobArea}
+              </p>
+            </div>
+
             {a.message && (
               <p className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-2">{a.message}</p>
             )}

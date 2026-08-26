@@ -206,7 +206,18 @@ function JobDetail() {
           </div>
         </section>
 
-        {isOwner && <ApplicantsPanel jobId={id} jobStatus={(job as any).status} />}
+        {isOwner && (
+          <ApplicantsPanel
+            jobId={id}
+            jobStatus={(job as any).status}
+            jobBudget={(job as any).budget ?? null}
+            jobTimingType={(job as any).timing_type ?? null}
+            jobPreferredAt={(job as any).preferred_at ?? null}
+            jobPreferredWindow={(job as any).preferred_window ?? null}
+            jobServiceAreaName={(job as any).service_areas?.name ?? null}
+            jobServiceAreaFallback={(job as any).service_area ?? (job as any).city ?? null}
+          />
+        )}
 
         {eligibility.isWorker && !isOwner && (
           <WorkerApplySection

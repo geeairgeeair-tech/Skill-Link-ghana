@@ -415,31 +415,39 @@ function ApplicantsPanel({
         );
         return (
           <div key={a.id} className="rounded-xl border border-border p-3 space-y-2.5">
-            {/* Photo, name, verified */}
+            {/* Photo | name/verified/profession/rating (left) + status/location (right) */}
             <div className="flex items-start gap-3">
               <div className="size-12 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-sm">
                 {p?.avatar_url ? <img src={p.avatar_url} className="size-full object-cover" alt="" /> : (p?.full_name?.[0]?.toUpperCase() ?? <User className="size-4"/>)}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Link to="/workers/$id" params={{ id: a.worker_id }} search={{ jobId, applicationId: a.id }} className="font-semibold truncate hover:text-primary">
-                    {p?.full_name ?? "Worker"}
-                  </Link>
-                  {wp?.verification_status === "approved" && (
-                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success inline-flex items-center gap-0.5">
-                      <CheckCircle2 className="size-2.5"/> Verified
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs font-bold text-foreground mt-0.5">{cat ?? "Worker"}</p>
-                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
-                  <span className="inline-flex items-center gap-0.5">
-                    ★ {wp?.rating ? Number(wp.rating).toFixed(1) : "New"}
-                    {wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
-                  </span>
-                  {wp?.jobs_completed != null && <span>· {wp.jobs_completed} jobs</span>}
-                  <span>·</span>
-                  {statusBadge}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link to="/workers/$id" params={{ id: a.worker_id }} search={{ jobId, applicationId: a.id }} className="font-semibold truncate hover:text-primary">
+                        {p?.full_name ?? "Worker"}
+                      </Link>
+                      {wp?.verification_status === "approved" && (
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success inline-flex items-center gap-0.5">
+                          <CheckCircle2 className="size-2.5"/> Verified
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm font-bold text-foreground mt-0.5">{cat ?? "Worker"}</p>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-0.5">
+                        ★ {wp?.rating ? Number(wp.rating).toFixed(1) : "New"}
+                        {wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
+                      </span>
+                      {wp?.jobs_completed != null && <span>· {wp.jobs_completed} jobs</span>}
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right space-y-1">
+                    {statusBadge}
+                    <p className="text-[11px] text-muted-foreground inline-flex items-center justify-end gap-1">
+                      <MapPin className="size-3 text-primary"/> {jobArea}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -449,15 +457,10 @@ function ApplicantsPanel({
               <AmountDisplay proposal={a.quoted_price} />
             </div>
 
-            {/* Timing & location */}
-            <div className="space-y-1">
-              <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                <Clock className="size-3 text-primary"/> {applicationTimingLine(a)}
-              </p>
-              <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-                <MapPin className="size-3 text-primary"/> {jobArea}
-              </p>
-            </div>
+            {/* Timing on its own line */}
+            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+              <Clock className="size-3 text-primary"/> {applicationTimingLine(a)}
+            </p>
 
             {a.message && (
               <p className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-2">{a.message}</p>

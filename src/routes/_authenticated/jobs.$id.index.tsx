@@ -352,6 +352,14 @@ function ApplicantsPanel({
     return [date, windowText].filter(Boolean).join(" • ");
   }
 
+  function formatApplied(iso: string) {
+    const d = new Date(iso);
+    const date = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+    return `${date} · ${time}`;
+  }
+
+
   function AmountDisplay({ proposal }: { proposal: number }) {
     const sameAsBudget = jobBudget != null && jobBudget === proposal;
     if (sameAsBudget) {

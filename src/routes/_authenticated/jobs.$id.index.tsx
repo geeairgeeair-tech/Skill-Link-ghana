@@ -405,10 +405,19 @@ function ApplicantsPanel({
         const wp = a.worker;
         const p = a.profile;
         const cat = wp?.categories?.name;
+        const statusBadge = (
+          <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+            a.status === "accepted" ? "bg-success/20 text-success" :
+            a.status === "rejected" ? "bg-muted text-muted-foreground" :
+            a.status === "withdrawn" ? "bg-muted text-muted-foreground" :
+            "bg-primary-soft text-primary"
+          }`}>{a.status === "rejected" ? "not selected" : a.status}</span>
+        );
         return (
-          <div key={a.id} className="rounded-xl border border-border p-3 space-y-2">
+          <div key={a.id} className="rounded-xl border border-border p-3 space-y-2.5">
+            {/* Photo, name, verified */}
             <div className="flex items-start gap-3">
-              <div className="size-11 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-sm">
+              <div className="size-12 shrink-0 rounded-full bg-primary-soft overflow-hidden grid place-items-center text-primary font-bold text-sm">
                 {p?.avatar_url ? <img src={p.avatar_url} className="size-full object-cover" alt="" /> : (p?.full_name?.[0]?.toUpperCase() ?? <User className="size-4"/>)}
               </div>
               <div className="min-w-0 flex-1">
@@ -421,25 +430,26 @@ function ApplicantsPanel({
                       <CheckCircle2 className="size-2.5"/> Verified
                     </span>
                   )}
-                  <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
-                    a.status === "accepted" ? "bg-success/20 text-success" :
-                    a.status === "rejected" ? "bg-muted text-muted-foreground" :
-                    a.status === "withdrawn" ? "bg-muted text-muted-foreground" :
-                    "bg-primary-soft text-primary"
-                  }`}>{a.status === "rejected" ? "not selected" : a.status}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground">
-                  {cat ? cat : "Worker"}
-                  {wp?.rating ? ` · ★ ${wp.rating}` : " · New"}{wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
-                  {wp?.jobs_completed != null ? ` · ${wp.jobs_completed} jobs` : ""}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Applied {new Date(a.created_at).toLocaleString()}</p>
-              </div>
-              <div className="shrink-0 max-w-[45%]">
-                <AmountDisplay proposal={a.quoted_price} />
+                <p className="text-xs font-bold text-foreground mt-0.5">{cat ?? "Worker"}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-0.5">
+                    ★ {wp?.rating ? Number(wp.rating).toFixed(1) : "New"}
+                    {wp?.reviews_count ? ` (${wp.reviews_count})` : ""}
+                  </span>
+                  {wp?.jobs_completed != null && <span>· {wp.jobs_completed} jobs</span>}
+                  <span>·</span>
+                  {statusBadge}
+                </div>
               </div>
             </div>
 
+            {/* Money */}
+            <div className="rounded-lg bg-muted/40 p-2.5">
+              <AmountDisplay proposal={a.quoted_price} />
+            </div>
+
+            {/* Timing & location */}
             <div className="space-y-1">
               <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
                 <Clock className="size-3 text-primary"/> {applicationTimingLine(a)}
@@ -455,31 +465,36 @@ function ApplicantsPanel({
             {a.status === "rejected" && a.decline_reason && (
               <p className="text-[11px] text-muted-foreground italic">Declined: "{a.decline_reason}"</p>
             )}
+
+            {/* Applied time */}
+            <p className="text-[11px] text-muted-foreground">Applied {formatApplied(a.created_at)}</p>
+
+            {/* Actions */}
             <div className="flex flex-wrap gap-2 pt-1">
-              <Link to="/workers/$id" params={{ id: a.worker_id }} search={{ jobId, applicationId: a.id }} className="flex-1 h-9 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
+              <Link to="/workers/$id" params={{ id: a.worker_id }} search={{ jobId, applicationId: a.id }} className="flex-1 h-10 rounded-lg border border-border text-xs font-semibold inline-flex items-center justify-center gap-1">
                 View profile
               </Link>
               {jobStatus === "open" && a.status === "pending" && (
                 <>
                   <button
                     onClick={() => setReviewFor(a)}
-                    className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+                    className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
                     Accept
                   </button>
                   <button
                     onClick={() => setDeclineFor(a)}
-                    className="flex-1 h-9 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold">
+                    className="flex-1 h-10 rounded-lg border border-destructive/40 text-destructive text-xs font-semibold">
                     Decline
                   </button>
                 </>
               )}
               {a.status === "accepted" && (
                 a.booking_id ? (
-                  <Link to="/bookings/$bookingId" params={{ bookingId: a.booking_id }} className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                  <Link to="/bookings/$bookingId" params={{ bookingId: a.booking_id }} className="flex-1 h-10 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
                     Open Booking →
                   </Link>
                 ) : (
-                  <Link to="/bookings" className="flex-1 h-9 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
+                  <Link to="/bookings" className="flex-1 h-10 rounded-lg bg-success text-success-foreground text-xs font-semibold inline-flex items-center justify-center">
                     Open Booking →
                   </Link>
                 )
@@ -488,6 +503,7 @@ function ApplicantsPanel({
           </div>
         );
       })}
+
 
       {reviewFor && (
         <ReviewAndConfirmModal

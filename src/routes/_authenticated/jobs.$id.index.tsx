@@ -363,10 +363,14 @@ function ApplicantsPanel({
   function AmountDisplay({ proposal }: { proposal: number }) {
     const sameAsBudget = jobBudget != null && jobBudget === proposal;
     if (sameAsBudget) {
-      return <span className="text-[11px] text-muted-foreground">Customer Budget: <span className="font-bold text-primary text-sm">GH₵{proposal.toLocaleString("en-GH")}</span></span>;
+      return (
+        <p className="text-[11px] text-muted-foreground">
+          Customer Budget: <span className="font-bold text-primary text-sm">GH₵{proposal.toLocaleString("en-GH")}</span>
+        </p>
+      );
     }
     return (
-      <div className="text-right leading-tight">
+      <div className="leading-tight space-y-0.5">
         {jobBudget != null && (
           <p className="text-[10px] text-muted-foreground">Customer Budget: GH₵{jobBudget.toLocaleString("en-GH")}</p>
         )}
@@ -374,6 +378,7 @@ function ApplicantsPanel({
       </div>
     );
   }
+
 
   const jobArea = jobServiceAreaName ?? jobServiceAreaFallback ?? "Ghana";
 

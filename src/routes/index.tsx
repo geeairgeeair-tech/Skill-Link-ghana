@@ -119,6 +119,24 @@ function Home() {
             <span className="text-sm">Post a job with photos or video</span>
             <ArrowRight className="size-4 ml-auto" />
           </Link>
+          {user && (
+            <Link
+              to="/jobs/mine"
+              className="mt-3 flex items-center gap-2 rounded-2xl bg-card text-foreground border border-border px-4 py-3 shadow-card font-semibold"
+            >
+              <ClipboardList className="size-5 text-primary" />
+              <span className="text-sm">My Job Posts</span>
+              {myJobs?.pending ? (
+                <span className="ml-auto rounded-full bg-gold/25 text-gold-foreground text-[11px] font-bold px-2 py-0.5">
+                  {myJobs.pending} awaiting review
+                </span>
+              ) : (
+                <span className="ml-auto text-xs font-medium text-muted-foreground">
+                  {myJobs?.jobCount ?? 0} posted
+                </span>
+              )}
+            </Link>
+          )}
           <div className="mt-4 flex items-center gap-2 text-xs text-primary-foreground/80">
             <ShieldCheck className="size-4 text-gold" /> Ghana Card verified
             <span className="opacity-50">·</span>

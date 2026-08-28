@@ -428,8 +428,8 @@ function ApplicantsPanel({
                         {p?.full_name ?? "Worker"}
                       </Link>
                       {wp?.verification_status === "approved" && (
-                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-success/20 text-success inline-flex items-center gap-0.5">
-                          <CheckCircle2 className="size-2.5"/> Verified
+                        <span className="inline-flex items-center text-success" aria-label="Verified">
+                          <CheckCircle2 className="size-2.5"/>
                         </span>
                       )}
                     </div>

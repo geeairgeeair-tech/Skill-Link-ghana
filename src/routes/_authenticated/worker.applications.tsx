@@ -236,8 +236,8 @@ function EditApplicationModal({ app, onClose }: { app: any; onClose: () => void 
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !submitting && onClose()}>
-      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-[60] bg-black/60 grid place-items-end sm:place-items-center p-0 sm:p-4" onClick={() => !submitting && onClose()}>
+      <form onClick={(e) => e.stopPropagation()} onSubmit={submit} className="w-full sm:max-w-md bg-card rounded-t-2xl sm:rounded-2xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:pb-5 space-y-4 max-h-[92vh] overflow-y-auto">
         <div>
           <h3 className="font-display text-lg font-bold">Edit application</h3>
           <p className="text-sm text-muted-foreground">{job?.title ?? "Job"}</p>

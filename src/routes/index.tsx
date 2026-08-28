@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { Search, ShieldCheck, Sparkles, ArrowRight, Camera } from "lucide-react";
+import { Search, ShieldCheck, Sparkles, ArrowRight, Camera, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAppRole } from "@/hooks/use-app-role";
 import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 import { BrandLogo } from "@/components/brand-logo";
 import { GuestGateCard } from "@/components/guest-gate";
 

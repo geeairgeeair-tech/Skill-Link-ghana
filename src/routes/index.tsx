@@ -1,13 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
-import { Search, ShieldCheck, Sparkles, ArrowRight, Camera } from "lucide-react";
+import { Search, ShieldCheck, Sparkles, ArrowRight, Camera, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/app-shell";
 import { FeaturedCategoryGrid } from "@/components/customer-marketplace";
 import { WorkerCard, type WorkerCardData } from "@/components/worker-card";
 import { useAppRole } from "@/hooks/use-app-role";
 import { useBusyWorkerIds, withAvailabilityState } from "@/hooks/use-busy-workers";
+import { useMyJobPostsSummary } from "@/hooks/use-job-applicant-counts";
 import { BrandLogo } from "@/components/brand-logo";
 import { GuestGateCard } from "@/components/guest-gate";
 
@@ -73,6 +74,7 @@ function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
   const { user, effectiveRole, hasApplication } = useAppRole();
+  const { data: myJobs } = useMyJobPostsSummary();
   const { data: busyIds } = useBusyWorkerIds();
   const role = effectiveRole;
   const navigate = useNavigate();
@@ -117,6 +119,24 @@ function Home() {
             <span className="text-sm">Post a job with photos or video</span>
             <ArrowRight className="size-4 ml-auto" />
           </Link>
+          {user && (
+            <Link
+              to="/jobs/mine"
+              className="mt-3 flex items-center gap-2 rounded-2xl bg-card text-foreground border border-border px-4 py-3 shadow-card font-semibold"
+            >
+              <ClipboardList className="size-5 text-primary" />
+              <span className="text-sm">My Job Posts</span>
+              {myJobs?.pending ? (
+                <span className="ml-auto rounded-full bg-gold/25 text-gold-foreground text-[11px] font-bold px-2 py-0.5">
+                  {myJobs.pending} awaiting review
+                </span>
+              ) : (
+                <span className="ml-auto text-xs font-medium text-muted-foreground">
+                  {myJobs?.jobCount ?? 0} posted
+                </span>
+              )}
+            </Link>
+          )}
           <div className="mt-4 flex items-center gap-2 text-xs text-primary-foreground/80">
             <ShieldCheck className="size-4 text-gold" /> Ghana Card verified
             <span className="opacity-50">·</span>

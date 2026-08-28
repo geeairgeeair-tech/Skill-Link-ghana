@@ -74,6 +74,7 @@ function Home() {
   const { data: categories } = useSuspenseQuery(categoriesQuery);
   const { data: featured } = useSuspenseQuery(featuredQuery);
   const { user, effectiveRole, hasApplication } = useAppRole();
+  const { data: myJobs } = useMyJobPostsSummary();
   const { data: busyIds } = useBusyWorkerIds();
   const role = effectiveRole;
   const navigate = useNavigate();

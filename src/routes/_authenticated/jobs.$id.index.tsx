@@ -442,7 +442,7 @@ function ApplicantsPanel({
                       {wp?.jobs_completed != null && <span>· {wp.jobs_completed} jobs</span>}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right space-y-1">
+                  <div className="shrink-0 text-right space-y-0">
                     {statusBadge}
                     <p className="text-[11px] text-muted-foreground inline-flex items-center justify-end gap-1">
                       <MapPin className="size-3 text-primary"/> {jobArea}
@@ -458,9 +458,15 @@ function ApplicantsPanel({
             </div>
 
             {/* Timing on its own line */}
-            <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
-              <Clock className="size-3 text-primary"/> {applicationTimingLine(a)}
-            </p>
+            {(() => {
+              const timing = applicationTimingLine(a);
+              const asap = timing.includes("Can start ASAP");
+              return (
+                <p className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                  <Clock className="size-3 text-primary"/> {asap ? <span className="font-bold text-foreground">{timing}</span> : timing}
+                </p>
+              );
+            })()}
 
             {a.message && (
               <p className="text-xs whitespace-pre-wrap bg-muted/40 rounded-lg p-2">{a.message}</p>

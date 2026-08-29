@@ -8,6 +8,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { ServiceAreaSelect } from "@/components/service-area-select";
+import { serviceAreaCity } from "@/lib/service-areas";
 import { TIME_WINDOWS, windowInfo, windowHasPassed, jobTimingLabel, jobDurationLabel, type TimeWindowKey } from "@/lib/job-timing";
 
 

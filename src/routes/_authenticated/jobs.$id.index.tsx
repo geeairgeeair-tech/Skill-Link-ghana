@@ -442,9 +442,9 @@ function ApplicantsPanel({
                       {wp?.jobs_completed != null && <span>· {wp.jobs_completed} jobs</span>}
                     </div>
                   </div>
-                  <div className="shrink-0 text-right space-y-0">
+                  <div className="shrink-0 flex flex-col items-end gap-0.5">
                     {statusBadge}
-                    <p className="text-[11px] text-muted-foreground inline-flex items-center justify-end gap-1">
+                    <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                       <MapPin className="size-3 text-primary"/> {jobArea}
                     </p>
                   </div>

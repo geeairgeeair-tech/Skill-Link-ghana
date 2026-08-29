@@ -114,11 +114,33 @@ export function ServiceAreaSelect({
           </div>
           <div className="max-h-64 overflow-y-auto rounded-xl border border-border divide-y divide-border">
             {isLoading && <p className="p-3 text-xs text-muted-foreground">Loading service areas…</p>}
-            {!isLoading && groups.length === 0 && (
+            {!isLoading && !ranked?.length && groups.length === 0 && (
               <p className="p-3 text-xs text-muted-foreground">
                 {q.trim() && notServedMessage ? notServedMessage : emptyMessage}
               </p>
             )}
+            {ranked?.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => {
+                  onChange(a.id, a);
+                  setOpen(false);
+                  setQ("");
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm"
+              >
+                <span
+                  className={`grid size-5 shrink-0 place-items-center rounded-md border ${
+                    value === a.id ? "border-primary bg-primary text-primary-foreground" : "border-input"
+                  }`}
+                >
+                  {value === a.id && <Check className="size-3.5" />}
+                </span>
+                <span className="truncate font-medium">{a.name}</span>
+                <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">{a.launch_zone}</span>
+              </button>
+            ))}
             {groups.map(([zone, list]) => (
               <div key={zone}>
                 <p className="sticky top-0 bg-muted/80 backdrop-blur px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">

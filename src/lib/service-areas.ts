@@ -24,6 +24,15 @@ export async function fetchActiveServiceAreas(): Promise<ServiceArea[]> {
   return (data ?? []) as ServiceArea[];
 }
 
+/**
+ * Derive the City/Zone from a canonical area's launch zone.
+ * Zones are named "Accra - …", "Kasoa", "Tema", so the city is the text
+ * before the first " - " (Weija → Accra, Kasoa-area → Kasoa).
+ */
+export function serviceAreaCity(area: Pick<ServiceArea, "launch_zone"> | null | undefined): string {
+  return area?.launch_zone?.split(" - ")[0]?.trim() ?? "";
+}
+
 export type WorkerCoverage = {
   primaryId: string | null;
   additionalIds: string[];

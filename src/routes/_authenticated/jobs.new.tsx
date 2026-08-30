@@ -265,11 +265,11 @@ function NewJobPage() {
           <Field label="General service area">
             <ServiceAreaSelect
               value={form.service_area_id || null}
-              onChange={(id, a) => setForm({ ...form, service_area_id: id ?? "", service_area: a?.name ?? "" })}
+              onChange={(id, a) => setForm({ ...form, service_area_id: id ?? "", service_area: a?.name ?? "", city: serviceAreaCity(a) })}
             />
           </Field>
           <Field label="City">
-            <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" required />
+            <input value={form.city} readOnly className="input opacity-70" required />
           </Field>
           <Field label="Exact service address">
             <input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" placeholder="House / street / landmark" required />

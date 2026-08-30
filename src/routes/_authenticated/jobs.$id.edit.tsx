@@ -277,10 +277,10 @@ function EditJobPage() {
         <F label="General service area *">
           <ServiceAreaSelect
             value={form.service_area_id || null}
-            onChange={(sid, a) => setForm({ ...form, service_area_id: sid ?? "", service_area: a?.name ?? "" })}
+            onChange={(sid, a) => setForm({ ...form, service_area_id: sid ?? "", service_area: a?.name ?? "", city: serviceAreaCity(a) || form.city })}
           />
         </F>
-        <F label="City *"><input value={form.city} onChange={e => setForm({...form, city: e.target.value})} className="input" /></F>
+        <F label="City *"><input value={form.city} readOnly className="input opacity-70" /></F>
         <F label="Exact service address *"><input value={form.address} onChange={e => setForm({...form, address: e.target.value})} className="input" placeholder="House / street / landmark" /></F>
         <F label="Budget (GH₵)"><input value={form.budget} onChange={e => setForm({...form, budget: e.target.value.replace(/\D/g,'')})} inputMode="numeric" className="input" /></F>
 

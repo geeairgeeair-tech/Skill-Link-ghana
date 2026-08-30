@@ -429,7 +429,7 @@ function ApplicantsPanel({
                       </Link>
                       {wp?.verification_status === "approved" && (
                         <span className="inline-flex items-center text-success" aria-label="Verified">
-                          <CheckCircle2 className="size-2.5"/>
+                          <CheckCircle2 className="size-3.5"/>
                         </span>
                       )}
                     </div>

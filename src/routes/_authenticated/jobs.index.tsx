@@ -246,12 +246,10 @@ function JobsBoard() {
           const firstImg = media.find(m => m.type === "image");
           const vidCount = media.filter(m => m.type === "video").length;
           const imgCount = media.filter(m => m.type === "image").length;
-          // Match = currently eligible to apply: verified profession match, canonical
-          // service-area coverage (legacy NULL area still matches), and no active
-          // commitment/busy/unavailable block. Visibility is unaffected.
-          const inMyCategory =
-            eligibility.matchesJob(j.category_id, j.service_area_id) &&
-            eligibility.blockedReason(j.status, j.category_id, undefined, j.service_area_id) === null;
+          // Match = job relevance only: verified profession match + canonical
+          // service-area coverage (legacy NULL area still matches). Busy/commitment
+          // state does NOT hide the chip; apply-time blockedReason still applies.
+          const inMyCategory = eligibility.matchesJob(j.category_id, j.service_area_id);
           const count = appCounts?.get(j.id) ?? 0;
           return (
             <Link key={j.id} to="/jobs/$id" params={{ id: j.id }} className="block rounded-2xl bg-card border border-border p-3 shadow-card hover:shadow-elevated">

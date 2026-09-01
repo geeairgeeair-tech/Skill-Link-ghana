@@ -182,7 +182,6 @@ function ProfilePage() {
 
 
           <Field label="Phone"><input value={phone} onChange={e=>setPhone(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
-          <Field label="Address"><input value={address} onChange={e=>setAddress(e.target.value)} className="w-full rounded-xl border border-input bg-card p-3 text-sm"/></Field>
           <button onClick={save} className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold">Save changes</button>
         </div>
 

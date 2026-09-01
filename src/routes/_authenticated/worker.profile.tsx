@@ -245,6 +245,27 @@ function WorkerProfilePage() {
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
         </Section>
 
+        <Section title="Contact phone">
+          <p className="text-xs text-muted-foreground">
+            Customers will only see your number after they accept your application or booking.
+          </p>
+          <Field label="Phone number">
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-xl border border-input bg-card p-3 text-sm"
+              placeholder="e.g. 024 123 4567"
+            />
+          </Field>
+          <button
+            onClick={savePhone}
+            disabled={savingPhone}
+            className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+          >
+            {savingPhone ? "Saving…" : "Save phone"}
+          </button>
+        </Section>
+
         <Section title="General service areas">
           {coverageLoading ? (
             <p className="text-xs text-muted-foreground">Loading…</p>

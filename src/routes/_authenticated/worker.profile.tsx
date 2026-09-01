@@ -28,7 +28,9 @@ function WorkerProfilePage() {
   const [form, setForm] = useState({
     city: "", service_area: "", unavailable_note: "",
   });
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
   const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
   const [savingAreas, setSavingAreas] = useState(false);
   const [editingAreas, setEditingAreas] = useState(false);

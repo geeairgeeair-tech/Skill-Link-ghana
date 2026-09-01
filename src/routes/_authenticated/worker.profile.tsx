@@ -28,7 +28,9 @@ function WorkerProfilePage() {
   const [form, setForm] = useState({
     city: "", service_area: "", unavailable_note: "",
   });
+  const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
+  const [savingPhone, setSavingPhone] = useState(false);
   const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
   const [savingAreas, setSavingAreas] = useState(false);
   const [editingAreas, setEditingAreas] = useState(false);
@@ -73,7 +75,7 @@ function WorkerProfilePage() {
     enabled: !!user,
     staleTime: 5 * 60_000,
     queryFn: async () =>
-      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
+      (await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle()).data,
   });
 
 
@@ -95,6 +97,10 @@ function WorkerProfilePage() {
       unavailable_note: (wp as any).unavailable_note ?? "",
     });
   }, [wp?.user_id, wp?.updated_at]);
+
+  useEffect(() => {
+    setPhone(myProfile?.phone ?? "");
+  }, [myProfile?.phone]);
 
   if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
 
@@ -131,6 +137,16 @@ function WorkerProfilePage() {
     qc.invalidateQueries({ queryKey: ["my-worker-profile"] });
   };
 
+
+  const savePhone = async () => {
+    if (!user) return;
+    setSavingPhone(true);
+    const { error } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
+    setSavingPhone(false);
+    if (error) return toast.error(error.message);
+    toast.success("Phone number updated");
+    qc.invalidateQueries({ queryKey: ["my-profile-name"] });
+  };
 
   // General service areas only — this never touches verification or professions.
   const saveCoverage = async () => {
@@ -227,6 +243,27 @@ function WorkerProfilePage() {
 
         <Section title="Profile photo">
           {user && <AvatarUpload userId={user.id} currentUrl={avatarUrl} fallbackText={user.email ?? "?"} onChange={setAvatarUrl} />}
+        </Section>
+
+        <Section title="Contact phone">
+          <p className="text-xs text-muted-foreground">
+            Customers will only see your number after they accept your application or booking.
+          </p>
+          <Field label="Phone number">
+            <input
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full rounded-xl border border-input bg-card p-3 text-sm"
+              placeholder="e.g. 024 123 4567"
+            />
+          </Field>
+          <button
+            onClick={savePhone}
+            disabled={savingPhone}
+            className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
+          >
+            {savingPhone ? "Saving…" : "Save phone"}
+          </button>
         </Section>
 
         <Section title="General service areas">

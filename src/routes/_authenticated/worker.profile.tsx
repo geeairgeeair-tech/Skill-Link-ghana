@@ -75,7 +75,7 @@ function WorkerProfilePage() {
     enabled: !!user,
     staleTime: 5 * 60_000,
     queryFn: async () =>
-      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
+      (await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle()).data,
   });
 
 

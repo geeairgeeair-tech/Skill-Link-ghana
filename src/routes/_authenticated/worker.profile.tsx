@@ -138,6 +138,16 @@ function WorkerProfilePage() {
   };
 
 
+  const savePhone = async () => {
+    if (!user) return;
+    setSavingPhone(true);
+    const { error } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
+    setSavingPhone(false);
+    if (error) return toast.error(error.message);
+    toast.success("Phone number updated");
+    qc.invalidateQueries({ queryKey: ["my-profile-name"] });
+  };
+
   // General service areas only — this never touches verification or professions.
   const saveCoverage = async () => {
     if (!user || !draftCoverage.primaryId) return;

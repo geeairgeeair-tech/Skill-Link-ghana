@@ -29,6 +29,7 @@ function WorkerProfilePage() {
     city: "", service_area: "", unavailable_note: "",
   });
   const [phone, setPhone] = useState("");
+  const [savedPhone, setSavedPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
   const [draftCoverage, setDraftCoverage] = useState<WorkerCoverage>({ primaryId: null, additionalIds: [] });
@@ -99,7 +100,9 @@ function WorkerProfilePage() {
   }, [wp?.user_id, wp?.updated_at]);
 
   useEffect(() => {
-    setPhone(myProfile?.phone ?? "");
+    const next = myProfile?.phone ?? "";
+    setPhone(next);
+    setSavedPhone(next);
   }, [myProfile?.phone]);
 
   if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
@@ -139,11 +142,15 @@ function WorkerProfilePage() {
 
 
   const savePhone = async () => {
-    if (!user) return;
+    if (!user || phone === savedPhone) return;
     setSavingPhone(true);
     const { error } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
     setSavingPhone(false);
     if (error) return toast.error(error.message);
+    setSavedPhone(phone);
+    qc.setQueryData(["my-profile-name", user.id], (old: any) =>
+      old ? { ...old, phone } : { full_name: myProfile?.full_name ?? "", phone }
+    );
     toast.success("Phone number updated");
     qc.invalidateQueries({ queryKey: ["my-profile-name"] });
   };
@@ -259,7 +266,7 @@ function WorkerProfilePage() {
           </Field>
           <button
             onClick={savePhone}
-            disabled={savingPhone}
+            disabled={savingPhone || phone === savedPhone}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
           >
             {savingPhone ? "Saving…" : "Save phone"}

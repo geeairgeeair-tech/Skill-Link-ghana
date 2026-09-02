@@ -76,7 +76,18 @@ function WorkerProfilePage() {
     enabled: !!user,
     staleTime: 5 * 60_000,
     queryFn: async () =>
-      (await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle()).data,
+      // phone is column-restricted (REVOKE SELECT) — loaded separately via get_profile_contact below.
+      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
+  });
+
+  const { data: myContact, isLoading: contactLoading } = useQuery({
+    queryKey: ["my-profile-contact", user?.id],
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_profile_contact", { _id: user!.id });
+      return (Array.isArray(data) ? data[0] : data) as { phone?: string | null } | null;
+    },
   });
 
 

@@ -413,7 +413,18 @@ function WorkerDashboard() {
         <div className="grid grid-cols-2 gap-2 pb-4">
           <Tile to="/worker/profile" icon={UserCog} title="My profile" subtitle="Bio, pricing, documents" />
           <Tile to="/worker/professions" icon={Layers} title="My professions" subtitle="Up to 3 verified skills" />
-          <Tile to="/jobs" icon={Briefcase} title="Browse jobs" subtitle="Find new work" />
+          <Tile
+            to="/jobs"
+            icon={Briefcase}
+            title="Browse jobs"
+            subtitle={
+              matchCount === null
+                ? "Find new work"
+                : matchCount === 0
+                  ? "No matches available"
+                  : `${matchCount} match${matchCount === 1 ? "" : "es"} available`
+            }
+          />
           <Tile to="/support" icon={LifeBuoy} title="Support" subtitle="Get help fast" />
         </div>
 

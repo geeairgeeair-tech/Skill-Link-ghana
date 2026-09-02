@@ -100,7 +100,9 @@ function WorkerProfilePage() {
   }, [wp?.user_id, wp?.updated_at]);
 
   useEffect(() => {
-    setPhone(myProfile?.phone ?? "");
+    const next = myProfile?.phone ?? "";
+    setPhone(next);
+    setSavedPhone(next);
   }, [myProfile?.phone]);
 
   if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;

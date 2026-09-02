@@ -266,7 +266,7 @@ function WorkerProfilePage() {
           </Field>
           <button
             onClick={savePhone}
-            disabled={savingPhone}
+            disabled={savingPhone || phone === savedPhone}
             className="w-full rounded-xl bg-primary text-primary-foreground py-3 font-semibold disabled:opacity-50"
           >
             {savingPhone ? "Saving…" : "Save phone"}

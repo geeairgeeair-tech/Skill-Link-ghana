@@ -9,6 +9,7 @@ import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {
@@ -38,7 +39,27 @@ function WorkerDashboard() {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const { data: myJobs } = useMyJobPostsSummary();
+  const eligibility = useWorkerEligibility();
 
+  const { data: openJobs, isLoading: matchesLoading } = useQuery({
+    queryKey: ["job-requests-open-matches", user?.id],
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("job_requests")
+        .select("id, category_id, service_area_id")
+        .eq("status", "open")
+        .limit(500);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const matchCount =
+    eligibility.loading || matchesLoading || !eligibility.isWorker
+      ? null
+      : (openJobs ?? []).filter((j: any) => eligibility.matchesJob(j.category_id, j.service_area_id)).length;
 
   const { data: coverage, isLoading: coverageLoading } = useQuery({
     queryKey: ["my-service-areas", user?.id],
@@ -392,7 +413,18 @@ function WorkerDashboard() {
         <div className="grid grid-cols-2 gap-2 pb-4">
           <Tile to="/worker/profile" icon={UserCog} title="My profile" subtitle="Bio, pricing, documents" />
           <Tile to="/worker/professions" icon={Layers} title="My professions" subtitle="Up to 3 verified skills" />
-          <Tile to="/jobs" icon={Briefcase} title="Browse jobs" subtitle="Find new work" />
+          <Tile
+            to="/jobs"
+            icon={Briefcase}
+            title="Browse jobs"
+            subtitle={
+              matchCount === null
+                ? "Find new work"
+                : matchCount === 0
+                  ? "No matches available"
+                  : `${matchCount} match${matchCount === 1 ? "" : "es"} available`
+            }
+          />
           <Tile to="/support" icon={LifeBuoy} title="Support" subtitle="Get help fast" />
         </div>
 

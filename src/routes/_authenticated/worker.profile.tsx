@@ -111,12 +111,13 @@ function WorkerProfilePage() {
   }, [wp?.user_id, wp?.updated_at]);
 
   useEffect(() => {
-    const next = myProfile?.phone ?? "";
+    if (contactLoading) return;
+    const next = myContact?.phone ?? "";
     setPhone(next);
     setSavedPhone(next);
-  }, [myProfile?.phone]);
+  }, [myContact?.phone, contactLoading]);
 
-  if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
+  if (wpLoading || nameLoading || contactLoading || roleLoading) return <PageSkeleton rows={4} />;
 
   // Only a truly non-professional account (never onboarded) sees the setup CTA.
   // An approved / pending / rejected / suspended pro keeps this page during refetches.

@@ -160,11 +160,9 @@ function WorkerProfilePage() {
     setSavingPhone(false);
     if (error) return toast.error(error.message);
     setSavedPhone(phone);
-    qc.setQueryData(["my-profile-name", user.id], (old: any) =>
-      old ? { ...old, phone } : { full_name: myProfile?.full_name ?? "", phone }
-    );
+    qc.setQueryData(["my-profile-contact", user.id], (old: any) => ({ ...(old ?? {}), phone }));
     toast.success("Phone number updated");
-    qc.invalidateQueries({ queryKey: ["my-profile-name"] });
+    qc.invalidateQueries({ queryKey: ["my-profile-contact"] });
   };
 
   // General service areas only — this never touches verification or professions.

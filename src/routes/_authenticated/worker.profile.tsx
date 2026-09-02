@@ -76,7 +76,18 @@ function WorkerProfilePage() {
     enabled: !!user,
     staleTime: 5 * 60_000,
     queryFn: async () =>
-      (await supabase.from("profiles").select("full_name, phone").eq("id", user!.id).maybeSingle()).data,
+      // phone is column-restricted (REVOKE SELECT) — loaded separately via get_profile_contact below.
+      (await supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle()).data,
+  });
+
+  const { data: myContact, isLoading: contactLoading } = useQuery({
+    queryKey: ["my-profile-contact", user?.id],
+    enabled: !!user,
+    staleTime: 5 * 60_000,
+    queryFn: async () => {
+      const { data } = await supabase.rpc("get_profile_contact", { _id: user!.id });
+      return (Array.isArray(data) ? data[0] : data) as { phone?: string | null } | null;
+    },
   });
 
 
@@ -100,12 +111,13 @@ function WorkerProfilePage() {
   }, [wp?.user_id, wp?.updated_at]);
 
   useEffect(() => {
-    const next = myProfile?.phone ?? "";
+    if (contactLoading) return;
+    const next = myContact?.phone ?? "";
     setPhone(next);
     setSavedPhone(next);
-  }, [myProfile?.phone]);
+  }, [myContact?.phone, contactLoading]);
 
-  if (wpLoading || nameLoading || roleLoading) return <PageSkeleton rows={4} />;
+  if (wpLoading || nameLoading || contactLoading || roleLoading) return <PageSkeleton rows={4} />;
 
   // Only a truly non-professional account (never onboarded) sees the setup CTA.
   // An approved / pending / rejected / suspended pro keeps this page during refetches.
@@ -148,11 +160,9 @@ function WorkerProfilePage() {
     setSavingPhone(false);
     if (error) return toast.error(error.message);
     setSavedPhone(phone);
-    qc.setQueryData(["my-profile-name", user.id], (old: any) =>
-      old ? { ...old, phone } : { full_name: myProfile?.full_name ?? "", phone }
-    );
+    qc.setQueryData(["my-profile-contact", user.id], (old: any) => ({ ...(old ?? {}), phone }));
     toast.success("Phone number updated");
-    qc.invalidateQueries({ queryKey: ["my-profile-name"] });
+    qc.invalidateQueries({ queryKey: ["my-profile-contact"] });
   };
 
   // General service areas only — this never touches verification or professions.

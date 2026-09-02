@@ -142,11 +142,15 @@ function WorkerProfilePage() {
 
 
   const savePhone = async () => {
-    if (!user) return;
+    if (!user || phone === savedPhone) return;
     setSavingPhone(true);
     const { error } = await supabase.from("profiles").update({ phone }).eq("id", user.id);
     setSavingPhone(false);
     if (error) return toast.error(error.message);
+    setSavedPhone(phone);
+    qc.setQueryData(["my-profile-name", user.id], (old: any) =>
+      old ? { ...old, phone } : { full_name: myProfile?.full_name ?? "", phone }
+    );
     toast.success("Phone number updated");
     qc.invalidateQueries({ queryKey: ["my-profile-name"] });
   };

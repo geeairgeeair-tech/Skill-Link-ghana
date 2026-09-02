@@ -9,6 +9,7 @@ import { CustomerMarketplaceSection } from "@/components/customer-marketplace";
 import { PageSkeleton } from "@/components/page-skeleton";
 
 import { useAuth } from "@/hooks/use-auth";
+import { useWorkerEligibility } from "@/hooks/use-job-eligibility";
 import { fetchWorkerCoverage } from "@/lib/service-areas";
 import { jobDurationLabel, windowInfo, bookingTimingLines } from "@/lib/job-timing";
 import {

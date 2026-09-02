@@ -39,7 +39,27 @@ function WorkerDashboard() {
   const { user, loading: authLoading } = useAuth();
   const qc = useQueryClient();
   const { data: myJobs } = useMyJobPostsSummary();
+  const eligibility = useWorkerEligibility();
 
+  const { data: openJobs, isLoading: matchesLoading } = useQuery({
+    queryKey: ["job-requests-open-matches", user?.id],
+    enabled: !!user,
+    staleTime: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("job_requests")
+        .select("id, category_id, service_area_id")
+        .eq("status", "open")
+        .limit(500);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const matchCount =
+    eligibility.loading || matchesLoading || !eligibility.isWorker
+      ? null
+      : (openJobs ?? []).filter((j: any) => eligibility.matchesJob(j.category_id, j.service_area_id)).length;
 
   const { data: coverage, isLoading: coverageLoading } = useQuery({
     queryKey: ["my-service-areas", user?.id],

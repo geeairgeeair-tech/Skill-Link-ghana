@@ -228,6 +228,7 @@ function BookingDetail() {
   }, [bookingId, qc]);
 
   const acceptedEstimate = useAcceptedEstimate(bookingId);
+  const agreed = agreedAmountOf(data?.booking, acceptedEstimate);
 
   if (isLoading || isPending) return <BookingSkeleton />;
   if (error) {

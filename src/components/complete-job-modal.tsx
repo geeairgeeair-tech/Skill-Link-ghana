@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtGHS, useEstimates } from "@/components/booking-estimate";
+import { agreedAmountOf } from "@/lib/agreed-amount";
 
 const HIGHER = [
   "Customer requested additional work",
@@ -27,13 +28,15 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const { data: estimates = [] } = useEstimates(bookingId);
   const approved = estimates.find((e) => e.status === "approved") ?? null;
 
-  // When no estimate was approved, the customer's original budget is the baseline.
-  const { data: budget = null } = useQuery({
-    queryKey: ["booking-budget", bookingId],
+  // No approved estimate → fall back to the accepted professional proposal,
+  // then to the customer's original budget.
+  const { data: bookingRow = null } = useQuery({
+    queryKey: ["booking-agreed-amount", bookingId],
     queryFn: async () => {
-      const { data } = await supabase.from("bookings").select("budget").eq("id", bookingId).maybeSingle();
-      const b = Number((data as any)?.budget ?? 0);
-      return b > 0 ? b : null;
+      const { data } = await supabase.from("bookings")
+        .select("budget, estimated_cost, estimated_amount, job_application_id")
+        .eq("id", bookingId).maybeSingle();
+      return (data as any) ?? null;
     },
   });
 
@@ -44,12 +47,18 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const baseline = approved ? Number(approved.total) : budget;
-  const baselineLabel = approved ? "Approved estimate" : "Customer budget";
+  const agreed = agreedAmountOf(bookingRow, approved ? Number(approved.total) : null);
+  const baseline = agreed.value;
+  const baselineLabel = agreed.label;
   const final = Number(amount || 0);
   const diff = baseline != null ? final - baseline : 0;
   const needsReason = baseline != null && final > 0 && diff !== 0;
   const options = diff > 0 ? HIGHER : LOWER;
+
+  // Prefill with the agreed amount (approved estimate, else accepted proposal).
+  useEffect(() => {
+    if (!amount && baseline != null) setAmount(String(baseline));
+  }, [baseline]);
 
   const submit = async () => {
     if (final <= 0) return toast.error("Enter the final amount");

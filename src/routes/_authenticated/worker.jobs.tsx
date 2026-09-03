@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAcceptedEstimates } from "@/lib/accepted-estimates";
+import { agreedAmountOf, customerBudgetOf } from "@/lib/agreed-amount";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
@@ -238,8 +239,12 @@ function JobsPage() {
                   <p key={l} className="inline-flex items-center gap-1">{l}</p>
                 ))}
                 {b.service_area && <p className="inline-flex items-center gap-1 min-w-0"><MapPin className="size-3 shrink-0"/><span className="truncate">{b.service_area}</span></p>}
-                {(b.budget ?? b.estimated_cost) != null && <p className="inline-flex items-center gap-1 font-semibold text-primary"><Wallet className="size-3"/>Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
-                {acceptedEstimates?.[b.id] != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Accepted Estimate {fmtGHS(acceptedEstimates[b.id])}</p>}
+                {customerBudgetOf(b) != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>Customer Budget: {fmtGHS(customerBudgetOf(b))}</p>}
+                {(() => {
+                  const agreed = agreedAmountOf(b, acceptedEstimates?.[b.id] ?? null);
+                  if (agreed.value == null || agreed.source === "budget") return null;
+                  return <p className="inline-flex items-center gap-1 font-semibold text-primary"><Wallet className="size-3"/>Agreed Amount: {fmtGHS(agreed.value)}</p>;
+                })()}
 
                 {b.final_amount != null && <p className="inline-flex items-center gap-1"><Wallet className="size-3"/>You reported {fmtGHS(b.final_amount)}</p>}
                 {b.amount_paid != null && <p className="inline-flex items-center gap-1 text-success"><CheckCircle2 className="size-3"/>Paid {fmtGHS(b.amount_paid)}</p>}

@@ -369,12 +369,21 @@ function ApplicantsPanel({
         </p>
       );
     }
+    const diff = jobBudget != null ? proposal - jobBudget : 0;
     return (
       <div className="leading-tight space-y-0.5">
         {jobBudget != null && (
           <p className="text-[10px] text-muted-foreground">Customer Budget: GH₵{jobBudget.toLocaleString("en-GH")}</p>
         )}
         <p className="font-bold text-primary text-sm">Professional Proposal: GH₵{proposal.toLocaleString("en-GH")}</p>
+        {jobBudget != null && diff !== 0 && (
+          <p className={`text-[10px] font-semibold ${diff > 0 ? "text-destructive" : "text-success"}`}>
+            This proposal is GH₵{Math.abs(diff).toLocaleString("en-GH")} {diff > 0 ? "above" : "below"} your GH₵{jobBudget.toLocaleString("en-GH")} budget.
+          </p>
+        )}
+        <p className="text-[10px] text-muted-foreground">
+          If you accept, GH₵{proposal.toLocaleString("en-GH")} becomes the agreed booking amount.
+        </p>
       </div>
     );
   }

@@ -58,6 +58,7 @@ export function EstimateSection({
   varianceReason,
   varianceNote,
   customerBudget,
+  acceptedProposal,
 }: {
   bookingId: string;
   isWorker: boolean;
@@ -67,6 +68,7 @@ export function EstimateSection({
   varianceReason?: string | null;
   varianceNote?: string | null;
   customerBudget?: number | null;
+  acceptedProposal?: number | null;
 }) {
 
   const qc = useQueryClient();

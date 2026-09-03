@@ -386,13 +386,16 @@ function BookingDetail() {
         <section className="rounded-2xl bg-card border border-border p-4">
           <h3 className="font-display font-bold text-sm mb-3 inline-flex items-center gap-1"><Wallet className="size-4"/> Amounts</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-            <Amount label="Customer budget" value={fmtGHS(b.budget ?? b.estimated_cost)} />
-            {acceptedEstimate != null && <Amount label="Accepted estimate" value={fmtGHS(acceptedEstimate)} />}
+            <Amount label="Customer budget" value={fmtGHS(customerBudgetOf(b))} />
+            {agreed.value != null && agreed.source !== "budget" && (
+              <Amount label={`Agreed amount (${agreed.source === "estimate" ? "approved estimate" : "accepted proposal"})`} value={fmtGHS(agreed.value)} />
+            )}
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>
           <p className="text-[11px] text-muted-foreground mt-2">
-            The customer's original budget is kept separate from the professional's accepted estimate.
+            The customer's original budget is kept as history. The agreed booking amount is the accepted
+            professional proposal, unless a later estimate was approved.
           </p>
 
           <p className="text-[11px] text-muted-foreground mt-2">Payment status: <span className="font-semibold">{statusLabel(b.payment_status ?? "unpaid")}</span></p>

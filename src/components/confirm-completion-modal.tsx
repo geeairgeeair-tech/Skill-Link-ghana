@@ -3,11 +3,13 @@ import { toast } from "sonner";
 import { Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcceptedEstimate } from "@/lib/accepted-estimates";
+import { agreedAmountOf } from "@/lib/agreed-amount";
 
 const fmt = (n: number) => `GH₵${Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 export function ConfirmCompletionModal({ booking, onClose, onDone }: { booking: any; onClose: () => void; onDone: () => void }) {
   const acceptedEstimate = useAcceptedEstimate(booking?.id);
+  const agreed = agreedAmountOf(booking, acceptedEstimate);
   const [amountPaid, setAmountPaid] = useState(String(booking.final_amount ?? ""));
   const [rating, setRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
@@ -49,7 +51,9 @@ export function ConfirmCompletionModal({ booking, onClose, onDone }: { booking: 
         <p className="text-xs text-muted-foreground mt-1">{booking.profiles?.full_name ?? booking.worker?.full_name ?? "Your pro"} · {booking.categories?.name ?? ""}</p>
         <div className="mt-3 rounded-xl bg-muted/50 p-3 text-xs space-y-1">
           {booking.budget != null && <p>Customer budget: <span className="font-semibold">{fmt(Number(booking.budget))}</span></p>}
-          {acceptedEstimate != null && <p>Accepted estimate: <span className="font-semibold">{fmt(acceptedEstimate)}</span></p>}
+          {agreed.value != null && agreed.source !== "budget" && (
+            <p>{agreed.source === "estimate" ? "Approved estimate" : "Agreed booking amount (accepted proposal)"}: <span className="font-semibold">{fmt(agreed.value)}</span></p>
+          )}
           <p>Worker reported: <span className="font-semibold">{fmt(Number(booking.final_amount ?? 0))}</span></p>
           {booking.completion_note && <p className="italic mt-1">"{booking.completion_note}"</p>}
         </div>

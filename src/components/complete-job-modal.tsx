@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +54,11 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const diff = baseline != null ? final - baseline : 0;
   const needsReason = baseline != null && final > 0 && diff !== 0;
   const options = diff > 0 ? HIGHER : LOWER;
+
+  // Prefill with the agreed amount (approved estimate, else accepted proposal).
+  useEffect(() => {
+    if (!amount && baseline != null) setAmount(String(baseline));
+  }, [baseline]);
 
   const submit = async () => {
     if (final <= 0) return toast.error("Enter the final amount");

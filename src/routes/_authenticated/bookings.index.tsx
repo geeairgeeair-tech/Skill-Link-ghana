@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAcceptedEstimates } from "@/lib/accepted-estimates";
+import { agreedAmountOf, customerBudgetOf } from "@/lib/agreed-amount";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { BOOKING_COLUMNS } from "@/lib/booking-columns";
@@ -165,8 +166,12 @@ function BookingsPage() {
                 <p className="text-xs text-muted-foreground mt-1">{bookingTimingLines(b as any).join(" · ")}</p>
               )}
 
-              {(b.budget ?? b.estimated_cost) != null && <p className="text-sm font-semibold text-primary mt-1">Customer Budget: {fmtGHS(b.budget ?? b.estimated_cost)}</p>}
-              {acceptedEstimates?.[b.id] != null && <p className="text-sm text-muted-foreground mt-1">Accepted Estimate: {fmtGHS(acceptedEstimates[b.id])}</p>}
+              {customerBudgetOf(b) != null && <p className="text-sm text-muted-foreground mt-1">Customer Budget: {fmtGHS(customerBudgetOf(b))}</p>}
+              {(() => {
+                const agreed = agreedAmountOf(b, acceptedEstimates?.[b.id] ?? null);
+                if (agreed.value == null || agreed.source === "budget") return null;
+                return <p className="text-sm font-semibold text-primary mt-1">Agreed Amount ({agreed.source === "estimate" ? "approved estimate" : "accepted proposal"}): {fmtGHS(agreed.value)}</p>;
+              })()}
 
               {b.final_amount != null && <p className="text-sm font-semibold text-primary mt-1">Final: {fmtGHS(b.final_amount)}</p>}
               {b.amount_paid != null && <p className="text-sm text-success mt-1 inline-flex items-center gap-1"><CheckCircle2 className="size-3.5"/>Paid: {fmtGHS(b.amount_paid)}</p>}

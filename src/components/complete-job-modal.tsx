@@ -46,8 +46,9 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const [confirmed, setConfirmed] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const baseline = approved ? Number(approved.total) : budget;
-  const baselineLabel = approved ? "Approved estimate" : "Customer budget";
+  const agreed = agreedAmountOf(bookingRow, approved ? Number(approved.total) : null);
+  const baseline = agreed.value;
+  const baselineLabel = agreed.label;
   const final = Number(amount || 0);
   const diff = baseline != null ? final - baseline : 0;
   const needsReason = baseline != null && final > 0 && diff !== 0;

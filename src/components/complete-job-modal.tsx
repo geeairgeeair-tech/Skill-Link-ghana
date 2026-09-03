@@ -27,13 +27,15 @@ export function CompleteJobModal({ bookingId, onClose, onDone }: {
   const { data: estimates = [] } = useEstimates(bookingId);
   const approved = estimates.find((e) => e.status === "approved") ?? null;
 
-  // When no estimate was approved, the customer's original budget is the baseline.
-  const { data: budget = null } = useQuery({
-    queryKey: ["booking-budget", bookingId],
+  // No approved estimate → fall back to the accepted professional proposal,
+  // then to the customer's original budget.
+  const { data: bookingRow = null } = useQuery({
+    queryKey: ["booking-agreed-amount", bookingId],
     queryFn: async () => {
-      const { data } = await supabase.from("bookings").select("budget").eq("id", bookingId).maybeSingle();
-      const b = Number((data as any)?.budget ?? 0);
-      return b > 0 ? b : null;
+      const { data } = await supabase.from("bookings")
+        .select("budget, estimated_cost, estimated_amount, job_application_id")
+        .eq("id", bookingId).maybeSingle();
+      return (data as any) ?? null;
     },
   });
 

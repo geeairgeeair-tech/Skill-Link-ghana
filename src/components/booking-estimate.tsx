@@ -118,6 +118,17 @@ export function EstimateSection({
         </div>
       )}
 
+      {acceptedProposal != null && (
+        <div className="rounded-xl bg-success/10 border border-success/20 px-3 py-2">
+          <p className="text-[11px] font-bold uppercase tracking-wide text-success">Agreed booking amount</p>
+          <p className="font-display font-bold">{fmtGHS(acceptedProposal)}</p>
+          <p className="text-[11px] text-muted-foreground">
+            Accepted professional proposal. No estimate is needed to confirm this amount — only send one if the
+            price genuinely changes.
+          </p>
+        </div>
+      )}
+
 
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading estimate…</p>

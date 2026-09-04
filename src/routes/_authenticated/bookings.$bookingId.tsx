@@ -390,8 +390,14 @@ function BookingDetail() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
             <Amount label="Customer budget" value={fmtGHS(customerBudgetOf(b))} />
             {agreed.value != null && agreed.source !== "budget" && (
-              <Amount label={`Agreed amount (${agreed.source === "estimate" ? "approved estimate" : "accepted proposal"})`} value={fmtGHS(agreed.value)} />
+              <Amount
+                label={agreed.source === "estimate" ? "Approved estimate" : "Accepted proposal"}
+                value={fmtGHS(agreed.value)}
+                success={agreed.source === "proposal"}
+                highlight={agreed.source === "estimate"}
+              />
             )}
+
             <Amount label="Worker final" value={fmtGHS(b.final_amount)} highlight />
             <Amount label="Customer paid" value={fmtGHS(b.amount_paid)} success />
           </div>

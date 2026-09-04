@@ -10,11 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
  * customer_accept_job_application / customer_decline_job_application RPCs.
  */
 
-export function ReviewAndConfirmModal({ app, onClose, onDone }: { app: any; onClose: () => void; onDone: (bookingId: string | null) => void }) {
+export function ReviewAndConfirmModal({ app, jobBudget = null, onClose, onDone }: { app: any; jobBudget?: number | null; onClose: () => void; onDone: (bookingId: string | null) => void }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const p = app.profile;
   const wp = app.worker;
+  const diff = jobBudget != null ? Number(app.quoted_price) - Number(jobBudget) : 0;
+  const gh = (n: number) => `GH₵${Number(n).toLocaleString("en-GH")}`;
+
 
   const submit = async () => {
     if (saving) return;
@@ -54,6 +57,18 @@ export function ReviewAndConfirmModal({ app, onClose, onDone }: { app: any; onCl
           {app.estimated_start && <p><span className="text-muted-foreground">Can start:</span> <span className="font-semibold">{new Date(app.estimated_start).toLocaleString()}</span></p>}
           {app.message && <p className="italic bg-muted/40 rounded p-2 mt-1">"{app.message}"</p>}
         </div>
+
+        {jobBudget != null && diff !== 0 && (
+          <div className={`mt-3 rounded-xl border p-3 text-xs space-y-1 ${diff > 0 ? "border-destructive/30 bg-destructive/5" : "border-success/30 bg-success/5"}`}>
+            <p className="font-semibold">
+              This proposal is {gh(Math.abs(diff))} {diff > 0 ? "above" : "below"} your {gh(jobBudget)} budget.
+            </p>
+            <p className="text-muted-foreground">
+              If you confirm, {gh(app.quoted_price)} becomes the agreed booking amount. Your original budget stays on record.
+            </p>
+          </div>
+        )}
+
 
         <label className="block mt-4 text-xs font-semibold">Optional note to worker</label>
         <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}

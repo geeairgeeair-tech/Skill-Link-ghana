@@ -360,33 +360,27 @@ function ApplicantsPanel({
   }
 
 
-  function AmountDisplay({ proposal }: { proposal: number }) {
+  function AmountDisplay({ proposal, accepted }: { proposal: number; accepted?: boolean }) {
     const sameAsBudget = jobBudget != null && jobBudget === proposal;
-    if (sameAsBudget) {
+    if (sameAsBudget && !accepted) {
       return (
         <p className="text-[11px] text-muted-foreground">
           Customer Budget: <span className="font-bold text-primary text-sm">GH₵{proposal.toLocaleString("en-GH")}</span>
         </p>
       );
     }
-    const diff = jobBudget != null ? proposal - jobBudget : 0;
     return (
       <div className="leading-tight space-y-0.5">
         {jobBudget != null && (
           <p className="text-[10px] text-muted-foreground">Customer Budget: GH₵{jobBudget.toLocaleString("en-GH")}</p>
         )}
-        <p className="font-bold text-primary text-sm">Professional Proposal: GH₵{proposal.toLocaleString("en-GH")}</p>
-        {jobBudget != null && diff !== 0 && (
-          <p className={`text-[10px] font-semibold ${diff > 0 ? "text-destructive" : "text-success"}`}>
-            This proposal is GH₵{Math.abs(diff).toLocaleString("en-GH")} {diff > 0 ? "above" : "below"} your GH₵{jobBudget.toLocaleString("en-GH")} budget.
-          </p>
-        )}
-        <p className="text-[10px] text-muted-foreground">
-          If you accept, GH₵{proposal.toLocaleString("en-GH")} becomes the agreed booking amount.
+        <p className={`font-bold text-sm ${accepted ? "text-success" : "text-primary"}`}>
+          {accepted ? "Accepted Proposal" : "Professional Proposal"}: GH₵{proposal.toLocaleString("en-GH")}
         </p>
       </div>
     );
   }
+
 
 
   const jobArea = jobServiceAreaName ?? jobServiceAreaFallback ?? "Ghana";

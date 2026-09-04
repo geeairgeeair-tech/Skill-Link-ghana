@@ -520,6 +520,8 @@ function ApplicantsPanel({
       {reviewFor && (
         <ReviewAndConfirmModal
           app={reviewFor}
+          jobBudget={jobBudget}
+
           onClose={() => setReviewFor(null)}
           onDone={(bookingId) => {
             setReviewFor(null);

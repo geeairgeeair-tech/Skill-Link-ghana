@@ -58,6 +58,18 @@ export function ReviewAndConfirmModal({ app, jobBudget = null, onClose, onDone }
           {app.message && <p className="italic bg-muted/40 rounded p-2 mt-1">"{app.message}"</p>}
         </div>
 
+        {jobBudget != null && diff !== 0 && (
+          <div className={`mt-3 rounded-xl border p-3 text-xs space-y-1 ${diff > 0 ? "border-destructive/30 bg-destructive/5" : "border-success/30 bg-success/5"}`}>
+            <p className="font-semibold">
+              This proposal is {gh(Math.abs(diff))} {diff > 0 ? "above" : "below"} your {gh(jobBudget)} budget.
+            </p>
+            <p className="text-muted-foreground">
+              If you confirm, {gh(app.quoted_price)} becomes the agreed booking amount. Your original budget stays on record.
+            </p>
+          </div>
+        )}
+
+
         <label className="block mt-4 text-xs font-semibold">Optional note to worker</label>
         <textarea value={note} onChange={e => setNote(e.target.value)} rows={2}
           placeholder="Anything else the worker should know…"

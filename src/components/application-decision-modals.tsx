@@ -10,11 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
  * customer_accept_job_application / customer_decline_job_application RPCs.
  */
 
-export function ReviewAndConfirmModal({ app, onClose, onDone }: { app: any; onClose: () => void; onDone: (bookingId: string | null) => void }) {
+export function ReviewAndConfirmModal({ app, jobBudget = null, onClose, onDone }: { app: any; jobBudget?: number | null; onClose: () => void; onDone: (bookingId: string | null) => void }) {
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const p = app.profile;
   const wp = app.worker;
+  const diff = jobBudget != null ? Number(app.quoted_price) - Number(jobBudget) : 0;
+  const gh = (n: number) => `GH₵${Number(n).toLocaleString("en-GH")}`;
+
 
   const submit = async () => {
     if (saving) return;

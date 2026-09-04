@@ -457,7 +457,7 @@ function ApplicantsPanel({
 
             {/* Money */}
             <div className="rounded-lg bg-muted/40 p-2.5">
-              <AmountDisplay proposal={a.quoted_price} />
+              <AmountDisplay proposal={a.quoted_price} accepted={a.status === "accepted"} />
             </div>
 
             {/* Timing on its own line */}

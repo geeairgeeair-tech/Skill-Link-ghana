@@ -57,8 +57,6 @@ export function EstimateSection({
   finalAmount,
   varianceReason,
   varianceNote,
-  customerBudget,
-  acceptedProposal,
 }: {
   bookingId: string;
   isWorker: boolean;
@@ -108,15 +106,11 @@ export function EstimateSection({
         )}
       </div>
 
-
-
-
-
       {isLoading ? (
         <p className="text-xs text-muted-foreground">Loading estimate…</p>
       ) : !current ? (
         <p className="text-xs text-muted-foreground">
-          {isWorker ? "No estimate sent yet. Create one so the customer knows the cost." : "Your worker has not sent an estimate yet."}
+          {isWorker ? "No estimate sent yet. Create one so the customer knows the cost." : "No estimate sent yet."}
         </p>
       ) : (
         <EstimateCard e={current} />
